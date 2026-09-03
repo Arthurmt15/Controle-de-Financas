@@ -23,7 +23,7 @@ const GOOGLE_CLIENT_ID = process.env.REACT_APP_GOOGLE_CLIENT_ID || '';
  * <LoginPage />
  */
 const LoginPage: React.FC = () => {
-  const { isAuthenticated, error, clearError } = useAuth();
+  const { isAuthenticated, error, clearError, loginWithGoogle } = useAuth();
   const { themeType, toggleTheme } = useTheme();
   const googleButtonRef = useRef<HTMLDivElement>(null);
 
@@ -83,7 +83,6 @@ const LoginPage: React.FC = () => {
    * @param {object} response - Resposta do Google com credential
    */
   const handleGoogleCallback = (response: { credential: string }) => {
-    const { loginWithGoogle } = useAuth();
     loginWithGoogle(response);
   };
 
