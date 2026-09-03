@@ -135,7 +135,7 @@ const Dashboard: React.FC = () => {
               <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
               <XAxis dataKey="name" stroke="#6b7280" fontSize={12} />
               <YAxis stroke="#6b7280" fontSize={12} />
-              <Tooltip formatter={(value: number) => formatCurrency(value)} />
+              <Tooltip formatter={(value) => formatCurrency(Number(value))} />
               <Legend />
               <Bar dataKey="entradas" fill="#10b981" radius={[4, 4, 0, 0]} />
               <Bar dataKey="saidas" fill="#ef4444" radius={[4, 4, 0, 0]} />
@@ -161,7 +161,7 @@ const Dashboard: React.FC = () => {
                     <Cell key={`cell-${index}`} fill={entry.color || PIE_COLORS[index % PIE_COLORS.length]} />
                   ))}
                 </Pie>
-                <Tooltip formatter={(value: number) => formatCurrency(value)} />
+                <Tooltip formatter={(value) => formatCurrency(Number(value))} />
               </PieChart>
             </ResponsiveContainer>
           ) : (
