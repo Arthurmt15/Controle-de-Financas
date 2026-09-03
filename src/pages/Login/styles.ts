@@ -158,6 +158,97 @@ export const ErrorClose = styled.button`
 `;
 
 /**
+ * Seção do Google
+ */
+export const GoogleSection = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 24px;
+`;
+
+/**
+ * Container do botão Google
+ */
+export const GoogleButtonContainer = styled.div`
+  width: 100%;
+  display: flex;
+  justify-content: center;
+`;
+
+/**
+ * Texto fallback
+ */
+export const FallbackText = styled.p`
+  font-size: 12px;
+  color: ${({ theme }) => theme.colors.textSecondary};
+  text-align: center;
+  margin: 0;
+`;
+
+/**
+ * Informações de segurança
+ */
+export const SecurityInfo = styled.div`
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 12px;
+  background-color: ${({ theme }) => `${theme.colors.success}10`};
+  border-radius: ${({ theme }) => theme.borderRadius};
+  margin-bottom: 24px;
+`;
+
+/**
+ * Ícone de segurança
+ */
+export const SecurityIcon = styled.span`
+  font-size: 16px;
+  flex-shrink: 0;
+`;
+
+/**
+ * Texto de segurança
+ */
+export const SecurityText = styled.p`
+  font-size: 12px;
+  color: ${({ theme }) => theme.colors.textSecondary};
+  margin: 0;
+  line-height: 1.5;
+`;
+
+/**
+ * Lista de funcionalidades
+ */
+export const Features = styled.div`
+  display: flex;
+  justify-content: space-around;
+  margin-top: 24px;
+  padding-top: 24px;
+  border-top: 1px solid ${({ theme }) => theme.colors.border};
+`;
+
+/**
+ * Item de funcionalidade
+ */
+export const FeatureItem = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  color: ${({ theme }) => theme.colors.textSecondary};
+`;
+
+/**
+ * Ícone de funcionalidade
+ */
+export const FeatureIcon = styled.span`
+  font-size: 20px;
+`;
+
+/**
  * Dica de login
  */
 export const Hint = styled.div`
