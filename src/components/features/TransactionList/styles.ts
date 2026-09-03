@@ -38,6 +38,38 @@ export const Title = styled.h2`
 `;
 
 /**
+ * Botões de exportação
+ */
+export const ExportButtons = styled.div`
+  display: flex;
+  gap: 8px;
+`;
+
+/**
+ * Botão de exportação
+ */
+export const ExportButton = styled.button`
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 12px;
+  font-size: 12px;
+  font-weight: 500;
+  border: 1px solid ${({ theme }) => theme.colors.border};
+  border-radius: ${({ theme }) => theme.borderRadius};
+  background-color: ${({ theme }) => theme.colors.surface};
+  color: ${({ theme }) => theme.colors.text};
+  cursor: pointer;
+  transition: all 0.2s ease;
+
+  &:hover {
+    background-color: ${({ theme }) => theme.colors.primary};
+    color: white;
+    border-color: ${({ theme }) => theme.colors.primary};
+  }
+`;
+
+/**
  * Filtros
  */
 export const Filters = styled.div`

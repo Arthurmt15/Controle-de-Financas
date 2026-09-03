@@ -7,6 +7,7 @@
 import React, { useState } from 'react';
 import { useTransactions } from '../../../hooks/useTransactions';
 import { formatCurrency, formatDate } from '../../../utils/formatters';
+import { exportTransactionsCSV, exportTransactionsPDF } from '../../../utils/exportData';
 import Modal from '../../common/Modal';
 import TransactionForm from '../TransactionForm';
 import * as C from './styles';
@@ -72,6 +73,34 @@ const TransactionList: React.FC = () => {
       {/* Cabeçalho com filtros */}
       <C.Header>
         <C.Title>Transações</C.Title>
+
+        {/* Botões de exportação */}
+        <C.ExportButtons>
+          <C.ExportButton
+            onClick={() => exportTransactionsCSV({ transactions: filteredTransactions, categories })}
+            aria-label="Exportar como CSV"
+            title="Exportar CSV"
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+              <polyline points="14 2 14 8 20 8" />
+              <line x1="16" y1="13" x2="8" y2="13" />
+              <line x1="16" y1="17" x2="8" y2="17" />
+            </svg>
+            CSV
+          </C.ExportButton>
+          <C.ExportButton
+            onClick={() => exportTransactionsPDF({ transactions: filteredTransactions, categories })}
+            aria-label="Exportar como PDF"
+            title="Exportar PDF"
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+              <polyline points="14 2 14 8 20 8" />
+            </svg>
+            PDF
+          </C.ExportButton>
+        </C.ExportButtons>
 
         {/* Filtros */}
         <C.Filters>
