@@ -146,6 +146,11 @@ export const Thead = styled.thead`
 `;
 
 /**
+ * Tbody
+ */
+export const Tbody = styled.tbody``;
+
+/**
  * Tr
  */
 export const Tr = styled.tr`
