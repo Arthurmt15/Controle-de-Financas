@@ -7,7 +7,8 @@
 import React, { Suspense, lazy } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
-import { ThemeProvider } from './contexts/ThemeContext';
+import { ThemeProvider, useTheme } from './contexts/ThemeContext';
+import { ThemeProvider as StyledThemeProvider } from 'styled-components';
 import Header from './components/layout/Header';
 import SkipLink from './components/common/SkipLink';
 import GlobalStyle from './Styles/global';
@@ -95,16 +96,26 @@ const AppRoutes: React.FC = () => {
 };
 
 /**
+ * Wrapper que conecta o ThemeContext ao ThemeProvider do styled-components
+ */
+const StyledThemeWrapper: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const { theme } = useTheme();
+  return <StyledThemeProvider theme={theme}>{children}</StyledThemeProvider>;
+};
+
+/**
  * Componente raiz da aplicação
  */
 const App: React.FC = () => {
   return (
     <BrowserRouter>
       <ThemeProvider>
-        <AuthProvider>
-          <AppRoutes />
-          <GlobalStyle />
-        </AuthProvider>
+        <StyledThemeWrapper>
+          <AuthProvider>
+            <AppRoutes />
+            <GlobalStyle />
+          </AuthProvider>
+        </StyledThemeWrapper>
       </ThemeProvider>
     </BrowserRouter>
   );
