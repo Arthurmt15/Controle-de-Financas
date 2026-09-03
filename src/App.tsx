@@ -1,79 +1,96 @@
 /**
  * @file App.tsx
- * @description Componente raiz da aplicação.
- * Configura providers, rotas e layout principal.
+ * @description Componente raiz da aplicação com rotas lazy-loaded.
+ * Implementa code splitting para melhor performance.
  */
 
-import React from 'react';
+import React, { Suspense, lazy } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { ThemeProvider } from './contexts/ThemeContext';
 import Header from './components/layout/Header';
-import LoginPage from './pages/Login';
-import DashboardPage from './pages/Dashboard';
-import TransactionsPage from './pages/Transactions';
+import SkipLink from './components/common/SkipLink';
 import GlobalStyle from './Styles/global';
+
+// Lazy loading das páginas (code splitting)
+const LoginPage = lazy(() => import('./pages/Login'));
+const DashboardPage = lazy(() => import('./pages/Dashboard'));
+const TransactionsPage = lazy(() => import('./pages/Transactions'));
+
+/**
+ * Componente de carregamento exibido durante lazy load
+ */
+const LoadingFallback = () => (
+  <div
+    style={{
+      display: 'flex',
+      justifyContent: 'center',
+      alignItems: 'center',
+      height: '100vh',
+      fontSize: '18px',
+      color: '#6b7280',
+    }}
+  >
+    <span>Carregando...</span>
+  </div>
+);
 
 /**
  * Rotas protegidas (requer autenticação)
  */
 const PrivateRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { isAuthenticated } = useAuth();
-
   if (!isAuthenticated) {
     return <Navigate to="/login" replace />;
   }
-
   return <>{children}</>;
 };
 
 /**
  * Layout principal com Header
  */
-const MainLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  return (
-    <>
-      <Header />
-      <main style={{ padding: '24px', maxWidth: '1400px', margin: '0 auto' }}>
-        {children}
-      </main>
-    </>
-  );
-};
+const MainLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => (
+  <>
+    <SkipLink />
+    <Header />
+    <main id="main-content" tabIndex={-1} style={{ padding: '24px', maxWidth: '1400px', margin: '0 auto' }}>
+      {children}
+    </main>
+  </>
+);
 
 /**
- * Componente de rotas autenticadas
+ * Rotas autenticadas
  */
-const AuthenticatedRoutes: React.FC = () => {
-  return (
-    <MainLayout>
+const AuthenticatedRoutes: React.FC = () => (
+  <MainLayout>
+    <Suspense fallback={<LoadingFallback />}>
       <Routes>
         <Route path="/dashboard" element={<DashboardPage />} />
         <Route path="/transactions" element={<TransactionsPage />} />
         <Route path="*" element={<Navigate to="/dashboard" replace />} />
       </Routes>
-    </MainLayout>
-  );
-};
+    </Suspense>
+  </MainLayout>
+);
 
 /**
- * Componente de rotas não autenticadas
+ * Rotas públicas
  */
-const PublicRoutes: React.FC = () => {
-  return (
+const PublicRoutes: React.FC = () => (
+  <Suspense fallback={<LoadingFallback />}>
     <Routes>
       <Route path="/login" element={<LoginPage />} />
       <Route path="*" element={<Navigate to="/login" replace />} />
     </Routes>
-  );
-};
+  </Suspense>
+);
 
 /**
- * Componente de rotas principal
+ * Gerenciador de rotas baseado em autenticação
  */
 const AppRoutes: React.FC = () => {
   const { isAuthenticated } = useAuth();
-
   return isAuthenticated ? <AuthenticatedRoutes /> : <PublicRoutes />;
 };
 
