@@ -4,7 +4,7 @@
  * Utiliza @react-oauth/google para autenticação segura via Google.
  */
 
-import React, { createContext, useContext, useCallback, useEffect, useState, useReducer } from 'react';
+import React, { createContext, useContext, useCallback, useEffect, useReducer } from 'react';
 import { useLocalStorage } from '../hooks/useLocalStorage';
 import type { User, AuthState, AuthAction } from '../types';
 
@@ -106,7 +106,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (storedUser) {
       dispatch({ type: 'LOGIN_SUCCESS', payload: storedUser });
     }
-  }, []);
+  }, [storedUser, dispatch]);
 
   /**
    * Realiza o login com Google OAuth
