@@ -119,6 +119,10 @@ export const Form = styled.form`
  * Mensagem de erro
  */
 export const ErrorMessage = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
   padding: 12px 16px;
   background-color: ${({ theme }) => `${theme.colors.error}15`};
   border: 1px solid ${({ theme }) => theme.colors.error};
@@ -126,6 +130,31 @@ export const ErrorMessage = styled.div`
   color: ${({ theme }) => theme.colors.error};
   font-size: 14px;
   text-align: center;
+`;
+
+/**
+ * Ícone de erro
+ */
+export const ErrorIcon = styled.span`
+  font-size: 16px;
+`;
+
+/**
+ * Botão de fechar erro
+ */
+export const ErrorClose = styled.button`
+  background: none;
+  border: none;
+  color: ${({ theme }) => theme.colors.error};
+  font-size: 18px;
+  cursor: pointer;
+  padding: 0;
+  margin-left: 4px;
+  line-height: 1;
+
+  &:hover {
+    opacity: 0.7;
+  }
 `;
 
 /**
