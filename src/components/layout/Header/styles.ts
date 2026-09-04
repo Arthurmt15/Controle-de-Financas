@@ -79,12 +79,12 @@ export const MenuButton = styled.button`
   border: none;
   border-radius: ${({ theme }) => theme.borderRadius};
   background-color: transparent;
-  color: ${({ theme }) => theme.colors.text};
+  color: ${({ theme }) => theme.colors.primary};
   cursor: pointer;
   transition: all 0.2s ease;
 
   &:hover {
-    background-color: ${({ theme }) => theme.colors.surfaceHover};
+    background-color: ${({ theme }) => theme.colors.primary}15;
   }
 
   @media (max-width: 768px) {
@@ -114,6 +114,10 @@ export const LogoIcon = styled.div`
   background: linear-gradient(135deg, ${({ theme }) => theme.colors.primary}, ${({ theme }) => theme.colors.secondary});
   color: white;
   border-radius: ${({ theme }) => theme.borderRadius};
+
+  svg {
+    color: white;
+  }
 `;
 
 /**
@@ -151,7 +155,7 @@ export const ThemeToggle = styled.button`
   border: none;
   border-radius: 50%;
   background-color: ${({ theme }) => theme.colors.surfaceHover};
-  color: ${({ theme }) => theme.colors.text};
+  color: ${({ theme }) => theme.colors.primary};
   cursor: pointer;
   transition: all 0.2s ease;
 
@@ -248,7 +252,7 @@ export const LogoutButton = styled.button`
   border: none;
   border-radius: ${({ theme }) => theme.borderRadius};
   background-color: transparent;
-  color: ${({ theme }) => theme.colors.textSecondary};
+  color: ${({ theme }) => theme.colors.primary};
   cursor: pointer;
   transition: all 0.2s ease;
 

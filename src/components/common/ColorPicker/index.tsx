@@ -20,7 +20,7 @@ const PickerButton = styled.button`
   border: 0;
   border-radius: 10px;
   background: ${({ theme }) => theme.colors.surface};
-  color: ${({ theme }) => theme.colors.text};
+  color: ${({ theme }) => theme.colors.primary};
   font-size: 18px;
   cursor: pointer;
   display: flex;
@@ -29,7 +29,7 @@ const PickerButton = styled.button`
   transition: background 0.2s;
 
   &:hover {
-    background: ${({ theme }) => theme.colors.surfaceHover};
+    background: ${({ theme }) => theme.colors.primary}15;
   }
 `;
 
