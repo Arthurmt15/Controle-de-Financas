@@ -9,7 +9,7 @@ import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
   LineChart, Line, PieChart, Pie, Cell,
 } from 'recharts';
-import { formatCurrency } from '../../../utils/formatters';
+import { formatCurrency } from '../../../../utils/formatters';
 import * as C from './ReportsCharts.styles';
 
 /** Cores para gráficos de pizza */

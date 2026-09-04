@@ -5,9 +5,9 @@
  */
 
 import React from 'react';
-import { formatCurrency, formatDate } from '../../../utils/formatters';
+import { formatCurrency, formatDate } from '../../../../utils/formatters';
 import * as C from './TopExpensesTable.styles';
-import type { Transaction, Category } from '../../../types';
+import type { Transaction, Category } from '../../../../types';
 
 /**
  * Props do componente TopExpensesTable

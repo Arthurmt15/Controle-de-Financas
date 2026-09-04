@@ -5,7 +5,7 @@
  */
 
 import React from 'react';
-import { formatCurrency } from '../../../utils/formatters';
+import { formatCurrency } from '../../../../utils/formatters';
 import * as C from './SummaryCards.styles';
 
 /**
