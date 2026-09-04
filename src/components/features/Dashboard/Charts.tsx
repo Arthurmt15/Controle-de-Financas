@@ -5,6 +5,7 @@
  */
 
 import React, { useState, useMemo } from 'react';
+import { useTheme } from '../../../contexts/ThemeContext';
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
   PieChart, Pie, Cell,
@@ -14,16 +15,8 @@ import { formatCurrency, getMonthAbbreviation } from '../../../utils/formatters'
 import { getLastNMonths } from '../../../utils/helpers';
 import * as C from './styles';
 
-/** Cores para o gráfico de pizza */
+/** Cores para o gráfico de pizza (paleta indigo) */
 const PIE_COLORS = ['#6366f1', '#8b5cf6', '#a78bfa', '#c4b5fd', '#ddd6fe'];
-
-/** Estilo comum do tooltip */
-const TOOLTIP_STYLE = {
-  backgroundColor: '#111a2a',
-  border: '1px solid #202b3f',
-  borderRadius: '8px',
-  color: '#f7f8fb',
-};
 
 /**
  * Componente Charts
@@ -31,12 +24,21 @@ const TOOLTIP_STYLE = {
  */
 const Charts: React.FC = () => {
   const { transactions, categories } = useTransactions();
+  const { theme } = useTheme();
   const [monthlyPeriod, setMonthlyPeriod] = useState<'12' | '6'>('12');
 
-  /**
-   * Prepara dados para gráfico de barras (evolução mensal do ano selecionado)
-   * Retorna array com entradas e saídas por mês
-   */
+  /** Estilo do tooltip adaptado ao tema */
+  const tooltipStyle = useMemo(() => ({
+    backgroundColor: theme.colors.surface,
+    border: `1px solid ${theme.colors.border}`,
+    borderRadius: '8px',
+    color: theme.colors.text,
+  }), [theme]);
+
+  /** Cor da grid e eixos adaptada ao tema */
+  const gridColor = theme.colors.border;
+  const axisColor = theme.colors.textSecondary;
+
   const monthlyData = useMemo(() => {
     return getLastNMonths(Number(monthlyPeriod)).map(({ month, name }) => {
       const monthTx = transactions.filter((t) => {
@@ -51,10 +53,6 @@ const Charts: React.FC = () => {
     });
   }, [transactions, monthlyPeriod]);
 
-  /**
-   * Prepara dados para gráfico de pizza (despesas por categoria)
-   * Retorna array com nome, valor e cor de cada categoria
-   */
   const categoryData = useMemo(() => {
     const now = new Date();
     const expenses = transactions.filter((t) => {
@@ -68,17 +66,15 @@ const Charts: React.FC = () => {
     return Object.entries(totals)
       .map(([catId, value]) => {
         const cat = categories.find((c) => c.id === catId);
-        return { name: cat?.name || 'Outros', value, color: cat?.color || '#6b7280' };
+        return { name: cat?.name || 'Outros', value, color: cat?.color || theme.colors.textSecondary };
       })
       .sort((a, b) => b.value - a.value);
-  }, [transactions, categories]);
+  }, [transactions, categories, theme]);
 
-  /** Verifica se há dados para exibir no gráfico de barras */
   const hasBarData = monthlyData.some((d) => d.entradas > 0 || d.saidas > 0);
 
   return (
     <C.ChartsGrid>
-      {/* Gráfico de evolução mensal */}
       <C.Panel $height="387px">
         <C.PanelHeader>
           <h2>Evolução Mensal</h2>
@@ -93,13 +89,13 @@ const Charts: React.FC = () => {
         {hasBarData ? (
           <ResponsiveContainer width="100%" height={285}>
             <BarChart data={monthlyData}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#202b3f" />
-              <XAxis dataKey="name" stroke="#8d99ad" fontSize={10} />
-              <YAxis stroke="#8d99ad" fontSize={10} />
-              <Tooltip formatter={(value) => formatCurrency(Number(value))} contentStyle={TOOLTIP_STYLE} />
+              <CartesianGrid strokeDasharray="3 3" stroke={gridColor} />
+              <XAxis dataKey="name" stroke={axisColor} fontSize={10} />
+              <YAxis stroke={axisColor} fontSize={10} />
+              <Tooltip formatter={(value) => formatCurrency(Number(value))} contentStyle={tooltipStyle} />
               <Legend />
-              <Bar dataKey="entradas" fill="#00c98b" radius={[4, 4, 0, 0]} />
-              <Bar dataKey="saidas" fill="#ff4d55" radius={[4, 4, 0, 0]} />
+              <Bar dataKey="entradas" fill={theme.colors.success} radius={[4, 4, 0, 0]} />
+              <Bar dataKey="saidas" fill={theme.colors.error} radius={[4, 4, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
         ) : (
@@ -110,12 +106,11 @@ const Charts: React.FC = () => {
           </C.EmptyChartMessage>
         )}
         <C.Legend>
-          <span><C.Dot $color="#00c98b" /> Entradas</span>
-          <span><C.Dot $color="#ff4d55" /> Saídas</span>
+          <span><C.Dot $color={theme.colors.success} /> Entradas</span>
+          <span><C.Dot $color={theme.colors.error} /> Saídas</span>
         </C.Legend>
       </C.Panel>
 
-      {/* Gráfico de categorias */}
       <C.Panel $height="387px">
         <C.PanelHeader>
           <h2>Despesas por Categoria</h2>
@@ -140,7 +135,7 @@ const Charts: React.FC = () => {
                   <Cell key={`cell-${index}`} fill={entry.color || PIE_COLORS[index % PIE_COLORS.length]} />
                 ))}
               </Pie>
-              <Tooltip formatter={(value) => formatCurrency(Number(value))} contentStyle={TOOLTIP_STYLE} />
+              <Tooltip formatter={(value) => formatCurrency(Number(value))} contentStyle={tooltipStyle} />
             </PieChart>
           </ResponsiveContainer>
         ) : (

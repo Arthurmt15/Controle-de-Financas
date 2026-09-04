@@ -327,7 +327,7 @@ export const DeleteButton = styled.button<{ $variant: 'ghost' | 'danger' }>`
     color: white;
 
     &:hover {
-      background-color: #dc2626;
+      background-color: ${theme.colors.primaryHover};
     }
   `}
 `;

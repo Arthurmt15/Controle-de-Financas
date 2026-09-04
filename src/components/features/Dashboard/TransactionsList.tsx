@@ -5,6 +5,7 @@
  */
 
 import React, { useMemo } from 'react';
+import { useTheme } from '../../../contexts/ThemeContext';
 import { useTransactions } from '../../../hooks/useTransactions';
 import { formatCurrency } from '../../../utils/formatters';
 import * as C from './styles';
@@ -15,22 +16,16 @@ import * as C from './styles';
  */
 const TransactionsList: React.FC = () => {
   const { transactions } = useTransactions();
+  const { theme } = useTheme();
 
-  /**
-   * Obtém as 5 transações mais recentes
-   * Retorna array ordenado por data decrescente
-   */
+  /** Transações mais recentes (últimas 5) */
   const recentTransactions = useMemo(() => {
     return [...transactions]
       .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
       .slice(0, 5);
   }, [transactions]);
 
-  /**
-   * Formata a data para exibição
-   * @param {string} dateString - Data em formato ISO
-   * @returns {string} Data formatada (DD/MM/AAAA)
-   */
+  /** Formata data ISO para DD/MM/AAAA */
   const formatDate = (dateString: string): string => {
     return new Date(dateString).toLocaleDateString('pt-BR');
   };
@@ -42,11 +37,11 @@ const TransactionsList: React.FC = () => {
           <h2>Últimas Transações</h2>
         </C.TransactionsHeader>
         <C.TransactionsEmpty>
-          <C.TransactionIcon style={{ background: 'rgba(112, 72, 237, 0.13)', color: '#9d73ff' }}>
+          <C.TransactionIcon style={{ background: `${theme.colors.primary}20`, color: theme.colors.primary }}>
             💳
           </C.TransactionIcon>
           <strong style={{ fontSize: '13px' }}>Nenhuma transação</strong>
-          <span style={{ color: '#8995a9', fontSize: '12px' }}>
+          <span style={{ color: theme.colors.textSecondary, fontSize: '12px' }}>
             Adicione sua primeira transação
           </span>
         </C.TransactionsEmpty>
@@ -61,7 +56,7 @@ const TransactionsList: React.FC = () => {
       </C.TransactionsHeader>
       <div style={{ padding: '0 21px' }}>
         {recentTransactions.map((tx) => (
-          <TransactionRow key={tx.id} tx={tx} formatDate={formatDate} />
+          <TransactionRow key={tx.id} tx={tx} formatDate={formatDate} theme={theme} />
         ))}
       </div>
     </C.Transactions>
@@ -70,20 +65,18 @@ const TransactionsList: React.FC = () => {
 
 /** Props da linha de transação */
 interface TransactionRowProps {
-  /** Dados da transação */
   tx: { id: string; description: string; amount: number; type: 'income' | 'expense'; date: string };
-  /** Função de formatação de data */
   formatDate: (date: string) => string;
+  theme: { colors: { success: string; error: string; border: string; textSecondary: string } };
 }
 
 /**
- * Componente de linha de transação
- * Exibe uma transação individual com ícone, descrição e valor
+ * Componente de linha de transação individual
  */
-const TransactionRow: React.FC<TransactionRowProps> = ({ tx, formatDate }) => {
+const TransactionRow: React.FC<TransactionRowProps> = ({ tx, formatDate, theme }) => {
   const isIncome = tx.type === 'income';
-  const color = isIncome ? '#00c98b' : '#ff4d55';
-  const bgColor = isIncome ? 'rgba(0, 201, 139, 0.17)' : 'rgba(255, 77, 85, 0.17)';
+  const color = isIncome ? theme.colors.success : theme.colors.error;
+  const bgColor = isIncome ? `${theme.colors.success}28` : `${theme.colors.error}28`;
 
   return (
     <div style={{
@@ -91,7 +84,7 @@ const TransactionRow: React.FC<TransactionRowProps> = ({ tx, formatDate }) => {
       alignItems: 'center',
       justifyContent: 'space-between',
       padding: '12px 0',
-      borderBottom: '1px solid #202b3f',
+      borderBottom: `1px solid ${theme.colors.border}`,
     }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
         <C.TransactionIcon style={{ background: bgColor, color }}>
@@ -99,7 +92,7 @@ const TransactionRow: React.FC<TransactionRowProps> = ({ tx, formatDate }) => {
         </C.TransactionIcon>
         <div>
           <div style={{ fontSize: '13px', fontWeight: 500 }}>{tx.description}</div>
-          <div style={{ fontSize: '11px', color: '#8d99ad' }}>{formatDate(tx.date)}</div>
+          <div style={{ fontSize: '11px', color: theme.colors.textSecondary }}>{formatDate(tx.date)}</div>
         </div>
       </div>
       <span style={{ fontSize: '14px', fontWeight: 600, color }}>

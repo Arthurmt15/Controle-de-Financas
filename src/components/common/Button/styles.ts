@@ -52,7 +52,7 @@ const variantStyles = {
     color: white;
 
     &:hover:not(:disabled) {
-      background-color: #dc2626;
+      background-color: ${({ theme }) => theme.colors.primaryHover};
       transform: translateY(-1px);
       box-shadow: ${({ theme }) => theme.shadows.md};
     }
