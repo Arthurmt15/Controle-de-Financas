@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Finanças — Dashboard</title>
+<link rel="stylesheet" href="style.css">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+</head>
+<body>
+<div class="app">
+<aside class="sidebar">
+  <div class="brand"><div class="brand-logo">$</div><strong>Finanças</strong></div>
+  <nav class="navigation">
+    <a class="nav-item active" href="#"><span>▦</span>Dashboard</a>
+    <a class="nav-item" href="#"><span>↔</span>Transações</a>
+    <a class="nav-item" href="#"><span>▥</span>Relatórios</a>
+    <a class="nav-item" href="#"><span>◔</span>Categorias</a>
+    <a class="nav-item" href="#"><span>◎</span>Metas</a>
+    <a class="nav-item" href="#"><span>⚙</span>Configurações</a>
+  </nav>
+  <div class="sidebar-bottom">
+    <div class="upgrade">
+      <div class="upgrade-title">◆ &nbsp;Upgrade para Pro</div>
+      <p>Tenha acesso a mais recursos e insights exclusivos.</p>
+      <button>Fazer upgrade</button>
+    </div>
+    <div class="theme-control"><span>◐ &nbsp; Tema escuro</span><div class="switch active"><span></span></div></div>
+  </div>
+</aside>
+
+<div class="main">
+<header class="topbar">
+  <div></div>
+  <div class="top-actions">
+    <button class="theme-button">☼</button>
+    <div class="profile">
+      <div class="avatar">A</div>
+      <div class="profile-info"><strong>Arthur Martiniano</strong><small>arthurnkf@gmail.com</small></div>
+      <span class="chevron">⌄</span>
+    </div>
+  </div>
+</header>
+
+<main class="content">
+  <div class="page-heading"><h1>Dashboard</h1><p>Resumo geral das suas finanças</p></div>
+
+  <section class="summary-grid">
+    <article class="summary-card"><div class="summary-icon income">↓</div><div><span>Entradas do Mês</span><strong class="green-text">R$ 0,00</strong><small>0% vs mês anterior</small></div><button class="dots">•••</button></article>
+    <article class="summary-card"><div class="summary-icon expense">↑</div><div><span>Saídas do Mês</span><strong class="red-text">R$ 0,00</strong><small>0% vs mês anterior</small></div><button class="dots">•••</button></article>
+    <article class="summary-card"><div class="summary-icon balance">▣</div><div><span>Saldo do Mês</span><strong class="purple-text">R$ 0,00</strong><small>0% vs mês anterior</small></div><button class="dots">•••</button></article>
+    <article class="summary-card"><div class="summary-icon annual">▣</div><div><span>Saldo Anual</span><strong class="blue-text">R$ 0,00</strong><small>0% vs ano anterior</small></div><button class="dots">•••</button></article>
+  </section>
+
+  <section class="charts-grid">
+    <article class="panel monthly-panel">
+      <div class="panel-header"><h2>Evolução Mensal</h2><button class="select">▣ &nbsp; Este ano &nbsp;⌄</button></div>
+      <div class="chart-empty">
+        <div class="chart-grid">
+          <span class="y y4">4.000</span><span class="y y3">3.000</span><span class="y y2">2.000</span><span class="y y1">1.000</span><span class="y y0">0</span>
+        </div>
+        <div class="empty-chart-message"><div class="empty-icon">↗</div><strong>Sem dados para exibir</strong><span>Suas entradas e saídas aparecerão aqui</span></div>
+        <div class="months"><span>Jan</span><span>Fev</span><span>Mar</span><span>Abr</span><span>Mai</span><span>Jun</span><span>Jul</span><span>Ago</span><span>Set</span><span>Out</span><span>Nov</span><span>Dez</span></div>
+      </div>
+      <div class="legend"><span><i class="dot green"></i>Entradas</span><span><i class="dot red"></i>Saídas</span></div>
+    </article>
+
+    <article class="panel category-panel">
+      <div class="panel-header"><h2>Despesas por Categoria</h2><button class="select">Este mês &nbsp;⌄</button></div>
+      <div class="category-empty"><div class="category-icon">◔</div><strong>Nenhuma despesa este mês</strong><span>Quando você adicionar despesas,<br>elas serão exibidas aqui</span></div>
+    </article>
+  </section>
+
+  <section class="panel transactions">
+    <div class="panel-header"><h2>Transações Recentes</h2><button class="select">Ver todas</button></div>
+    <div class="transactions-empty"><div class="transaction-icon">☷</div><strong>Nenhuma transação encontrada</strong><span>Suas últimas transações aparecerão aqui</span></div>
+  </section>
+</main>
+</div>
+</div>
+</body>
+</html>
