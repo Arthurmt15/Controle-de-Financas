@@ -16,6 +16,7 @@ export const ChartsGrid = styled.div`
 
 /** Container do painel de gráfico */
 export const Panel = styled.div<{ $height?: string }>`
+  position: relative;
   border: 1px solid ${({ theme }) => theme.colors.border};
   border-radius: 10px;
   background: linear-gradient(145deg, #111a2a, #0e1624);
