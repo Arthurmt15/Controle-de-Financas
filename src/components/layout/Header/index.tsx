@@ -4,35 +4,42 @@
  * Exibe logo, navegação, seletor de tema, seletor de cor e informações do usuário.
  */
 
-import React from 'react';
+import React, { useState, useCallback } from 'react';
+import { useLocation } from 'react-router-dom';
 import { useAuth } from '../../../contexts/AuthContext';
 import { useTheme } from '../../../contexts/ThemeContext';
 import Icon from '../../common/Icon';
 import ColorPicker from '../../common/ColorPicker';
 import * as C from './styles';
 
-/**
- * Props do componente Header
- */
-interface HeaderProps {
-  /** Função para abrir/fechar a sidebar mobile */
-  onToggleSidebar?: () => void;
-}
+/** Itens de navegação do menu mobile */
+const NAV_ITEMS = [
+  { path: '/dashboard', label: 'Dashboard' },
+  { path: '/transactions', label: 'Transações' },
+  { path: '/reports', label: 'Relatórios' },
+  { path: '/settings', label: 'Configurações' },
+];
 
 /**
  * Componente de cabeçalho principal
- * @param {HeaderProps} props - Props do componente
  * @returns {JSX.Element} Componente Header renderizado
  */
-const Header: React.FC<HeaderProps> = ({ onToggleSidebar }) => {
+const Header: React.FC = () => {
   const { user, logout } = useAuth();
   const { themeType, toggleTheme } = useTheme();
+  const location = useLocation();
+  const [menuOpen, setMenuOpen] = useState(false);
+
+  /** Alterna o menu mobile */
+  const toggleMenu = useCallback(() => setMenuOpen((prev) => !prev), []);
+
+  /** Fecha o menu mobile */
+  const closeMenu = useCallback(() => setMenuOpen(false), []);
 
   return (
     <C.Container>
       <C.LeftSection>
-        {/* Botão hamburger para mobile */}
-        <C.MenuButton onClick={onToggleSidebar} aria-label="Abrir menu">
+        <C.MenuButton onClick={toggleMenu} aria-label="Abrir menu">
           <Icon size={24}>
             <line x1="3" y1="6" x2="21" y2="6" />
             <line x1="3" y1="12" x2="21" y2="12" />
@@ -40,7 +47,6 @@ const Header: React.FC<HeaderProps> = ({ onToggleSidebar }) => {
           </Icon>
         </C.MenuButton>
 
-        {/* Logo */}
         <C.Logo to="/dashboard">
           <C.LogoIcon>
             <Icon size={24} color="white">
@@ -50,25 +56,16 @@ const Header: React.FC<HeaderProps> = ({ onToggleSidebar }) => {
           <C.LogoText>Finanças</C.LogoText>
         </C.Logo>
 
-        {/* Links de navegação */}
         <C.NavLinks>
-          <C.NavLink to="/dashboard">Dashboard</C.NavLink>
-          <C.NavLink to="/transactions">Transações</C.NavLink>
-          <C.NavLink to="/reports">Relatórios</C.NavLink>
-          <C.NavLink to="/settings">Configurações</C.NavLink>
+          {NAV_ITEMS.map(({ path, label }) => (
+            <C.NavLink key={path} to={path}>{label}</C.NavLink>
+          ))}
         </C.NavLinks>
       </C.LeftSection>
 
       <C.RightSection>
-        {/* Seletor de cor de destaque */}
         <ColorPicker />
-
-        {/* Botão de alternar tema */}
-        <C.ThemeToggle
-          onClick={toggleTheme}
-          aria-label={`Alternar para tema ${themeType === 'light' ? 'escuro' : 'claro'}`}
-          title={`Tema ${themeType === 'light' ? 'escuro' : 'claro'}`}
-        >
+        <C.ThemeToggle onClick={toggleTheme} title={`Tema ${themeType === 'light' ? 'escuro' : 'claro'}`}>
           {themeType === 'light' ? (
             <Icon>
               <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
@@ -88,21 +85,16 @@ const Header: React.FC<HeaderProps> = ({ onToggleSidebar }) => {
           )}
         </C.ThemeToggle>
 
-        {/* Informações do usuário */}
         {user && (
           <C.UserSection>
             <C.UserAvatar>
-              {user.avatar ? (
-                <img src={user.avatar} alt={user.name} />
-              ) : (
-                <span>{user.name.charAt(0).toUpperCase()}</span>
-              )}
+              {user.avatar ? <img src={user.avatar} alt={user.name} /> : <span>{user.name.charAt(0).toUpperCase()}</span>}
             </C.UserAvatar>
             <C.UserInfo>
               <C.UserName>{user.name}</C.UserName>
               <C.UserEmail>{user.email}</C.UserEmail>
             </C.UserInfo>
-            <C.LogoutButton onClick={logout} aria-label="Sair da conta" title="Sair">
+            <C.LogoutButton onClick={logout} aria-label="Sair" title="Sair">
               <Icon>
                 <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
                 <polyline points="16 17 21 12 16 7" />
@@ -112,6 +104,24 @@ const Header: React.FC<HeaderProps> = ({ onToggleSidebar }) => {
           </C.UserSection>
         )}
       </C.RightSection>
+
+      <C.MobileOverlay $isOpen={menuOpen} onClick={closeMenu} />
+      <C.MobileMenu $isOpen={menuOpen}>
+        <C.CloseButton onClick={closeMenu} aria-label="Fechar menu">
+          <Icon size={24}>
+            <line x1="18" y1="6" x2="6" y2="18" />
+            <line x1="6" y1="6" x2="18" y2="18" />
+          </Icon>
+        </C.CloseButton>
+        {NAV_ITEMS.map(({ path, label }) => (
+          <C.MobileNavLink key={path} to={path} onClick={closeMenu}>
+            {label}
+          </C.MobileNavLink>
+        ))}
+        <C.MobileNavLink to="/login" onClick={() => { closeMenu(); logout(); }}>
+          Sair
+        </C.MobileNavLink>
+      </C.MobileMenu>
     </C.Container>
   );
 };
