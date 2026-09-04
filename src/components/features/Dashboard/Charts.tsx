@@ -4,7 +4,7 @@
  * Exibe gráfico de barras (evolução mensal) e pizza (categorias).
  */
 
-import React, { useMemo } from 'react';
+import React, { useState, useMemo } from 'react';
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
   PieChart, Pie, Cell,
@@ -31,13 +31,14 @@ const TOOLTIP_STYLE = {
  */
 const Charts: React.FC = () => {
   const { transactions, categories } = useTransactions();
+  const [monthlyPeriod, setMonthlyPeriod] = useState<'12' | '6'>('12');
 
   /**
    * Prepara dados para gráfico de barras (evolução mensal do ano selecionado)
    * Retorna array com entradas e saídas por mês
    */
   const monthlyData = useMemo(() => {
-    return getLastNMonths(12).map(({ month, name }) => {
+    return getLastNMonths(Number(monthlyPeriod)).map(({ month, name }) => {
       const monthTx = transactions.filter((t) => {
         const d = new Date(t.date);
         return d.getMonth() === month && d.getFullYear() === new Date().getFullYear();
@@ -48,7 +49,7 @@ const Charts: React.FC = () => {
         saidas: monthTx.filter((t) => t.type === 'expense').reduce((s, t) => s + t.amount, 0),
       };
     });
-  }, [transactions]);
+  }, [transactions, monthlyPeriod]);
 
   /**
    * Prepara dados para gráfico de pizza (despesas por categoria)
@@ -81,9 +82,12 @@ const Charts: React.FC = () => {
       <C.Panel $height="387px">
         <C.PanelHeader>
           <h2>Evolução Mensal</h2>
-          <C.PanelSelect>
-            <option>Este Ano</option>
-            <option>Últimos 6 meses</option>
+          <C.PanelSelect
+            value={monthlyPeriod}
+            onChange={(e) => setMonthlyPeriod(e.target.value as '12' | '6')}
+          >
+            <option value="12">Este Ano</option>
+            <option value="6">Últimos 6 meses</option>
           </C.PanelSelect>
         </C.PanelHeader>
         {hasBarData ? (
