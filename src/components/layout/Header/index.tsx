@@ -1,13 +1,13 @@
 /**
  * @file components/layout/Header/index.tsx
  * @description Componente de cabeçalho principal da aplicação.
- * Exibe logo, navegação, seletor de tema e informações do usuário.
+ * Exibe logo, navegação, seletor de tema, seletor de cor e informações do usuário.
  */
 
 import React from 'react';
-import { Link } from 'react-router-dom';
 import { useAuth } from '../../../contexts/AuthContext';
 import { useTheme } from '../../../contexts/ThemeContext';
+import ColorPicker from '../../common/ColorPicker';
 import * as C from './styles';
 
 /**
@@ -72,6 +72,9 @@ const Header: React.FC<HeaderProps> = ({ onToggleSidebar }) => {
       </C.LeftSection>
 
       <C.RightSection>
+        {/* Seletor de cor de destaque */}
+        <ColorPicker />
+
         {/* Botão de alternar tema */}
         <C.ThemeToggle
           onClick={toggleTheme}
