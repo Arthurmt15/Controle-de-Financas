@@ -1,7 +1,7 @@
 /**
  * @file types/index.ts
  * @description Definições de tipos TypeScript para o sistema de controle financeiro.
- * Este arquivo contém todas as interfaces e tipos utilizados no projeto.
+ * Este arquivo exporta todas as interfaces e tipos utilizados no projeto.
  */
 
 /**
@@ -236,51 +236,12 @@ export interface ModalProps {
   closeOnOverlayClick?: boolean;
 }
 
-/**
- * Interface que representa as métricas do dashboard
- * @interface DashboardMetrics
- */
-export interface DashboardMetrics {
-  /** Total de entradas no mês */
-  monthlyIncome: number;
-  /** Total de saídas no mês */
-  monthlyExpense: number;
-  /** Saldo do mês */
-  monthlyBalance: number;
-  /** Total de entradas no ano */
-  yearlyIncome: number;
-  /** Total de saídas no ano */
-  yearlyExpense: number;
-  /** Saldo do ano */
-  yearlyBalance: number;
-  /** Média de entradas mensais */
-  averageMonthlyIncome: number;
-  /** Média de saídas mensais */
-  averageMonthlyExpense: number;
-}
-
-/**
- * Interface que representa um item de gráfico
- * @interface ChartDataItem
- */
-export interface ChartDataItem {
-  /** Nome/label do item */
-  name: string;
-  /** Valor numérico */
-  value: number;
-  /** Cor de preenchimento (opcional) */
-  fill?: string;
-}
-
-/**
- * Interface que representa dados para gráfico de barras mensal
- * @interface MonthlyChartData
- */
-export interface MonthlyChartData {
-  /** Mês (abreviação) */
-  month: string;
-  /** Valor de entradas */
-  income: number;
-  /** Valor de saídas */
-  expense: number;
-}
+// Re-exporta tipos de dashboard e gráficos
+export type {
+  DashboardMetrics,
+  ChartDataItem,
+  MonthlyChartData,
+  Budget,
+  BudgetState,
+  BudgetAction,
+} from './dashboard';

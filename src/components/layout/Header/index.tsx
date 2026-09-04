@@ -5,6 +5,7 @@
  */
 
 import React from 'react';
+import { Link } from 'react-router-dom';
 import { useAuth } from '../../../contexts/AuthContext';
 import { useTheme } from '../../../contexts/ThemeContext';
 import * as C from './styles';
@@ -60,6 +61,14 @@ const Header: React.FC<HeaderProps> = ({ onToggleSidebar }) => {
           </C.LogoIcon>
           <C.LogoText>Finanças</C.LogoText>
         </C.Logo>
+
+        {/* Links de navegação */}
+        <C.NavLinks>
+          <C.NavLink to="/dashboard">Dashboard</C.NavLink>
+          <C.NavLink to="/transactions">Transações</C.NavLink>
+          <C.NavLink to="/reports">Relatórios</C.NavLink>
+          <C.NavLink to="/settings">Configurações</C.NavLink>
+        </C.NavLinks>
       </C.LeftSection>
 
       <C.RightSection>

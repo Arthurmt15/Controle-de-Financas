@@ -31,6 +31,42 @@ export const LeftSection = styled.div`
 `;
 
 /**
+ * Links de navegação
+ */
+export const NavLink = styled(Link)`
+  font-size: 14px;
+  font-weight: 500;
+  color: ${({ theme }) => theme.colors.textSecondary};
+  text-decoration: none;
+  padding: 6px 12px;
+  border-radius: ${({ theme }) => theme.borderRadius};
+  transition: all 0.2s ease;
+
+  &:hover {
+    color: ${({ theme }) => theme.colors.primary};
+    background-color: ${({ theme }) => theme.colors.surfaceHover};
+  }
+
+  @media (max-width: 768px) {
+    display: none;
+  }
+`;
+
+/**
+ * Container dos links de navegação
+ */
+export const NavLinks = styled.nav`
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-left: 24px;
+
+  @media (max-width: 768px) {
+    display: none;
+  }
+`;
+
+/**
  * Botão hamburger para mobile
  */
 export const MenuButton = styled.button`
