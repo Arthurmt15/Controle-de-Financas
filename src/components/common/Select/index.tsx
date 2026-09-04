@@ -5,17 +5,17 @@
  */
 
 import React, { forwardRef } from 'react';
+import Icon from '../Icon';
 import * as C from './styles';
 
-/**
- * Props do componente Select
- */
+/** Interface para opções do select */
 interface SelectOption {
   value: string;
   label: string;
   disabled?: boolean;
 }
 
+/** Props do componente Select */
 interface SelectProps {
   value: string;
   onChange: (e: React.ChangeEvent<HTMLSelectElement>) => void;
@@ -33,18 +33,6 @@ interface SelectProps {
  * Componente Select reutilizável
  * @param {SelectProps} props - Props do componente
  * @returns {JSX.Element} Componente Select renderizado
- *
- * @example
- * <Select
- *   value={category}
- *   onChange={(e) => setCategory(e.target.value)}
- *   options={[
- *     { value: '1', label: 'Alimentação' },
- *     { value: '2', label: 'Transporte' },
- *   ]}
- *   label="Categoria"
- *   placeholder="Selecione"
- * />
  */
 const Select = forwardRef<HTMLSelectElement, SelectProps>(
   (
@@ -62,6 +50,7 @@ const Select = forwardRef<HTMLSelectElement, SelectProps>(
     },
     ref
   ) => {
+    /** ID único do select */
     const selectId = `select-${name || label?.toLowerCase().replace(/\s/g, '-')}`;
 
     return (
@@ -102,20 +91,10 @@ const Select = forwardRef<HTMLSelectElement, SelectProps>(
             ))}
           </C.StyledSelect>
 
-          {/* Ícone de seta */}
           <C.ArrowIcon>
-            <svg
-              width="16"
-              height="16"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
+            <Icon size={16}>
               <polyline points="6 9 12 15 18 9" />
-            </svg>
+            </Icon>
           </C.ArrowIcon>
         </C.SelectWrapper>
 

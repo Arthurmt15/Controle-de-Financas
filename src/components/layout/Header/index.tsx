@@ -7,24 +7,9 @@
 import React from 'react';
 import { useAuth } from '../../../contexts/AuthContext';
 import { useTheme } from '../../../contexts/ThemeContext';
+import Icon from '../../common/Icon';
 import ColorPicker from '../../common/ColorPicker';
 import * as C from './styles';
-
-/** Ícone SVG estilizado que usa a cor primária do tema */
-const Icon = ({ children, size = 20 }: { children: React.ReactNode; size?: number }) => (
-  <svg
-    width={size}
-    height={size}
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="2"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-  >
-    {children}
-  </svg>
-);
 
 /**
  * Props do componente Header
@@ -38,22 +23,16 @@ interface HeaderProps {
  * Componente de cabeçalho principal
  * @param {HeaderProps} props - Props do componente
  * @returns {JSX.Element} Componente Header renderizado
- *
- * @example
- * <Header onToggleSidebar={() => setIsOpen(!isOpen)} />
  */
 const Header: React.FC<HeaderProps> = ({ onToggleSidebar }) => {
   const { user, logout } = useAuth();
-  const { themeType, toggleTheme, theme } = useTheme();
+  const { themeType, toggleTheme } = useTheme();
 
   return (
     <C.Container>
       <C.LeftSection>
         {/* Botão hamburger para mobile */}
-        <C.MenuButton
-          onClick={onToggleSidebar}
-          aria-label="Abrir menu"
-        >
+        <C.MenuButton onClick={onToggleSidebar} aria-label="Abrir menu">
           <Icon size={24}>
             <line x1="3" y1="6" x2="21" y2="6" />
             <line x1="3" y1="12" x2="21" y2="12" />
@@ -64,7 +43,7 @@ const Header: React.FC<HeaderProps> = ({ onToggleSidebar }) => {
         {/* Logo */}
         <C.Logo to="/dashboard">
           <C.LogoIcon>
-            <Icon size={24}>
+            <Icon size={24} color="white">
               <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
             </Icon>
           </C.LogoIcon>
@@ -123,11 +102,7 @@ const Header: React.FC<HeaderProps> = ({ onToggleSidebar }) => {
               <C.UserName>{user.name}</C.UserName>
               <C.UserEmail>{user.email}</C.UserEmail>
             </C.UserInfo>
-            <C.LogoutButton
-              onClick={logout}
-              aria-label="Sair da conta"
-              title="Sair"
-            >
+            <C.LogoutButton onClick={logout} aria-label="Sair da conta" title="Sair">
               <Icon>
                 <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
                 <polyline points="16 17 21 12 16 7" />

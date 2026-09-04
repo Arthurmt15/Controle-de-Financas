@@ -6,6 +6,7 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import { useTheme, AccentColor, ACCENT_COLORS } from '../../../contexts/ThemeContext';
+import Icon from '../Icon';
 import styled from 'styled-components';
 
 /** Container do seletor de cores */
@@ -21,7 +22,6 @@ const PickerButton = styled.button`
   border-radius: 10px;
   background: ${({ theme }) => theme.colors.surface};
   color: ${({ theme }) => theme.colors.primary};
-  font-size: 18px;
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -123,29 +123,30 @@ const ColorPicker: React.FC = () => {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
+  /** Alterna a visibilidade do dropdown */
+  const toggleDropdown = () => setIsOpen(!isOpen);
+
+  /** Seleciona uma cor e fecha o dropdown */
+  const selectColor = (color: AccentColor) => {
+    setAccentColor(color);
+    setIsOpen(false);
+  };
+
   return (
     <PickerContainer ref={containerRef}>
       <PickerButton
-        onClick={() => setIsOpen(!isOpen)}
+        onClick={toggleDropdown}
         aria-label="Mudar cor do tema"
         title="Personalizar cor"
+        type="button"
       >
-        <svg
-          width="18"
-          height="18"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="2"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        >
+        <Icon size={18}>
           <circle cx="13.5" cy="6.5" r="2.5" />
           <circle cx="19" cy="11.5" r="2.5" />
           <circle cx="6" cy="12.5" r="2.5" />
           <circle cx="12" cy="19.5" r="2.5" />
           <path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.437-1.125-.29-.289-.438-.652-.438-1.125a1.64 1.64 0 0 1 1.668-1.668h1.996c3.051 0 5.555-2.503 5.555-5.554C21.965 6.012 17.461 2 12 2z" />
-        </svg>
+        </Icon>
       </PickerButton>
 
       <Dropdown $isOpen={isOpen}>
@@ -156,12 +157,10 @@ const ColorPicker: React.FC = () => {
               key={color}
               $color={ACCENT_COLORS[color].primary}
               $isSelected={accentColor === color}
-              onClick={() => {
-                setAccentColor(color);
-                setIsOpen(false);
-              }}
+              onClick={() => selectColor(color)}
               aria-label={`Cor ${COLOR_NAMES[color]}`}
               title={COLOR_NAMES[color]}
+              type="button"
             />
           ))}
         </ColorGrid>

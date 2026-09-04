@@ -8,6 +8,7 @@ import React, { useState } from 'react';
 import { useTransactions } from '../../../hooks/useTransactions';
 import { getRandomColor } from '../../../utils/formatters';
 import Button from '../../common/Button';
+import Icon from '../../common/Icon';
 import * as C from './styles';
 
 /** Lista de ícones disponíveis para categorias */
@@ -253,17 +254,10 @@ const CategoryManager: React.FC = () => {
                   onClick={() => setDeletingId(category.id)}
                   aria-label={`Excluir ${category.name}`}
                 >
-                  <svg
-                    width="16"
-                    height="16"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                  >
+                  <Icon size={16}>
                     <polyline points="3 6 5 6 21 6" />
                     <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
-                  </svg>
+                  </Icon>
                 </C.DeleteButton>
               )}
             </C.CategoryActions>

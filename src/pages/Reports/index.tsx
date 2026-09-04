@@ -9,6 +9,7 @@ import { useTransactions } from '../../hooks/useTransactions';
 import { formatDate, getMonthAbbreviation } from '../../utils/formatters';
 import { getLastNMonths } from '../../utils/helpers';
 import { exportTransactionsCSV, exportTransactionsPDF } from '../../utils/exportData';
+import Icon from '../../components/common/Icon';
 import SummaryCards from '../../components/features/Reports/components/SummaryCards';
 import ReportsCharts from '../../components/features/Reports/components/ReportsCharts';
 import TopExpensesTable from '../../components/features/Reports/components/TopExpensesTable';
@@ -145,17 +146,17 @@ const ReportsPage: React.FC = () => {
         <C.Title>Relatórios</C.Title>
         <C.ExportButtons>
           <C.ExportButton onClick={() => exportTransactionsCSV({ transactions: filteredByDate, categories })}>
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <Icon size={16}>
               <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
               <polyline points="14 2 14 8 20 8" />
-            </svg>
+            </Icon>
             CSV
           </C.ExportButton>
           <C.ExportButton onClick={() => exportTransactionsPDF({ transactions: filteredByDate, categories })}>
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <Icon size={16}>
               <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
               <polyline points="14 2 14 8 20 8" />
-            </svg>
+            </Icon>
             PDF
           </C.ExportButton>
         </C.ExportButtons>

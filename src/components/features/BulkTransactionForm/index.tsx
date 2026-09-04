@@ -8,6 +8,7 @@ import React, { useState } from 'react';
 import { useTransactions } from '../../../hooks/useTransactions';
 import { toInputDate } from '../../../utils/formatters';
 import Button from '../../common/Button';
+import Icon from '../../common/Icon';
 import * as C from './styles';
 
 /**
@@ -210,17 +211,10 @@ const BulkTransactionForm: React.FC = () => {
                 disabled={items.length === 1}
                 aria-label="Remover item"
               >
-                <svg
-                  width="16"
-                  height="16"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                >
+                <Icon size={16}>
                   <line x1="18" y1="6" x2="6" y2="18" />
                   <line x1="6" y1="6" x2="18" y2="18" />
-                </svg>
+                </Icon>
               </C.RemoveButton>
             </C.ItemRow>
           ))}

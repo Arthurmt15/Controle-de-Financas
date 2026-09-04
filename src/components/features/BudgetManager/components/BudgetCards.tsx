@@ -6,6 +6,7 @@
 
 import React from 'react';
 import { formatCurrency } from '../../../../utils/formatters';
+import Icon from '../../../common/Icon';
 import * as C from './BudgetCards.styles';
 import type { Budget, Category } from '../../../../types';
 
@@ -83,10 +84,10 @@ const BudgetCards: React.FC<BudgetCardsProps> = ({
     return (
       <C.EmptyState>
         <C.EmptyIcon>
-          <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+          <Icon size={48}>
             <rect x="2" y="4" width="20" height="16" rx="2" />
             <path d="M2 10h20" />
-          </svg>
+          </Icon>
         </C.EmptyIcon>
         <C.EmptyText>Nenhum orçamento definido para este mês</C.EmptyText>
         <C.EmptyHint>Clique em "Novo Orçamento" para começar</C.EmptyHint>
@@ -114,10 +115,10 @@ const BudgetCards: React.FC<BudgetCardsProps> = ({
                 onClick={() => onDelete(budget.id)}
                 aria-label="Excluir orçamento"
               >
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <Icon size={14}>
                   <line x1="18" y1="6" x2="6" y2="18" />
                   <line x1="6" y1="6" x2="18" y2="18" />
-                </svg>
+                </Icon>
               </C.DeleteButton>
             </C.CardHeader>
 
