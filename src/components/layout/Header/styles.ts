@@ -83,8 +83,16 @@ export const MenuButton = styled.button`
   cursor: pointer;
   transition: all 0.2s ease;
 
+  svg {
+    color: ${({ theme }) => theme.colors.primary};
+  }
+
   &:hover {
     background-color: ${({ theme }) => theme.colors.primary}15;
+
+    svg {
+      color: ${({ theme }) => theme.colors.primary};
+    }
   }
 
   @media (max-width: 768px) {
@@ -159,10 +167,17 @@ export const ThemeToggle = styled.button`
   cursor: pointer;
   transition: all 0.2s ease;
 
+  svg {
+    color: ${({ theme }) => theme.colors.primary};
+  }
+
   &:hover {
     background-color: ${({ theme }) => theme.colors.primary};
     color: white;
-    transform: rotate(15deg);
+
+    svg {
+      color: white;
+    }
   }
 
   &:focus {
@@ -256,9 +271,17 @@ export const LogoutButton = styled.button`
   cursor: pointer;
   transition: all 0.2s ease;
 
+  svg {
+    color: ${({ theme }) => theme.colors.primary};
+  }
+
   &:hover {
     background-color: ${({ theme }) => theme.colors.error};
     color: white;
+
+    svg {
+      color: white;
+    }
   }
 
   &:focus {
