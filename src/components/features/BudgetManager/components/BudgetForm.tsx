@@ -5,7 +5,6 @@
  */
 
 import React, { useState } from 'react';
-import { useLocalStorage } from '../../../../hooks/useLocalStorage';
 import { generateId } from '../../../../utils/helpers';
 import Button from '../../../common/Button';
 import * as C from './BudgetForm.styles';

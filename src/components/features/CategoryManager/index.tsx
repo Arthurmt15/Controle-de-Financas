@@ -9,7 +9,6 @@ import { useTransactions } from '../../../hooks/useTransactions';
 import { getRandomColor } from '../../../utils/formatters';
 import Button from '../../common/Button';
 import * as C from './styles';
-import type { Category } from '../../../types';
 
 /** Lista de ícones disponíveis para categorias */
 const AVAILABLE_ICONS = [

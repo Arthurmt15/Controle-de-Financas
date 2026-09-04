@@ -7,7 +7,6 @@
 import React, { useState, useMemo } from 'react';
 import { useTransactions } from '../../../hooks/useTransactions';
 import { useLocalStorage } from '../../../hooks/useLocalStorage';
-import { getMonthName } from '../../../utils/formatters';
 import BudgetSummary from './components/BudgetSummary';
 import BudgetCards from './components/BudgetCards';
 import BudgetForm from './components/BudgetForm';
@@ -30,15 +29,6 @@ const BudgetManager: React.FC = () => {
   const currentDate = new Date();
   const currentMonth = `${currentDate.getFullYear()}-${String(currentDate.getMonth() + 1).padStart(2, '0')}`;
   const [selectedMonth, setSelectedMonth] = useState(currentMonth);
-
-  /**
-   * Calcula o nome do mês selecionado
-   * @returns Nome do mês por extenso + ano
-   */
-  const monthName = useMemo(() => {
-    const [year, month] = selectedMonth.split('-');
-    return `${getMonthName(parseInt(month) - 1)} ${year}`;
-  }, [selectedMonth]);
 
   /** Orçamentos do mês selecionado */
   const currentBudgets = useMemo(() => {
