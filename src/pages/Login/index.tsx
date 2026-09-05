@@ -246,7 +246,7 @@ const LoginPage: React.FC = () => {
 
           <div className="flex justify-center items-center gap-2 mt-7">
             <span className={classes.registerText}>Ainda não tem uma conta?</span>
-            <a href="#" className={classes.registerLink}>Criar conta</a>
+            <button type="button" className={classes.registerLink}>Criar conta</button>
           </div>
         </div>
       </section>

@@ -5,7 +5,6 @@
  */
 
 import React, { useState, useCallback } from 'react';
-import { useLocation } from 'react-router-dom';
 import { useAuth } from '../../../contexts/AuthContext';
 import { useTheme } from '../../../contexts/ThemeContext';
 import Icon from '../../common/Icon';
@@ -27,7 +26,6 @@ const NAV_ITEMS = [
 const Header: React.FC = () => {
   const { user, logout } = useAuth();
   const { themeType, toggleTheme } = useTheme();
-  const location = useLocation();
   const [menuOpen, setMenuOpen] = useState(false);
 
   /** Alterna o menu mobile */
