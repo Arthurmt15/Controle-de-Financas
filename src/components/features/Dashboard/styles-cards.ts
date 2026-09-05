@@ -1,10 +1,16 @@
 /**
  * @file components/features/Dashboard/styles-cards.ts
  * @description Estilos dos cards de resumo e métricas do Dashboard.
+ * Contém estilos para grid de cards, cards individuais, ícones e textos.
  */
 
 import styled from 'styled-components';
 
+/**
+ * Grid responsivo para cards de resumo
+ * Utiliza CSS Grid com 4 colunas em desktop
+ * Em telas médias, 2 colunas; em telas pequenas, 1 coluna
+ */
 export const SummaryGrid = styled.div`
   display: grid;
   grid-template-columns: repeat(4, 1fr);
@@ -14,6 +20,11 @@ export const SummaryGrid = styled.div`
   @media (max-width: 600px) { grid-template-columns: 1fr; }
 `;
 
+/**
+ * Card de resumo individual
+ * Exibe uma métrica financeira com ícone, valor e subtexto
+ * Layout flexível para alinhar itens horizontalmente
+ */
 export const SummaryCard = styled.div`
   position: relative;
   min-height: 116px;
@@ -29,7 +40,11 @@ export const SummaryCard = styled.div`
   @media (max-width: 600px) { min-height: 100px; }
 `;
 
-/** Ícone do card - usa cores do tema */
+/**
+ * Ícone do card de resumo
+ * Container circular com cor baseada no tipo de métrica
+ * @param {'income' | 'expense' | 'balance' | 'annual'} $variant - Tipo da métrica
+ */
 export const SummaryIcon = styled.div<{ $variant: 'income' | 'expense' | 'balance' | 'annual' }>`
   width: 52px;
   height: 52px;
@@ -50,12 +65,20 @@ export const SummaryIcon = styled.div<{ $variant: 'income' | 'expense' | 'balanc
     $variant === 'balance' ? `${theme.colors.primary}30` : `${theme.colors.info}28`};
 `;
 
+/**
+ * Rótulo/descrição do card
+ * Texto pequeno e secundário que descreve a métrica
+ */
 export const SummaryLabel = styled.span`
   display: block;
   color: ${({ theme }) => theme.colors.textSecondary};
   font-size: 12px;
 `;
 
+/**
+ * Valor principal do card
+ * Texto grande e negrito que exibe o valor formatado
+ */
 export const SummaryValue = styled.strong`
   display: block;
   margin-top: 7px;
@@ -63,6 +86,10 @@ export const SummaryValue = styled.strong`
   color: ${({ theme }) => theme.colors.text};
 `;
 
+/**
+ * Texto secundário do card
+ * Exibe informações complementares como variação percentual
+ */
 export const SummarySubtext = styled.small`
   display: block;
   margin-top: 7px;
@@ -70,6 +97,11 @@ export const SummarySubtext = styled.small`
   font-size: 11px;
 `;
 
+/**
+ * Botão de opções (três pontos)
+ * Posicionado no canto superior direito do card
+ * Transparente por padrão, com hover sutil
+ */
 export const DotsButton = styled.button`
   position: absolute;
   right: 12px;

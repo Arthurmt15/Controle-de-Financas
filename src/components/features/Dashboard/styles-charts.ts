@@ -1,10 +1,16 @@
 /**
  * @file components/features/Dashboard/styles-charts.ts
  * @description Estilos dos gráficos, painéis e transações do Dashboard.
+ * Contém estilos para grid de gráficos, painéis, legendas e lista de transações.
  */
 
 import styled from 'styled-components';
 
+/**
+ * Grid responsivo para layout dos gráficos
+ * Utiliza CSS Grid para organizar gráficos lado a lado
+ * Em telas pequenas, empilha verticalmente
+ */
 export const ChartsGrid = styled.div`
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -12,6 +18,12 @@ export const ChartsGrid = styled.div`
   @media (max-width: 850px) { grid-template-columns: 1fr; }
 `;
 
+/**
+ * Painel container para gráficos
+ * Posição relativa para permitir posicionamento absoluto de elementos filhos
+ * Altura configurável via prop $height
+ * @param {string} $height - Altura personalizada do painel
+ */
 export const Panel = styled.div<{ $height?: string }>`
   position: relative;
   border: 1px solid ${({ theme }) => theme.colors.border};
@@ -25,6 +37,11 @@ export const Panel = styled.div<{ $height?: string }>`
   @media (max-width: 600px) { height: 350px; }
 `;
 
+/**
+ * Cabeçalho do painel
+ * Contém título e controles de filtro
+ * Altura fixa para alinhamento consistente
+ */
 export const PanelHeader = styled.div`
   height: 65px;
   display: flex;
@@ -38,6 +55,10 @@ export const PanelHeader = styled.div`
   }
 `;
 
+/**
+ * Select dropdown para filtros do painel
+ * Estilizado para combinar com o design do tema
+ */
 export const PanelSelect = styled.select`
   height: 35px;
   padding: 0 12px;
@@ -49,6 +70,11 @@ export const PanelSelect = styled.select`
   @media (max-width: 600px) { font-size: 10px; padding: 0 8px; }
 `;
 
+/**
+ * Mensagem de estado vazio para gráficos
+ * Posicionamento absoluto para cobrir todo o painel
+ * pointer-events: none para não bloquear cliques em elementos subjacentes
+ */
 export const EmptyChartMessage = styled.div`
   position: absolute;
   inset: 0;
@@ -58,10 +84,15 @@ export const EmptyChartMessage = styled.div`
   flex-direction: column;
   gap: 8px;
   text-align: center;
+  pointer-events: none;
   strong { font-size: 13px; }
   span { color: ${({ theme }) => theme.colors.textSecondary}; font-size: 12px; }
 `;
 
+/**
+ * Ícone de estado vazio para gráficos
+ * Container circular com borda e fundo semi-transparente
+ */
 export const EmptyIcon = styled.div`
   width: 55px;
   height: 55px;
@@ -75,6 +106,10 @@ export const EmptyIcon = styled.div`
   font-size: 25px;
 `;
 
+/**
+ * Container da legenda dos gráficos
+ * Centraliza itens de legenda horizontalmente
+ */
 export const Legend = styled.div`
   display: flex;
   justify-content: center;
@@ -85,6 +120,11 @@ export const Legend = styled.div`
   span { display: flex; align-items: center; gap: 7px; }
 `;
 
+/**
+ * Dot indicador de cor na legenda
+ * Circulo pequeno que representa a cor da série no gráfico
+ * @param {string} $color - Cor do dot
+ */
 export const Dot = styled.span<{ $color: string }>`
   width: 10px;
   height: 10px;
@@ -92,6 +132,11 @@ export const Dot = styled.span<{ $color: string }>`
   background: ${({ $color }) => $color};
 `;
 
+/**
+ * Mensagem de estado vazio para categorias
+ * Altura fixa para manter consistência visual
+ * pointer-events: none para não bloquear cliques
+ */
 export const CategoryEmpty = styled.div`
   height: 320px;
   display: flex;
@@ -100,10 +145,15 @@ export const CategoryEmpty = styled.div`
   justify-content: center;
   gap: 9px;
   text-align: center;
+  pointer-events: none;
   strong { font-size: 13px; }
   span { color: ${({ theme }) => theme.colors.textSecondary}; font-size: 12px; }
 `;
 
+/**
+ * Ícone de estado vazio para categorias
+ * Container circular com borda e fundo semi-transparente
+ */
 export const CategoryIcon = styled.div`
   width: 55px;
   height: 55px;
@@ -117,6 +167,10 @@ export const CategoryIcon = styled.div`
   font-size: 25px;
 `;
 
+/**
+ * Container da lista de transações
+ * Bordas e background consistente com o tema
+ */
 export const Transactions = styled.div`
   margin-top: 15px;
   border: 1px solid ${({ theme }) => theme.colors.border};
@@ -127,6 +181,10 @@ export const Transactions = styled.div`
   overflow: hidden;
 `;
 
+/**
+ * Cabeçalho da seção de transações
+ * Contém título e separador visual
+ */
 export const TransactionsHeader = styled.div`
   height: 55px;
   display: flex;
@@ -137,6 +195,10 @@ export const TransactionsHeader = styled.div`
   h2 { font-size: 15px; }
 `;
 
+/**
+ * Mensagem de estado vazio para transações
+ * Altura fixa para manter layout consistente
+ */
 export const TransactionsEmpty = styled.div`
   height: 110px;
   display: flex;
@@ -146,6 +208,11 @@ export const TransactionsEmpty = styled.div`
   gap: 6px;
 `;
 
+/**
+ * Ícone de tipo de transação
+ * Container quadrado com bordas arredondadas
+ * Usado para exibir ícones de entrada/saída
+ */
 export const TransactionIcon = styled.div`
   width: 35px;
   height: 35px;

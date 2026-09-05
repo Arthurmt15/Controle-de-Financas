@@ -8,6 +8,7 @@
 import React, { useEffect, useRef } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useTheme } from '../../contexts/ThemeContext';
+import Icon from '../../components/common/Icon';
 
 /**
  * ID do cliente Google (substitua pelo seu)
@@ -24,7 +25,7 @@ const GOOGLE_CLIENT_ID = process.env.REACT_APP_GOOGLE_CLIENT_ID || '';
  */
 const LoginPage: React.FC = () => {
   const { isAuthenticated, error, clearError, loginWithGoogle } = useAuth();
-  const { themeType, toggleTheme } = useTheme();
+  const { themeType, toggleTheme, theme } = useTheme();
   const googleButtonRef = useRef<HTMLDivElement>(null);
 
   /**
@@ -115,22 +116,9 @@ const LoginPage: React.FC = () => {
         : 'w-full max-w-lg p-10 lg:p-12 bg-gradient-to-br from-[rgba(255,255,255,0.96)] to-[rgba(255,255,255,0.98)] border border-gray-200 rounded-3xl shadow-[0_30px_80px_rgba(0,0,0,0.1)]',
       title: isDark ? 'text-white text-3xl font-bold' : 'text-gray-900 text-3xl font-bold',
       subtitle: 'text-gray-400 text-base',
-      input: isDark
-        ? 'w-full h-14 px-4 bg-[#090e19] border border-gray-700 rounded-lg outline-none text-white text-sm focus:border-[#6366f1] focus:shadow-[0_0_0_3px_rgba(99,102,241,0.12)]'
-        : 'w-full h-14 px-4 bg-white border border-gray-300 rounded-lg outline-none text-gray-900 text-sm focus:border-[#6366f1] focus:shadow-[0_0_0_3px_rgba(99,102,241,0.12)]',
-      label: isDark ? 'block mb-2 text-sm font-medium text-white' : 'block mb-2 text-sm font-medium text-gray-900',
-      dividerLine: 'flex-1 h-px bg-gray-700',
-      dividerText: 'text-gray-500 text-xs',
-      googleIcon: 'text-xl font-bold text-[#4285f4]',
-      passwordToggle: 'absolute right-4 top-1/2 -translate-y-1/2 border-none bg-transparent text-gray-400 cursor-pointer',
-      rememberLabel: isDark
-        ? 'flex items-center gap-2 text-gray-400 cursor-pointer text-xs'
-        : 'flex items-center gap-2 text-gray-500 cursor-pointer text-xs',
-      forgotPassword: 'text-[#6366f1] text-xs hover:text-white',
-      loginButton: 'w-full h-14 rounded-lg bg-gradient-to-r from-[#4f46e5] to-[#6366f1] text-white text-base font-semibold cursor-pointer hover:-translate-y-0.5 hover:shadow-[0_10px_25px_rgba(99,102,241,0.35)]',
       registerText: 'text-gray-500 text-xs',
       registerLink: 'text-[#6366f1] text-xs hover:text-white',
-      themeButton: 'absolute top-4 right-4 w-10 h-10 rounded-full border-none bg-gray-100 dark:bg-gray-800 text-xl cursor-pointer hover:scale-110',
+      themeButton: `absolute top-4 right-4 w-10 h-10 rounded-full border-none bg-white flex items-center justify-center cursor-pointer hover:scale-110 shadow-lg`,
     };
   };
 
@@ -222,7 +210,23 @@ const LoginPage: React.FC = () => {
       <section className={classes.loginSection}>
         <div className={classes.loginCard} style={{ position: 'relative' }}>
           <button className={classes.themeButton} onClick={toggleTheme} aria-label="Alternar tema">
-            {themeType === 'light' ? '🌙' : '☀️'}
+            {themeType === 'light' ? (
+              <Icon color={theme.colors.primary}>
+                <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
+              </Icon>
+            ) : (
+              <Icon color={theme.colors.primary}>
+                <circle cx="12" cy="12" r="5" />
+                <line x1="12" y1="1" x2="12" y2="3" />
+                <line x1="12" y1="21" x2="12" y2="23" />
+                <line x1="4.22" y1="4.22" x2="5.64" y2="5.64" />
+                <line x1="18.36" y1="18.36" x2="19.78" y2="19.78" />
+                <line x1="1" y1="12" x2="3" y2="12" />
+                <line x1="21" y1="12" x2="23" y2="12" />
+                <line x1="4.22" y1="19.78" x2="5.64" y2="18.36" />
+                <line x1="18.36" y1="5.64" x2="19.78" y2="4.22" />
+              </Icon>
+            )}
           </button>
 
           <div className="text-center mb-9">
@@ -239,35 +243,6 @@ const LoginPage: React.FC = () => {
           )}
 
           <div ref={googleButtonRef} className="w-full flex justify-center" />
-
-          <div className="flex items-center gap-4 my-7">
-            <span className={classes.dividerLine} />
-            <small className={classes.dividerText}>ou</small>
-            <span className={classes.dividerLine} />
-          </div>
-
-          <div className="mb-5">
-            <label className={classes.label} htmlFor="email">E-mail</label>
-            <input className={classes.input} id="email" type="email" placeholder="seu@email.com" disabled />
-          </div>
-
-          <div className="mb-5">
-            <label className={classes.label} htmlFor="password">Senha</label>
-            <div className="relative">
-              <input className={classes.input} id="password" type="password" placeholder="Sua senha" disabled />
-              <button type="button" className={classes.passwordToggle} aria-label="Mostrar senha">◉</button>
-            </div>
-          </div>
-
-          <div className="flex items-center justify-between mb-6 text-xs">
-            <label className={classes.rememberLabel}>
-              <input type="checkbox" disabled className="w-4 h-4 accent-[#6366f1]" />
-              <span>Lembrar de mim</span>
-            </label>
-            <a href="#" className={classes.forgotPassword}>Esqueceu sua senha?</a>
-          </div>
-
-          <button type="button" className={classes.loginButton} disabled>Entrar</button>
 
           <div className="flex justify-center items-center gap-2 mt-7">
             <span className={classes.registerText}>Ainda não tem uma conta?</span>

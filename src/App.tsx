@@ -8,6 +8,7 @@ import React, { Suspense, lazy } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { ThemeProvider, useTheme } from './contexts/ThemeContext';
+import { TransactionsProvider } from './contexts/TransactionsContext';
 import { ThemeProvider as StyledThemeProvider } from 'styled-components';
 import Header from './components/layout/Header';
 import SkipLink from './components/common/SkipLink';
@@ -67,17 +68,19 @@ const MainLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => (
  * Rotas autenticadas
  */
 const AuthenticatedRoutes: React.FC = () => (
-  <MainLayout>
-    <Suspense fallback={<LoadingFallback />}>
-      <Routes>
-        <Route path="/dashboard" element={<DashboardPage />} />
-        <Route path="/transactions" element={<TransactionsPage />} />
-        <Route path="/reports" element={<ReportsPage />} />
-        <Route path="/settings" element={<SettingsPage />} />
-        <Route path="*" element={<Navigate to="/dashboard" replace />} />
-      </Routes>
-    </Suspense>
-  </MainLayout>
+  <TransactionsProvider>
+    <MainLayout>
+      <Suspense fallback={<LoadingFallback />}>
+        <Routes>
+          <Route path="/dashboard" element={<DashboardPage />} />
+          <Route path="/transactions" element={<TransactionsPage />} />
+          <Route path="/reports" element={<ReportsPage />} />
+          <Route path="/settings" element={<SettingsPage />} />
+          <Route path="*" element={<Navigate to="/dashboard" replace />} />
+        </Routes>
+      </Suspense>
+    </MainLayout>
+  </TransactionsProvider>
 );
 
 /**
