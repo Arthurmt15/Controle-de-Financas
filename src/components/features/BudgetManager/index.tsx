@@ -25,8 +25,8 @@ const BudgetManager: React.FC = () => {
 
   /** Lista de orçamentos carregados da API */
   const [budgets, setBudgets] = useState<Budget[]>([]);
-  /** Estado de carregamento */
-  const [loading, setLoading] = useState(false);
+  /** Estado de carregamento (usado internamente) */
+  const [, setLoading] = useState(false);
 
   /** Mês selecionado (formato YYYY-MM) */
   const currentDate = new Date();
