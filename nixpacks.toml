@@ -1,0 +1,11 @@
+[phases.setup]
+nixPkgs = ["nodejs_24"]
+
+[phases.install]
+cmds = ["cd server && npm install --include=dev"]
+
+[phases.build]
+cmds = ["cd server && npm run build"]
+
+[start]
+cmd = "cd server && node dist/index.js"
