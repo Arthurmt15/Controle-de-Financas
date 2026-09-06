@@ -1,13 +1,8 @@
 {
-  "build": {
-    "builder": "NIXPACKS",
-    "buildCommand": "npm install && npm run build"
-  },
-  "deploy": {
-    "startCommand": "npx serve -s build -l 3000",
-    "healthcheckPath": "/",
-    "environmentVariables": {
-      "REACT_APP_API_URL": "https://seu-backend.up.railway.app/api"
+  "rewrites": [
+    {
+      "source": "/((?!api/).*)",
+      "destination": "/index.html"
     }
-  }
+  ]
 }
