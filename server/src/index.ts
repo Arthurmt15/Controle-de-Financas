@@ -24,8 +24,21 @@ const PORT = process.env.PORT || 5000;
  * Middleware de CORS
  * Permite requisições do frontend em desenvolvimento e produção
  */
+const allowedOrigins = [
+  process.env.FRONTEND_URL,
+  'http://localhost:3000',
+  'https://controle-de-financas.vercel.app',
+].filter(Boolean);
+
 app.use(cors({
-  origin: process.env.FRONTEND_URL || 'http://localhost:3000',
+  origin: (origin, callback) => {
+    // Permite requisições sem origin (ex: ferramentas de API)
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error('Não permitido pelo CORS'));
+    }
+  },
   credentials: true,
 }));
 
