@@ -1,11 +1,10 @@
 /**
  * @file components/features/BudgetManager/components/BudgetForm.tsx
  * @description Formulário para adicionar novo orçamento mensal.
- * Permite selecionar categoria e definir limite mensal.
+ * Envia dados via API em vez de atualizar localStorage diretamente.
  */
 
 import React, { useState } from 'react';
-import { generateId } from '../../../../utils/helpers';
 import Button from '../../../common/Button';
 import * as C from './BudgetForm.styles';
 import type { Budget, Category } from '../../../../types';
@@ -16,36 +15,23 @@ import type { Budget, Category } from '../../../../types';
 interface BudgetFormProps {
   /** Mês selecionado (formato YYYY-MM) */
   selectedMonth: string;
-  /** Lista de orçamentos existentes */
-  budgets: Budget[];
-  /** Função para atualizar orçamentos */
-  setBudgets: React.Dispatch<React.SetStateAction<Budget[]>>;
   /** Lista de categorias disponíveis */
   categories: Category[];
   /** Orçamentos do mês atual */
   currentBudgets: Budget[];
+  /** Callback para adicionar orçamento via API */
+  onAddBudget: (budget: Omit<Budget, 'id'>) => Promise<void>;
 }
 
 /**
  * Formulário de novo orçamento
- * @param {BudgetFormProps} props - Props do componente
- * @returns {JSX.Element} Formulário renderizado
- *
- * @example
- * <BudgetForm
- *   selectedMonth="2026-09"
- *   budgets={budgets}
- *   setBudgets={setBudgets}
- *   categories={categories}
- *   currentBudgets={currentBudgets}
- * />
+ * Valida dados e envia via callback para a API
  */
 const BudgetForm: React.FC<BudgetFormProps> = ({
   selectedMonth,
-  budgets,
-  setBudgets,
   categories,
   currentBudgets,
+  onAddBudget,
 }) => {
   /** Estado do formulário */
   const [newBudget, setNewBudget] = useState({ categoryId: '', limit: '' });
@@ -53,6 +39,8 @@ const BudgetForm: React.FC<BudgetFormProps> = ({
   const [error, setError] = useState('');
   /** Controle de visibilidade do formulário */
   const [isAdding, setIsAdding] = useState(false);
+  /** Estado de carregamento durante envio */
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   /** Categorias de despesa disponíveis */
   const expenseCategories = categories.filter(
@@ -65,10 +53,10 @@ const BudgetForm: React.FC<BudgetFormProps> = ({
   );
 
   /**
-   * Adiciona um novo orçamento
-   * Valida dados, gera ID e salva no estado
+   * Adiciona um novo orçamento via API
+   * Valida dados, envia para o servidor e reseta o formulário
    */
-  const handleAddBudget = () => {
+  const handleAddBudget = async () => {
     if (!newBudget.categoryId) {
       setError('Selecione uma categoria');
       return;
@@ -86,22 +74,24 @@ const BudgetForm: React.FC<BudgetFormProps> = ({
       return;
     }
 
-    const budget: Budget = {
-      id: generateId(),
-      categoryId: newBudget.categoryId,
-      limit,
-      month: selectedMonth,
-    };
-
-    setBudgets((prev) => [...prev, budget]);
-    setNewBudget({ categoryId: '', limit: '' });
-    setError('');
-    setIsAdding(false);
+    setIsSubmitting(true);
+    try {
+      await onAddBudget({
+        categoryId: newBudget.categoryId,
+        limit,
+        month: selectedMonth,
+      });
+      setNewBudget({ categoryId: '', limit: '' });
+      setError('');
+      setIsAdding(false);
+    } catch (err) {
+      setError('Erro ao salvar orçamento');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
-  /**
-   * Cancela a adição e reseta o formulário
-   */
+  /** Cancela a adição e reseta o formulário */
   const handleCancel = () => {
     setIsAdding(false);
     setError('');
@@ -159,7 +149,9 @@ const BudgetForm: React.FC<BudgetFormProps> = ({
 
       <C.FormActions>
         <Button variant="ghost" onClick={handleCancel}>Cancelar</Button>
-        <Button onClick={handleAddBudget}>Adicionar</Button>
+        <Button onClick={handleAddBudget} isLoading={isSubmitting}>
+          Adicionar
+        </Button>
       </C.FormActions>
     </C.AddForm>
   );

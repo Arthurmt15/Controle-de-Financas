@@ -1,6 +1,13 @@
 {
-  "buildCommand": "npm run build",
-  "outputDirectory": "build",
-  "framework": "create-react-app",
-  "installCommand": "npm install --legacy-peer-deps"
+  "build": {
+    "builder": "NIXPACKS",
+    "buildCommand": "npm install && npm run build"
+  },
+  "deploy": {
+    "startCommand": "npx serve -s build -l 3000",
+    "healthcheckPath": "/",
+    "environmentVariables": {
+      "REACT_APP_API_URL": "https://seu-backend.up.railway.app/api"
+    }
+  }
 }

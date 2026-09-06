@@ -1,14 +1,15 @@
 /**
  * @file contexts/TransactionsContext.tsx
  * @description Contexto compartilhado para transações financeiras.
- * Garante que TransactionForm e TransactionList compartilhem o mesmo estado,
- * permitindo atualização automática ao adicionar/editar/excluir transações.
+ * Usa API backend (Railway/PostgreSQL) para persistir dados.
+ * Filtros permanecem no localStorage (são estado de UI).
  */
 
-import React, { createContext, useContext, useReducer, useCallback, useMemo } from 'react';
+import React, { createContext, useContext, useReducer, useCallback, useMemo, useEffect } from 'react';
 import { useLocalStorage } from '../hooks/useLocalStorage';
+import { useAuth } from './AuthContext';
+import { transactionService, categoryService } from '../services/api';
 import { transactionReducer } from '../reducers/transactionReducer';
-import { generateId } from '../utils/helpers';
 import { filterTransactions } from '../utils/transactionFilters';
 import { calculateMetrics } from '../utils/transactionMetrics';
 import type {
@@ -21,18 +22,7 @@ import type {
 /** Estado inicial do reducer de transações */
 const initialState: TransactionState = {
   transactions: [],
-  categories: [
-    { id: '1', name: 'Alimentação', color: '#FF6B6B', icon: 'FaUtensils', defaultType: 'expense' },
-    { id: '2', name: 'Transporte', color: '#4ECDC4', icon: 'FaCar', defaultType: 'expense' },
-    { id: '3', name: 'Moradia', color: '#45B7D1', icon: 'FaHome', defaultType: 'expense' },
-    { id: '4', name: 'Lazer', color: '#96CEB4', icon: 'FaGamepad', defaultType: 'expense' },
-    { id: '5', name: 'Saúde', color: '#FFEAA7', icon: 'FaHeartbeat', defaultType: 'expense' },
-    { id: '6', name: 'Educação', color: '#DDA0DD', icon: 'FaGraduationCap', defaultType: 'expense' },
-    { id: '7', name: 'Salário', color: '#00B894', icon: 'FaMoneyBillWave', defaultType: 'income' },
-    { id: '8', name: 'Freelance', color: '#6C5CE7', icon: 'FaLaptop', defaultType: 'income' },
-    { id: '9', name: 'Investimentos', color: '#FDCB6E', icon: 'FaChartLine', defaultType: 'income' },
-    { id: '10', name: 'Outros', color: '#636E72', icon: 'FaEllipsisH', defaultType: 'both' },
-  ],
+  categories: [],
   filters: {
     startDate: null,
     endDate: null,
@@ -50,31 +40,27 @@ const initialState: TransactionState = {
 interface TransactionsContextValue extends TransactionState {
   filteredTransactions: Transaction[];
   metrics: ReturnType<typeof calculateMetrics>;
-  addTransaction: (transaction: Omit<Transaction, 'id'>) => void;
-  updateTransaction: (transaction: Transaction) => void;
-  deleteTransaction: (transactionId: string) => void;
-  addCategory: (category: Omit<Category, 'id'>) => void;
-  deleteCategory: (categoryId: string) => void;
+  addTransaction: (transaction: Omit<Transaction, 'id'>) => Promise<void>;
+  updateTransaction: (transaction: Transaction) => Promise<void>;
+  deleteTransaction: (transactionId: string) => Promise<void>;
+  addCategory: (category: Omit<Category, 'id'>) => Promise<void>;
+  deleteCategory: (categoryId: string) => Promise<void>;
   setFilters: (filters: Partial<TransactionFilters>) => void;
   clearFilters: () => void;
 }
 
-/** Contexto de transações (undefined por padrão) */
+/** Contexto de transações */
 const TransactionsContext = createContext<TransactionsContextValue | undefined>(undefined);
 
 /**
  * Provider de transações
- * Compartilha estado entre todos os componentes que usam useTransactions
+ * Carrega dados da API ao montar e sincroniza mudanças
  */
 export function TransactionsProvider({ children }: { children: React.ReactNode }) {
-  const [storedTransactions, setStoredTransactions] = useLocalStorage<Transaction[]>(
-    'financas_transactions',
-    initialState.transactions
-  );
-  const [storedCategories, setStoredCategories] = useLocalStorage<Category[]>(
-    'financas_categories',
-    initialState.categories
-  );
+  const { user } = useAuth();
+  const userId = user?.id || '';
+
+  // Filtros permanecem no localStorage (estado de UI)
   const [storedFilters, setStoredFilters] = useLocalStorage<TransactionFilters>(
     'financas_filters',
     initialState.filters
@@ -82,64 +68,138 @@ export function TransactionsProvider({ children }: { children: React.ReactNode }
 
   const [state, dispatch] = useReducer(transactionReducer, {
     ...initialState,
-    transactions: storedTransactions,
-    categories: storedCategories,
     filters: storedFilters,
   });
 
-  /** Adiciona uma nova transação e persiste no localStorage */
+  /**
+   * Carrega dados do banco quando o usuário está autenticado
+   * Busca transações e categorias da API
+   */
+  useEffect(() => {
+    if (!userId) return;
+
+    const loadData = async () => {
+      dispatch({ type: 'SET_LOADING', payload: true });
+      try {
+        // Busca transações e categorias em paralelo
+        const [transactions, categories] = await Promise.all([
+          transactionService.getAll(userId),
+          categoryService.getAll(userId),
+        ]);
+
+        dispatch({ type: 'SET_TRANSACTIONS', payload: transactions });
+        dispatch({ type: 'SET_CATEGORIES', payload: categories });
+        dispatch({ type: 'SET_ERROR', payload: null });
+      } catch (error) {
+        console.error('Erro ao carregar dados:', error);
+        dispatch({ type: 'SET_ERROR', payload: 'Erro ao carregar dados do servidor' });
+      } finally {
+        dispatch({ type: 'SET_LOADING', payload: false });
+      }
+    };
+
+    loadData();
+  }, [userId]);
+
+  /**
+   * Adiciona uma nova transação via API
+   * Atualiza estado local after sucesso no servidor
+   */
   const addTransaction = useCallback(
-    (transaction: Omit<Transaction, 'id'>) => {
-      const newTransaction: Transaction = { ...transaction, id: generateId() };
-      dispatch({ type: 'ADD_TRANSACTION', payload: newTransaction });
-      setStoredTransactions([...state.transactions, newTransaction]);
+    async (transaction: Omit<Transaction, 'id'>) => {
+      try {
+        dispatch({ type: 'SET_LOADING', payload: true });
+        const newTransaction = await transactionService.create(transaction, userId);
+        dispatch({ type: 'ADD_TRANSACTION', payload: newTransaction });
+      } catch (error) {
+        console.error('Erro ao adicionar transação:', error);
+        dispatch({ type: 'SET_ERROR', payload: 'Erro ao salvar transação' });
+      } finally {
+        dispatch({ type: 'SET_LOADING', payload: false });
+      }
     },
-    [state.transactions, setStoredTransactions]
+    [userId]
   );
 
-  /** Atualiza uma transação existente */
+  /**
+   * Atualiza uma transação existente via API
+   */
   const updateTransaction = useCallback(
-    (transaction: Transaction) => {
-      dispatch({ type: 'UPDATE_TRANSACTION', payload: transaction });
-      const updated = state.transactions.map((t) =>
-        t.id === transaction.id ? transaction : t
-      );
-      setStoredTransactions(updated);
+    async (transaction: Transaction) => {
+      try {
+        dispatch({ type: 'SET_LOADING', payload: true });
+        const updated = await transactionService.update(transaction);
+        dispatch({ type: 'UPDATE_TRANSACTION', payload: updated });
+      } catch (error) {
+        console.error('Erro ao atualizar transação:', error);
+        dispatch({ type: 'SET_ERROR', payload: 'Erro ao atualizar transação' });
+      } finally {
+        dispatch({ type: 'SET_LOADING', payload: false });
+      }
     },
-    [state.transactions, setStoredTransactions]
+    []
   );
 
-  /** Remove uma transação pelo ID */
+  /**
+   * Remove uma transação via API
+   */
   const deleteTransaction = useCallback(
-    (transactionId: string) => {
-      dispatch({ type: 'DELETE_TRANSACTION', payload: transactionId });
-      const updated = state.transactions.filter((t) => t.id !== transactionId);
-      setStoredTransactions(updated);
+    async (transactionId: string) => {
+      try {
+        dispatch({ type: 'SET_LOADING', payload: true });
+        await transactionService.delete(transactionId);
+        dispatch({ type: 'DELETE_TRANSACTION', payload: transactionId });
+      } catch (error) {
+        console.error('Erro ao remover transação:', error);
+        dispatch({ type: 'SET_ERROR', payload: 'Erro ao remover transação' });
+      } finally {
+        dispatch({ type: 'SET_LOADING', payload: false });
+      }
     },
-    [state.transactions, setStoredTransactions]
+    []
   );
 
-  /** Adiciona uma nova categoria */
+  /**
+   * Adiciona uma nova categoria via API
+   */
   const addCategory = useCallback(
-    (category: Omit<Category, 'id'>) => {
-      const newCategory: Category = { ...category, id: generateId() };
-      dispatch({ type: 'ADD_CATEGORY', payload: newCategory });
-      setStoredCategories([...state.categories, newCategory]);
+    async (category: Omit<Category, 'id'>) => {
+      try {
+        dispatch({ type: 'SET_LOADING', payload: true });
+        const newCategory = await categoryService.create(category, userId);
+        dispatch({ type: 'ADD_CATEGORY', payload: newCategory });
+      } catch (error) {
+        console.error('Erro ao adicionar categoria:', error);
+        dispatch({ type: 'SET_ERROR', payload: 'Erro ao salvar categoria' });
+      } finally {
+        dispatch({ type: 'SET_LOADING', payload: false });
+      }
     },
-    [state.categories, setStoredCategories]
+    [userId]
   );
 
-  /** Remove uma categoria pelo ID */
+  /**
+   * Remove uma categoria via API
+   */
   const deleteCategory = useCallback(
-    (categoryId: string) => {
-      dispatch({ type: 'DELETE_CATEGORY', payload: categoryId });
-      const updated = state.categories.filter((c) => c.id !== categoryId);
-      setStoredCategories(updated);
+    async (categoryId: string) => {
+      try {
+        dispatch({ type: 'SET_LOADING', payload: true });
+        await categoryService.delete(categoryId);
+        dispatch({ type: 'DELETE_CATEGORY', payload: categoryId });
+      } catch (error) {
+        console.error('Erro ao remover categoria:', error);
+        dispatch({ type: 'SET_ERROR', payload: 'Erro ao remover categoria' });
+      } finally {
+        dispatch({ type: 'SET_LOADING', payload: false });
+      }
     },
-    [state.categories, setStoredCategories]
+    []
   );
 
-  /** Atualiza os filtros de transação */
+  /**
+   * Atualiza os filtros de transação (salvo no localStorage)
+   */
   const setFilters = useCallback(
     (filters: Partial<TransactionFilters>) => {
       dispatch({ type: 'SET_FILTERS', payload: filters });
@@ -148,7 +208,9 @@ export function TransactionsProvider({ children }: { children: React.ReactNode }
     [state.filters, setStoredFilters]
   );
 
-  /** Limpa todos os filtros aplicados */
+  /**
+   * Limpa todos os filtros aplicados
+   */
   const clearFilters = useCallback(() => {
     dispatch({ type: 'CLEAR_FILTERS' });
     setStoredFilters(initialState.filters);
@@ -166,7 +228,7 @@ export function TransactionsProvider({ children }: { children: React.ReactNode }
     [state.transactions]
   );
 
-  /** Valor do contexto (memoizado para evitar re-renders desnecessários) */
+  /** Valor do contexto (memoizado) */
   const value = useMemo<TransactionsContextValue>(
     () => ({
       transactions: state.transactions,
@@ -202,7 +264,6 @@ export function TransactionsProvider({ children }: { children: React.ReactNode }
 
 /**
  * Hook para acessar o contexto de transações
- * Garante que todos os componentes compartilhem o mesmo estado
  */
 export function useTransactions(): TransactionsContextValue {
   const context = useContext(TransactionsContext);

@@ -1,11 +1,13 @@
 /**
  * @file contexts/AuthContext.tsx
  * @description Contexto de autenticação com Google OAuth.
- * Utiliza @react-oauth/google para autenticação segura via Google.
+ * Utiliza API backend (Railway/PostgreSQL) para persistir dados do usuário.
+ * Mantém localStorage como cache para sessão offline.
  */
 
 import React, { createContext, useContext, useCallback, useEffect, useReducer } from 'react';
 import { useLocalStorage } from '../hooks/useLocalStorage';
+import { userService } from '../services/api';
 import type { User, AuthState, AuthAction } from '../types';
 
 /**
@@ -22,10 +24,6 @@ interface GooglePayload {
  * Decodifica um token JWT do Google
  * @param {string} token - Token JWT do Google
  * @returns {GooglePayload} Payload decodificado com dados do usuário
- *
- * @example
- * const payload = decodeGoogleToken(credentialResponse.credential);
- * console.log(payload.name); // "Arthur Oliveira"
  */
 function decodeGoogleToken(token: string): GooglePayload {
   try {
@@ -54,9 +52,6 @@ const initialState: AuthState = {
 
 /**
  * Reducer para gerenciar ações de autenticação
- * @param {AuthState} state - Estado atual
- * @param {AuthAction} action - Ação a ser executada
- * @returns {AuthState} Novo estado
  */
 function authReducer(state: AuthState, action: AuthAction): AuthState {
   switch (action.type) {
@@ -87,14 +82,14 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 /**
  * Provider de autenticação
- * @param {object} props - Props do provider
- * @param {React.ReactNode} props.children - Componentes filhos
+ * Salva usuário no localStorage (cache) e cria registro no banco via API
  */
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [storedUser, setStoredUser, removeStoredUser] = useLocalStorage<User | null>(
     'financas_user',
     null
   );
+
   const [state, dispatch] = useReducer(authReducer, {
     ...initialState,
     user: storedUser,
@@ -110,20 +105,33 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   /**
    * Realiza o login com Google OAuth
-   * Decodifica o token JWT e extrai dados do usuário
-   * @param {object} credentialResponse - Resposta do Google com credential
+   * Decodifica o token, cria/busca usuário no banco e salva no localStorage
    */
   const loginWithGoogle = useCallback(
-    (credentialResponse: { credential: string }) => {
+    async (credentialResponse: { credential: string }) => {
       try {
         dispatch({ type: 'LOGIN_START' });
+
+        // Decodifica o token JWT do Google
         const payload = decodeGoogleToken(credentialResponse.credential);
-        const user: User = {
-          id: payload.sub,
+
+        // Cria ou busca o usuário no banco de dados (Railway)
+        const dbUser = await userService.createOrFind({
+          googleId: payload.sub,
           name: payload.name,
           email: payload.email,
           avatar: payload.picture,
+        });
+
+        // Monta o objeto User para o estado
+        const user: User = {
+          id: dbUser.id || payload.sub,
+          name: dbUser.name || payload.name,
+          email: dbUser.email || payload.email,
+          avatar: dbUser.avatar || payload.picture,
         };
+
+        // Salva no estado e no localStorage (cache)
         dispatch({ type: 'LOGIN_SUCCESS', payload: user });
         setStoredUser(user);
       } catch (error) {
@@ -157,8 +165,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
 /**
  * Hook para acessar contexto de autenticação
- * @returns {AuthContextType} Valores e funções de autenticação
- * @throws {Error} Se usado fora do AuthProvider
  */
 export function useAuth(): AuthContextType {
   const context = useContext(AuthContext);
