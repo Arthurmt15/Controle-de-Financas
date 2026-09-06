@@ -19,8 +19,10 @@ router.get('/:userId', async (req: Request, res: Response) => {
     const { userId } = req.params;
 
     // Busca orçamentos com JOIN na categoria para obter detalhes
+    // Mapeia budget_limit para limit para manter compatibilidade com o frontend
     const result = await pool.query(
-      `SELECT b.*, c.name as category_name, c.color as category_color, c.icon as category_icon
+      `SELECT b.id, b.user_id, b.category_id, b."budget_limit" as "limit", b.month, b.created_at,
+              c.name as category_name, c.color as category_color, c.icon as category_icon
        FROM budgets b
        LEFT JOIN categories c ON b.category_id = c.id
        WHERE b.user_id = $1
@@ -82,11 +84,11 @@ router.post('/', async (req: Request, res: Response) => {
     // Gera ID único baseado no timestamp
     const budgetId = `${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
 
-    // Insere o orçamento no banco
+    // Insere o orçamento no banco (limit -> budget_limit)
     const result = await pool.query(
-      `INSERT INTO budgets (id, user_id, category_id, limit, month)
+      `INSERT INTO budgets (id, user_id, category_id, "budget_limit", month)
        VALUES ($1, $2, $3, $4, $5)
-       RETURNING *`,
+       RETURNING id, user_id, category_id, "budget_limit" as "limit", month, created_at`,
       [budgetId, userId, categoryId, limit, month]
     );
 

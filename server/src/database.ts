@@ -92,7 +92,7 @@ export async function createTables(): Promise<void> {
         id VARCHAR(255) PRIMARY KEY,
         user_id VARCHAR(255) NOT NULL REFERENCES users(id) ON DELETE CASCADE,
         category_id VARCHAR(255) NOT NULL REFERENCES categories(id) ON DELETE CASCADE,
-        limit DECIMAL(12, 2) NOT NULL,
+        "budget_limit" DECIMAL(12, 2) NOT NULL,
         month VARCHAR(7) NOT NULL,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       );
