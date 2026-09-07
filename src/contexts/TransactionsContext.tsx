@@ -87,8 +87,11 @@ export function TransactionsProvider({ children }: { children: React.ReactNode }
           categoryService.getAll(userId),
         ]);
 
+        dispatch({ type: 'SET_TRANSACTIONS', payload: transactions });
+
         // Se não tem categorias, cria as padrão
         if (categories.length === 0) {
+          console.log('Nenhuma categoria encontrada, criando padrão...');
           const defaultCategories = [
             { name: 'Alimentação', color: '#FF6B6B', icon: 'FaUtensils', defaultType: 'expense' as const },
             { name: 'Transporte', color: '#4ECDC4', icon: 'FaCar', defaultType: 'expense' as const },
@@ -103,17 +106,23 @@ export function TransactionsProvider({ children }: { children: React.ReactNode }
           ];
 
           for (const cat of defaultCategories) {
-            await categoryService.create(cat, userId);
+            try {
+              await categoryService.create(cat, userId);
+              console.log(`Categoria "${cat.name}" criada com sucesso`);
+            } catch (catError) {
+              console.error(`Erro ao criar categoria "${cat.name}":`, catError);
+            }
           }
 
           // Recarrega categorias após criar as padrão
           const newCategories = await categoryService.getAll(userId);
+          console.log(`Categorias recarregadas: ${newCategories.length}`);
           dispatch({ type: 'SET_CATEGORIES', payload: newCategories });
         } else {
+          console.log(`Categorias encontradas: ${categories.length}`);
           dispatch({ type: 'SET_CATEGORIES', payload: categories });
         }
 
-        dispatch({ type: 'SET_TRANSACTIONS', payload: transactions });
         dispatch({ type: 'SET_ERROR', payload: null });
       } catch (error) {
         console.error('Erro ao carregar dados:', error);
