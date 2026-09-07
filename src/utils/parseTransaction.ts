@@ -43,11 +43,12 @@ const EXPENSE_KEYWORDS = [
 
 /**
  * Extrai valor numérico de uma string
- * Suporta formatos: R$ 25,50 | 25.50 | 25,50 | R$25
+ * Suporta formatos: R$ 2000 | R$ 25,50 | 25.50 | 25,50 | R$25
  */
 function extractAmount(text: string): number | null {
-  // Padrão para R$ seguido de número
-  const brlPattern = /R\$\s*(\d{1,3}(?:\.\d{3})*(?:,\d{2})?)/i;
+  // Padrão para R$ seguido de número (inteiro ou decimal)
+  // Aceita: R$ 2000, R$ 2000,50, R$ 1.500, R$ 1.500,50
+  const brlPattern = /R\$\s*(\d{1,6}(?:\.\d{3})*(?:,\d{1,2})?)/i;
   const brlMatch = text.match(brlPattern);
   if (brlMatch) {
     const value = brlMatch[1].replace(/\./g, '').replace(',', '.');
@@ -56,7 +57,7 @@ function extractAmount(text: string): number | null {
   }
 
   // Padrão para número com vírgula decimal (ex: 25,50)
-  const commaDecimalPattern = /(\d{1,3}(?:\.\d{3})*,\d{1,2})\b/g;
+  const commaDecimalPattern = /(\d{1,6}(?:\.\d{3})*,\d{1,2})\b/g;
   const commaMatches = text.match(commaDecimalPattern);
   if (commaMatches) {
     // Pega o último valor encontrado (geralmente o total)
@@ -67,7 +68,7 @@ function extractAmount(text: string): number | null {
   }
 
   // Padrão para número com ponto decimal (ex: 25.50)
-  const dotDecimalPattern = /\b(\d{1,3}(?:,\d{3})*\.\d{1,2})\b/g;
+  const dotDecimalPattern = /\b(\d{1,6}(?:,\d{3})*\.\d{1,2})\b/g;
   const dotMatches = text.match(dotDecimalPattern);
   if (dotMatches) {
     const lastMatch = dotMatches[dotMatches.length - 1];
@@ -75,7 +76,7 @@ function extractAmount(text: string): number | null {
     if (!isNaN(num) && num > 0) return num;
   }
 
-  // Padrão para número inteiro (ex: 50, 100)
+  // Padrão para número inteiro (ex: 50, 100, 2000)
   const integerPattern = /\b(\d{2,6})\b/g;
   const integerMatches = text.match(integerPattern);
   if (integerMatches) {
@@ -115,12 +116,12 @@ function detectType(text: string): 'income' | 'expense' {
 function extractDescription(text: string, amount: number | null): string {
   let description = text;
 
-  // Remove valores R$ xx,xx
-  description = description.replace(/R\$\s*\d{1,3}(?:\.\d{3})*(?:,\d{2})?/gi, '');
+  // Remove valores R$ xx,xx (com ou sem ponto de milhar)
+  description = description.replace(/R\$\s*\d{1,6}(?:\.\d{3})*(?:,\d{1,2})?/gi, '');
 
   // Remove números soltos
-  description = description.replace(/\b\d{1,3}(?:\.\d{3})*,\d{1,2}\b/g, '');
-  description = description.replace(/\b\d{1,3}(?:,\d{3})*\.\d{1,2}\b/g, '');
+  description = description.replace(/\b\d{1,6}(?:\.\d{3})*,\d{1,2}\b/g, '');
+  description = description.replace(/\b\d{1,6}(?:,\d{3})*\.\d{1,2}\b/g, '');
   description = description.replace(/\b\d{2,6}\b/g, '');
 
   // Remove palavras de tipo
