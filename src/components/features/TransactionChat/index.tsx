@@ -44,7 +44,7 @@ interface TransactionChatProps {
 const TransactionChat: React.FC<TransactionChatProps> = ({
   onTransactionCreated,
 }) => {
-  const { addTransaction, categories } = useTransactions();
+  const { addTransaction, categories, isLoading } = useTransactions();
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [inputValue, setInputValue] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
@@ -120,11 +120,40 @@ const TransactionChat: React.FC<TransactionChatProps> = ({
       return;
     }
 
+    // Verifica se categorias estão carregadas
+    if (isLoading) {
+      addMessage(
+        'Carregando categorias... aguarde um momento e tente novamente.',
+        false
+      );
+      setIsProcessing(false);
+      return;
+    }
+
+    // Verifica se existem categorias
+    if (categories.length === 0) {
+      addMessage(
+        'Nenhuma categoria encontrada. Recarregue a página (F5) e tente novamente.',
+        false
+      );
+      setIsProcessing(false);
+      return;
+    }
+
     // Encontra categoria apropriada
     const matchingCategory = categories.find(
       c => c.defaultType === parsed.type || c.defaultType === 'both'
     );
     const defaultCategoryId = matchingCategory?.id || categories[0]?.id || '';
+
+    if (!defaultCategoryId) {
+      addMessage(
+        'Erro: nenhuma categoria válida encontrada. Recarregue a página (F5).',
+        false
+      );
+      setIsProcessing(false);
+      return;
+    }
 
     // Cria a transação
     const transactionData: Omit<Transaction, 'id'> = {
@@ -149,10 +178,11 @@ const TransactionChat: React.FC<TransactionChatProps> = ({
       if (onTransactionCreated) {
         onTransactionCreated(transactionData);
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Erro ao criar transação:', error);
+      const errorMsg = error?.message || 'Erro desconhecido';
       addMessage(
-        'Erro ao criar a transação. Verifique se todas as categorias existem.',
+        `Erro ao criar a transação: ${errorMsg}`,
         false
       );
     }
