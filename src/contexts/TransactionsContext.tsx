@@ -40,10 +40,10 @@ const initialState: TransactionState = {
 interface TransactionsContextValue extends TransactionState {
   filteredTransactions: Transaction[];
   metrics: ReturnType<typeof calculateMetrics>;
-  addTransaction: (transaction: Omit<Transaction, 'id'>) => Promise<void>;
-  updateTransaction: (transaction: Transaction) => Promise<void>;
+  addTransaction: (transaction: Omit<Transaction, 'id'>) => Promise<Transaction>;
+  updateTransaction: (transaction: Transaction) => Promise<Transaction>;
   deleteTransaction: (transactionId: string) => Promise<void>;
-  addCategory: (category: Omit<Category, 'id'>) => Promise<void>;
+  addCategory: (category: Omit<Category, 'id'>) => Promise<Category>;
   deleteCategory: (categoryId: string) => Promise<void>;
   setFilters: (filters: Partial<TransactionFilters>) => void;
   clearFilters: () => void;
@@ -111,6 +111,7 @@ export function TransactionsProvider({ children }: { children: React.ReactNode }
         dispatch({ type: 'SET_LOADING', payload: true });
         const newTransaction = await transactionService.create(transaction, userId);
         dispatch({ type: 'ADD_TRANSACTION', payload: newTransaction });
+        return newTransaction;
       } catch (error) {
         console.error('Erro ao adicionar transação:', error);
         dispatch({ type: 'SET_ERROR', payload: 'Erro ao salvar transação' });
@@ -131,6 +132,7 @@ export function TransactionsProvider({ children }: { children: React.ReactNode }
         dispatch({ type: 'SET_LOADING', payload: true });
         const updated = await transactionService.update(transaction);
         dispatch({ type: 'UPDATE_TRANSACTION', payload: updated });
+        return updated;
       } catch (error) {
         console.error('Erro ao atualizar transação:', error);
         dispatch({ type: 'SET_ERROR', payload: 'Erro ao atualizar transação' });
@@ -170,9 +172,11 @@ export function TransactionsProvider({ children }: { children: React.ReactNode }
         dispatch({ type: 'SET_LOADING', payload: true });
         const newCategory = await categoryService.create(category, userId);
         dispatch({ type: 'ADD_CATEGORY', payload: newCategory });
+        return newCategory;
       } catch (error) {
         console.error('Erro ao adicionar categoria:', error);
         dispatch({ type: 'SET_ERROR', payload: 'Erro ao salvar categoria' });
+        throw error;
       } finally {
         dispatch({ type: 'SET_LOADING', payload: false });
       }

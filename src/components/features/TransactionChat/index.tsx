@@ -44,7 +44,7 @@ interface TransactionChatProps {
 const TransactionChat: React.FC<TransactionChatProps> = ({
   onTransactionCreated,
 }) => {
-  const { addTransaction, categories } = useTransactions();
+  const { addTransaction, addCategory, categories } = useTransactions();
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [inputValue, setInputValue] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
@@ -120,21 +120,67 @@ const TransactionChat: React.FC<TransactionChatProps> = ({
       return;
     }
 
-    // Verifica se existem categorias
-    if (categories.length === 0) {
+    // Encontra ou cria categoria apropriada
+    let defaultCategoryId = '';
+
+    if (categories.length > 0) {
+      // Procura categoria que combine com o tipo
+      const matchingCategory = categories.find(
+        c => c.defaultType === parsed.type || c.defaultType === 'both'
+      );
+      defaultCategoryId = matchingCategory?.id || categories[0].id;
+    } else {
+      // Cria categorias padrão se não existirem
+      addMessage('Criando categorias padrão...', false);
+
+      const defaultCategories = [
+        {
+          name: 'Alimentação',
+          color: '#FF6B6B',
+          icon: 'Restaurant',
+          defaultType: 'expense' as const,
+        },
+        {
+          name: 'Transporte',
+          color: '#4ECDC4',
+          icon: 'Car',
+          defaultType: 'expense' as const,
+        },
+        {
+          name: 'Salário',
+          color: '#2ECC71',
+          icon: 'Briefcase',
+          defaultType: 'income' as const,
+        },
+        {
+          name: 'Outros',
+          color: '#9B59B6',
+          icon: 'MoreHorizontal',
+          defaultType: 'both' as const,
+        },
+      ];
+
+      // Cria a categoria mais apropriada baseada no tipo
+      const categoryToCreate = parsed.type === 'income'
+        ? defaultCategories[2] // Salário
+        : defaultCategories[3]; // Outros
+
+      try {
+        const newCategory = await addCategory(categoryToCreate);
+        defaultCategoryId = newCategory.id;
+      } catch (error) {
+        console.error('Erro ao criar categoria:', error);
+      }
+    }
+
+    if (!defaultCategoryId) {
       addMessage(
-        'Nenhuma categoria encontrada. Crie uma categoria primeiro na aba de configurações.',
+        'Erro: não foi possível encontrar ou criar uma categoria. Tente novamente.',
         false
       );
       setIsProcessing(false);
       return;
     }
-
-    // Encontra categoria apropriada
-    const matchingCategory = categories.find(
-      c => c.defaultType === parsed.type || c.defaultType === 'both'
-    );
-    const defaultCategoryId = matchingCategory?.id || categories[0].id;
 
     // Cria a transação
     const transactionData: Omit<Transaction, 'id'> = {
