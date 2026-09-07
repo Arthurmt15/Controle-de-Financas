@@ -82,47 +82,14 @@ export function TransactionsProvider({ children }: { children: React.ReactNode }
       dispatch({ type: 'SET_LOADING', payload: true });
       try {
         // Busca transações e categorias em paralelo
+        // O backend cria categorias padrão automaticamente se não existirem
         const [transactions, categories] = await Promise.all([
           transactionService.getAll(userId),
           categoryService.getAll(userId),
         ]);
 
         dispatch({ type: 'SET_TRANSACTIONS', payload: transactions });
-
-        // Se não tem categorias, cria as padrão
-        if (categories.length === 0) {
-          console.log('Nenhuma categoria encontrada, criando padrão...');
-          const defaultCategories = [
-            { name: 'Alimentação', color: '#FF6B6B', icon: 'FaUtensils', defaultType: 'expense' as const },
-            { name: 'Transporte', color: '#4ECDC4', icon: 'FaCar', defaultType: 'expense' as const },
-            { name: 'Moradia', color: '#45B7D1', icon: 'FaHome', defaultType: 'expense' as const },
-            { name: 'Lazer', color: '#96CEB4', icon: 'FaGamepad', defaultType: 'expense' as const },
-            { name: 'Saúde', color: '#FFEAA7', icon: 'FaHeartbeat', defaultType: 'expense' as const },
-            { name: 'Educação', color: '#DDA0DD', icon: 'FaGraduationCap', defaultType: 'expense' as const },
-            { name: 'Salário', color: '#00B894', icon: 'FaMoneyBillWave', defaultType: 'income' as const },
-            { name: 'Freelance', color: '#6C5CE7', icon: 'FaLaptop', defaultType: 'income' as const },
-            { name: 'Investimentos', color: '#FDCB6E', icon: 'FaChartLine', defaultType: 'income' as const },
-            { name: 'Outros', color: '#636E72', icon: 'FaEllipsisH', defaultType: 'both' as const },
-          ];
-
-          for (const cat of defaultCategories) {
-            try {
-              await categoryService.create(cat, userId);
-              console.log(`Categoria "${cat.name}" criada com sucesso`);
-            } catch (catError) {
-              console.error(`Erro ao criar categoria "${cat.name}":`, catError);
-            }
-          }
-
-          // Recarrega categorias após criar as padrão
-          const newCategories = await categoryService.getAll(userId);
-          console.log(`Categorias recarregadas: ${newCategories.length}`);
-          dispatch({ type: 'SET_CATEGORIES', payload: newCategories });
-        } else {
-          console.log(`Categorias encontradas: ${categories.length}`);
-          dispatch({ type: 'SET_CATEGORIES', payload: categories });
-        }
-
+        dispatch({ type: 'SET_CATEGORIES', payload: categories });
         dispatch({ type: 'SET_ERROR', payload: null });
       } catch (error) {
         console.error('Erro ao carregar dados:', error);
