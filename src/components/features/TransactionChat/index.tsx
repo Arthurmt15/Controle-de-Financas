@@ -120,10 +120,21 @@ const TransactionChat: React.FC<TransactionChatProps> = ({
       return;
     }
 
+    // Verifica se existem categorias
+    if (categories.length === 0) {
+      addMessage(
+        'Nenhuma categoria encontrada. Crie uma categoria primeiro na aba de configurações.',
+        false
+      );
+      setIsProcessing(false);
+      return;
+    }
+
     // Encontra categoria apropriada
-    const defaultCategoryId = categories.length > 0
-      ? categories.find(c => c.defaultType === parsed.type || c.defaultType === 'both')?.id || categories[0].id
-      : '';
+    const matchingCategory = categories.find(
+      c => c.defaultType === parsed.type || c.defaultType === 'both'
+    );
+    const defaultCategoryId = matchingCategory?.id || categories[0].id;
 
     // Cria a transação
     const transactionData: Omit<Transaction, 'id'> = {
@@ -149,8 +160,9 @@ const TransactionChat: React.FC<TransactionChatProps> = ({
         onTransactionCreated(transactionData);
       }
     } catch (error) {
+      console.error('Erro ao criar transação:', error);
       addMessage(
-        'Erro ao criar a transação. Por favor, tente novamente.',
+        'Erro ao criar a transação. Verifique se todas as categorias existem.',
         false
       );
     }

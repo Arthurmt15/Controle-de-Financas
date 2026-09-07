@@ -133,13 +133,13 @@ const TransactionForm: React.FC<TransactionFormProps> = ({
 
       if (editingTransaction) {
         // Atualiza transação existente
-        updateTransaction({
+        await updateTransaction({
           ...transactionData,
           id: editingTransaction.id,
         });
       } else {
         // Adiciona nova transação
-        addTransaction(transactionData);
+        await addTransaction(transactionData);
       }
 
       // Reseta o formulário

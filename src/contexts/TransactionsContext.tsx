@@ -114,6 +114,7 @@ export function TransactionsProvider({ children }: { children: React.ReactNode }
       } catch (error) {
         console.error('Erro ao adicionar transação:', error);
         dispatch({ type: 'SET_ERROR', payload: 'Erro ao salvar transação' });
+        throw error; // Relança o erro para o componente tratar
       } finally {
         dispatch({ type: 'SET_LOADING', payload: false });
       }
@@ -133,6 +134,7 @@ export function TransactionsProvider({ children }: { children: React.ReactNode }
       } catch (error) {
         console.error('Erro ao atualizar transação:', error);
         dispatch({ type: 'SET_ERROR', payload: 'Erro ao atualizar transação' });
+        throw error; // Relança o erro para o componente tratar
       } finally {
         dispatch({ type: 'SET_LOADING', payload: false });
       }
