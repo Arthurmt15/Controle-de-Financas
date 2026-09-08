@@ -24,6 +24,11 @@ export const TabContainer = styled.div`
   padding: 8px;
   border-radius: ${({ theme }) => theme.borderRadius};
   box-shadow: ${({ theme }) => theme.shadows.sm};
+
+  @media (max-width: 480px) {
+    padding: 6px;
+    gap: 6px;
+  }
 `;
 
 /**
@@ -46,6 +51,11 @@ export const Tab = styled.button<{ $isActive: boolean }>`
   &:hover:not(:disabled) {
     background-color: ${({ $isActive, theme }) =>
       $isActive ? theme.colors.primary : `${theme.colors.primary}10`};
+  }
+
+  @media (max-width: 480px) {
+    padding: 10px 12px;
+    font-size: 13px;
   }
 `;
 

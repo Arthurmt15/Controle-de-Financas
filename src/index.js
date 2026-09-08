@@ -8,6 +8,13 @@ import { createRoot } from 'react-dom/client';
 import './index.css';
 import App from './App';
 
+// Suprime erros CORS do Google Identity Services (gsi/log é analytics interno do Google, inofensivo)
+const originalConsoleError = console.error;
+console.error = (...args) => {
+  if (typeof args[0] === 'string' && args[0].includes('accounts.google.com/gsi/log')) return;
+  originalConsoleError(...args);
+};
+
 // Obtém o elemento raiz do DOM
 const container = document.getElementById('root');
 

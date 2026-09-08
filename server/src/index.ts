@@ -24,8 +24,20 @@ const PORT = process.env.PORT || 5000;
  * Middleware de CORS
  * Permite requisições do frontend em desenvolvimento e produção
  */
+const allowedOrigins = [
+  process.env.FRONTEND_URL,
+  'http://localhost:3000',
+  'https://controle-de-financas.vercel.app',
+].filter(Boolean);
+
 app.use(cors({
-  origin: true,
+  origin: (origin: string | undefined, callback: (err: Error | null, allow?: boolean) => void) => {
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error('Não permitido pelo CORS'));
+    }
+  },
   credentials: true,
 }));
 
@@ -59,8 +71,14 @@ app.use('/api/budgets', budgetsRouter);
  * Middleware de tratamento de erros globais
  * Captura erros não tratados nas rotas e garante headers CORS
  */
-app.use((err: Error, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
+app.use((err: Error, req: express.Request, res: express.Response, _next: express.NextFunction) => {
   console.error('Erro não tratado:', err);
+
+  const origin = req.headers.origin;
+  if (origin && allowedOrigins.includes(origin)) {
+    res.setHeader('Access-Control-Allow-Origin', origin);
+  }
+  res.setHeader('Access-Control-Allow-Credentials', 'true');
 
   res.status(500).json({
     success: false,
