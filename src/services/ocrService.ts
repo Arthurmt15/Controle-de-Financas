@@ -1,115 +1,108 @@
 /**
- * Serviço de OCR usando EasyOCR API (gratuito, sem cadastro)
- * https://console.easyocr.org/api/ocr
+ * Serviço de OCR simplificado
+ * Usa tesseract.js com configurações otimizadas para comprovantes
  */
 
 import { createWorker } from 'tesseract.js';
 
-const EASYOCR_URL = 'https://console.easyocr.org/api/ocr';
-
-interface OcrResult {
+export interface OcrResult {
   text: string;
   confidence: number;
-  source: 'easyocr' | 'tesseract';
+  rawText: string; // Texto bruto para debug
   error?: string;
 }
 
 /**
- * OCR via EasyOCR API (gratuito, sem cadastro)
+ * Pré-processa imagem para melhorar OCR
+ * Converte para preto e branco com alto contraste
  */
-async function easyOcr(file: File): Promise<OcrResult> {
-  try {
-    const formData = new FormData();
-    formData.append('file', file);
+async function preprocessImage(file: File): Promise<File> {
+  return new Promise((resolve) => {
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+    const img = new Image();
 
-    const response = await fetch(EASYOCR_URL, {
-      method: 'POST',
-      body: formData,
-    });
+    img.onload = () => {
+      // Escala para 2x se muito pequena
+      const scale = Math.min(2, Math.max(1, 1500 / Math.max(img.width, img.height)));
+      canvas.width = img.width * scale;
+      canvas.height = img.height * scale;
 
-    if (!response.ok) {
-      throw new Error(`Erro API: ${response.status}`);
-    }
+      ctx!.drawImage(img, 0, 0, canvas.width, canvas.height);
 
-    const data = await response.json();
+      // Converte para tons de cinza
+      const imageData = ctx!.getImageData(0, 0, canvas.width, canvas.height);
+      const data = imageData.data;
 
-    if (!data.words || data.words.length === 0) {
-      return { text: '', confidence: 0, source: 'easyocr', error: 'Nenhum texto encontrado' };
-    }
+      for (let i = 0; i < data.length; i += 4) {
+        const gray = data[i] * 0.299 + data[i + 1] * 0.587 + data[i + 2] * 0.114;
+        data[i] = gray;
+        data[i + 1] = gray;
+        data[i + 2] = gray;
+      }
 
-    // Junta todo o texto reconhecido
-    const fullText = data.words.map((w: any) => w.text).join('\n');
-    const avgConfidence = data.words.reduce((sum: number, w: any) => sum + (w.rate || 0), 0) / data.words.length;
+      // Threshold binário
+      const threshold = 128;
+      for (let i = 0; i < data.length; i += 4) {
+        const value = data[i] > threshold ? 255 : 0;
+        data[i] = value;
+        data[i + 1] = value;
+        data[i + 2] = value;
+      }
 
-    return {
-      text: fullText.trim(),
-      confidence: Math.round(avgConfidence * 100),
-      source: 'easyocr',
+      ctx!.putImageData(imageData, 0, 0);
+
+      canvas.toBlob((blob) => {
+        if (blob) {
+          resolve(new File([blob], file.name, { type: 'image/png' }));
+        } else {
+          resolve(file);
+        }
+      }, 'image/png');
     };
-  } catch (error) {
-    return {
-      text: '',
-      confidence: 0,
-      source: 'easyocr',
-      error: error instanceof Error ? error.message : 'Erro desconhecido',
-    };
-  }
+
+    img.onerror = () => resolve(file);
+    img.src = URL.createObjectURL(file);
+  });
 }
 
 /**
- * OCR via tesseract.js (local, fallback)
+ * OCR principal - tesseract.js com configurações otimizadas
  */
-async function ocrTesseract(file: File): Promise<OcrResult> {
+export async function extractTextFromImage(
+  file: File,
+  language: string = 'por'
+): Promise<OcrResult> {
   try {
-    const worker = await createWorker('por+eng');
-    const { data } = await worker.recognize(file);
+    // Pré-processa a imagem
+    const processedFile = await preprocessImage(file);
+
+    // Cria worker com português + inglês
+    const worker = await createWorker(`${language}+eng`, 1, {
+      logger: (m) => console.log(m),
+    });
+
+    // Configurações otimizadas para comprovantes
+    await worker.setParameters({
+      tessedit_char_whitelist: 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789.,;:/- R$%áéíóúãõâêôàèìòùçñÁÉÍÓÚÃÕÂÊÔÀÈÌÒÙÇÑ',
+    });
+
+    const { data } = await worker.recognize(processedFile);
     await worker.terminate();
 
     return {
       text: data.text.trim(),
       confidence: data.confidence,
-      source: 'tesseract',
+      rawText: data.text, // Texto bruto para debug
     };
   } catch (error) {
     return {
       text: '',
       confidence: 0,
-      source: 'tesseract',
+      rawText: '',
       error: error instanceof Error ? error.message : 'Erro desconhecido',
     };
   }
-}
-
-/**
- * OCR principal - tenta EasyOCR primeiro, fallback para tesseract
- */
-export async function extractTextFromImage(
-  file: File,
-  language: string = 'eng'
-): Promise<OcrResult> {
-  // Tenta EasyOCR primeiro
-  const easyResult = await easyOcr(file);
-
-  // Se EasyOCR funcionou e tem texto, usa
-  if (easyResult.text && easyResult.text.length > 10) {
-    return easyResult;
-  }
-
-  // Fallback para tesseract
-  const tesseractResult = await ocrTesseract(file);
-
-  // Se ambos falharam
-  if (!easyResult.text && !tesseractResult.text) {
-    return {
-      text: '',
-      confidence: 0,
-      source: 'tesseract',
-      error: 'Nenhum OCR conseguiu ler a imagem',
-    };
-  }
-
-  // Retorna o que tem mais texto
-  return easyResult.text.length > tesseractResult.text.length ? easyResult : tesseractResult;
 }
 
 /**
@@ -117,19 +110,18 @@ export async function extractTextFromImage(
  */
 export async function extractTextFromUrl(
   url: string,
-  language: string = 'eng'
+  language: string = 'por'
 ): Promise<OcrResult> {
   try {
     const response = await fetch(url);
     const blob = await response.blob();
     const file = new File([blob], 'image.jpg', { type: 'image/jpeg' });
-
     return await extractTextFromImage(file, language);
   } catch (error) {
     return {
       text: '',
       confidence: 0,
-      source: 'easyocr',
+      rawText: '',
       error: error instanceof Error ? error.message : 'Erro desconhecido',
     };
   }
