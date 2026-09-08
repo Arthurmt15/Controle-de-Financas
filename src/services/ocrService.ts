@@ -32,8 +32,8 @@ function fileToBase64(file: File): Promise<string> {
 }
 
 /**
- * Pré-processa imagem para melhorar OCR
- * Aumenta contraste e nitidez
+ * Pré-processamento agressivo da imagem para OCR
+ * Converte para preto e branco com alto contraste
  */
 async function preprocessImage(file: File): Promise<File> {
   return new Promise((resolve) => {
@@ -42,28 +42,66 @@ async function preprocessImage(file: File): Promise<File> {
     const img = new Image();
 
     img.onload = () => {
-      canvas.width = img.width;
-      canvas.height = img.height;
+      // Escala para 2x se muito pequena
+      const scale = Math.min(2, Math.max(1, 1500 / Math.max(img.width, img.height)));
+      canvas.width = img.width * scale;
+      canvas.height = img.height * scale;
 
-      // Desenha a imagem
-      ctx!.drawImage(img, 0, 0);
+      // Desenha a imagem escalada
+      ctx!.drawImage(img, 0, 0, canvas.width, canvas.height);
 
       // Pega os pixels
       const imageData = ctx!.getImageData(0, 0, canvas.width, canvas.height);
       const data = imageData.data;
 
-      // Aumenta contraste
-      const contrast = 1.5;
-      const brightness = 10;
-
+      // Passo 1: Converte para tons de cinza
       for (let i = 0; i < data.length; i += 4) {
-        // R, G, B
-        data[i] = Math.min(255, Math.max(0, (data[i] - 128) * contrast + 128 + brightness));
-        data[i + 1] = Math.min(255, Math.max(0, (data[i + 1] - 128) * contrast + 128 + brightness));
-        data[i + 2] = Math.min(255, Math.max(0, (data[i + 2] - 128) * contrast + 128 + brightness));
+        const gray = data[i] * 0.299 + data[i + 1] * 0.587 + data[i + 2] * 0.114;
+        data[i] = gray;
+        data[i + 1] = gray;
+        data[i + 2] = gray;
+      }
+
+      // Passo 2: Aplica threshold (preto e branco puro)
+      const threshold = 140;
+      for (let i = 0; i < data.length; i += 4) {
+        const value = data[i] > threshold ? 255 : 0;
+        data[i] = value;
+        data[i + 1] = value;
+        data[i + 2] = value;
       }
 
       ctx!.putImageData(imageData, 0, 0);
+
+      // Passo 3: Aplica sharpening via convolução
+      const sharpened = ctx!.getImageData(0, 0, canvas.width, canvas.height);
+      const sData = sharpened.data;
+      const kernel = [
+        0, -1, 0,
+        -1, 5, -1,
+        0, -1, 0
+      ];
+
+      for (let y = 1; y < canvas.height - 1; y++) {
+        for (let x = 1; x < canvas.width - 1; x++) {
+          let r = 0, g = 0, b = 0;
+          for (let ky = -1; ky <= 1; ky++) {
+            for (let kx = -1; kx <= 1; kx++) {
+              const idx = ((y + ky) * canvas.width + (x + kx)) * 4;
+              const ki = (ky + 1) * 3 + (kx + 1);
+              r += data[idx] * kernel[ki];
+              g += data[idx + 1] * kernel[ki];
+              b += data[idx + 2] * kernel[ki];
+            }
+          }
+          const idx = (y * canvas.width + x) * 4;
+          sData[idx] = Math.min(255, Math.max(0, r));
+          sData[idx + 1] = Math.min(255, Math.max(0, g));
+          sData[idx + 2] = Math.min(255, Math.max(0, b));
+        }
+      }
+
+      ctx!.putImageData(sharpened, 0, 0);
 
       // Converte de volta para blob
       canvas.toBlob((blob) => {
