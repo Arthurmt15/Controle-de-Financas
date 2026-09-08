@@ -87,7 +87,7 @@ const TransactionChat: React.FC<TransactionChatProps> = ({
           '• "Mercado ontem 150,50"\n' +
           '• "Entrada 4k salário"\n\n' +
           '📂 Para criar categorias:\n' +
-          '• "criar categoria mulher"\n\n' +
+          '• "criar categoria [nome]"\n\n' +
           '📊 Para ver análises:\n' +
           '• "resumo" ou "análise"\n\n' +
           '❓ Digite "ajuda" para ver todos os comandos',
@@ -154,7 +154,7 @@ const TransactionChat: React.FC<TransactionChatProps> = ({
         '• "Mercado ontem 150,50"\n' +
         '• "Entrada 4k salário"\n\n' +
         '📂 Para criar categoria:\n' +
-        '• "criar categoria mulher"\n\n' +
+        '• "criar categoria [nome]"\n\n' +
         '📊 Para ver análise:\n' +
         '• "resumo" ou "análise"\n\n' +
         '❓ Digite "ajuda" para ver todos os comandos',

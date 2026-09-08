@@ -417,7 +417,6 @@ export function getExampleMessages(): string[] {
   return [
     'Mercado ontem 150,50',
     'Entrada 4k salário',
-    'criar categoria mulher',
     'resumo',
     'análise',
     'ajuda',
