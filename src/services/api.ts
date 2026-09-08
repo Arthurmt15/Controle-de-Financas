@@ -88,6 +88,19 @@ export const userService = {
 // SERVIÇO DE TRANSAÇÕES
 // ============================================
 
+/** Mapeia snake_case do PostgreSQL para camelCase do TypeScript */
+function mapTransaction(row: any): Transaction {
+  return {
+    id: row.id,
+    description: row.description,
+    amount: row.amount,
+    type: row.type,
+    date: row.date,
+    categoryId: row.categoryId ?? row.category_id ?? '',
+    notes: row.notes,
+  };
+}
+
 /**
  * Serviço de transações financeiras
  * CRUD completo para entradas e saídas
@@ -99,10 +112,10 @@ export const transactionService = {
    * @returns Lista de transações
    */
   async getAll(userId: string) {
-    const response = await apiRequest<{ success: boolean; data: Transaction[] }>(
+    const response = await apiRequest<{ success: boolean; data: any[] }>(
       `/transactions/${userId}`
     );
-    return response.data;
+    return response.data.map(mapTransaction);
   },
 
   /**
@@ -156,6 +169,17 @@ export const transactionService = {
 // SERVIÇO DE CATEGORIAS
 // ============================================
 
+/** Mapeia snake_case do PostgreSQL para camelCase do TypeScript */
+function mapCategory(row: any): Category {
+  return {
+    id: row.id,
+    name: row.name,
+    color: row.color,
+    icon: row.icon,
+    defaultType: row.defaultType ?? row.default_type ?? 'both',
+  };
+}
+
 /**
  * Serviço de categorias financeiras
  * CRUD para categorias personalizadas por usuário
@@ -167,10 +191,10 @@ export const categoryService = {
    * @returns Lista de categorias
    */
   async getAll(userId: string) {
-    const response = await apiRequest<{ success: boolean; data: Category[] }>(
+    const response = await apiRequest<{ success: boolean; data: any[] }>(
       `/categories/${userId}`
     );
-    return response.data;
+    return response.data.map(mapCategory);
   },
 
   /**
@@ -208,6 +232,16 @@ export const categoryService = {
 // SERVIÇO DE ORÇAMENTOS
 // ============================================
 
+/** Mapeia snake_case do PostgreSQL para camelCase do TypeScript */
+function mapBudget(row: any): Budget {
+  return {
+    id: row.id,
+    categoryId: row.categoryId ?? row.category_id ?? '',
+    limit: row.limit ?? row.budget_limit ?? 0,
+    month: row.month,
+  };
+}
+
 /**
  * Serviço de orçamentos mensais
  * Gerencia limites de gasto por categoria
@@ -219,10 +253,10 @@ export const budgetService = {
    * @returns Lista de orçamentos
    */
   async getAll(userId: string) {
-    const response = await apiRequest<{ success: boolean; data: Budget[] }>(
+    const response = await apiRequest<{ success: boolean; data: any[] }>(
       `/budgets/${userId}`
     );
-    return response.data;
+    return response.data.map(mapBudget);
   },
 
   /**
