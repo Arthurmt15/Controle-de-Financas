@@ -2,12 +2,16 @@
  * @file components/features/TransactionChat/index.tsx
  * @description Componente de chat para adicionar transações por mensagem.
  * Permite ao usuário digitar mensagens como "Almoço R$ 25" e cria a transação.
+ * Suporta comandos como "criar categoria", "resumo", "análise" e "ajuda".
  */
 
 import React, { useState, useRef, useEffect } from 'react';
 import { createWorker } from 'tesseract.js';
 import { useTransactions } from '../../../hooks/useTransactions';
-import { parseTransactionFromMessage, getExampleMessages, CATEGORY_STYLES } from '../../../utils/parseTransaction';
+import { parseTransactionFromMessage, getExampleMessages } from '../../../utils/parseTransaction';
+import { detectCommand, executeCommand } from '../../../utils/chatCommands';
+import { generateSummary, generateAnalysis } from '../../../utils/analysisEngine';
+import { CATEGORY_STYLES } from '../../../utils/categories';
 import * as C from './styles';
 import type { Transaction } from '../../../types';
 import type { ParsedTransaction } from '../../../utils/parseTransaction';
@@ -45,7 +49,7 @@ interface TransactionChatProps {
 const TransactionChat: React.FC<TransactionChatProps> = ({
   onTransactionCreated,
 }) => {
-  const { addTransaction, addCategory, categories, isLoading, error: txError } = useTransactions();
+  const { transactions, addTransaction, addCategory, deleteCategory, categories, isLoading, error: txError } = useTransactions();
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [inputValue, setInputValue] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
@@ -76,7 +80,15 @@ const TransactionChat: React.FC<TransactionChatProps> = ({
     setMessages([
       {
         id: 'welcome',
-        text: 'Olá! Digite uma mensagem para adicionar uma transação.\n\nExemplos:\n• "Gastei 120 da luz dia 5 de janeiro"\n• "Mercado ontem 150,50"\n• "Entrada 4k salário"',
+        text: 'Olá! Sou seu assistente financeiro. 💬\n\n' +
+          '📝 Para adicionar transações:\n' +
+          '• "Mercado ontem 150,50"\n' +
+          '• "Entrada 4k salário"\n\n' +
+          '📂 Para criar categorias:\n' +
+          '• "criar categoria mulher"\n\n' +
+          '📊 Para ver análises:\n' +
+          '• "resumo" ou "análise"\n\n' +
+          '❓ Digite "ajuda" para ver todos os comandos',
         isUser: false,
         timestamp: new Date(),
       },
@@ -106,6 +118,7 @@ const TransactionChat: React.FC<TransactionChatProps> = ({
 
   /**
    * Processa mensagem do usuário
+   * Primeiro verifica se é um comando, depois tenta parsear como transação
    */
   const processMessage = async (text: string) => {
     setIsProcessing(true);
@@ -113,12 +126,36 @@ const TransactionChat: React.FC<TransactionChatProps> = ({
     // Adiciona mensagem do usuário
     addMessage(text, true);
 
-    // Tenta parsear a mensagem
+    // 1. Verifica se é um comando (criar categoria, resumo, análise, etc.)
+    const command = detectCommand(text);
+    if (command.type !== null) {
+      const response = await executeCommand(
+        command,
+        categories,
+        addCategory,
+        deleteCategory,
+        () => generateSummary(transactions, categories),
+        () => generateAnalysis(transactions, categories),
+      );
+      addMessage(response, false);
+      setIsProcessing(false);
+      return;
+    }
+
+    // 2. Tenta parsear como transação
     const parsed = parseTransactionFromMessage(text);
 
     if (!parsed) {
       addMessage(
-        'Não consegui identificar uma transação válida. Tente algo como:\n• "Gastei 120 da luz dia 5 de janeiro"\n• "Mercado ontem 150,50"\n• "Entrada 4k salário"',
+        'Não consegui identificar um comando ou transação válida.\n\n' +
+        '📝 Para adicionar transação:\n' +
+        '• "Mercado ontem 150,50"\n' +
+        '• "Entrada 4k salário"\n\n' +
+        '📂 Para criar categoria:\n' +
+        '• "criar categoria mulher"\n\n' +
+        '📊 Para ver análise:\n' +
+        '• "resumo" ou "análise"\n\n' +
+        '❓ Digite "ajuda" para ver todos os comandos',
         false
       );
       setIsProcessing(false);
@@ -427,7 +464,7 @@ const TransactionChat: React.FC<TransactionChatProps> = ({
           value={inputValue}
           onChange={(e) => setInputValue(e.target.value)}
           onKeyPress={handleKeyPress}
-          placeholder={pendingTransaction ? "Escolha uma opção acima" : "Ex: Mercado ontem 150,50"}
+          placeholder={pendingTransaction ? "Escolha uma opção acima" : "Ex: Mercado 150 ou criar categoria"}
           disabled={isProcessing || !!pendingTransaction}
         />
 
