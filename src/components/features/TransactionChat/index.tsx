@@ -144,7 +144,58 @@ const TransactionChat: React.FC<TransactionChatProps> = ({
       return;
     }
 
-    // 2. Tenta parsear como transação
+    // 2. Se o texto tem 2+ linhas, trata como texto de OCR colado
+    const lines = text.split('\n').filter(l => l.trim().length > 0);
+    if (lines.length >= 2) {
+      const receipt = parseReceiptText(text);
+      if (receipt.amount) {
+        // Tenta encontrar categoria baseada na descrição/loja
+        const searchTerms = [receipt.description, receipt.store].filter(Boolean).join(' ').toLowerCase();
+        let matchCat = categories.find(c => {
+          const catName = c.name.toLowerCase();
+          return searchTerms.includes(catName) ||
+            catName.includes(searchTerms.split(' ')[0]);
+        });
+
+        // Se não encontrou, usa "Outros"
+        if (!matchCat) {
+          matchCat = categories.find(c => c.name.toLowerCase() === 'outros') || categories[0];
+        }
+
+        if (matchCat) {
+          const responseMsg = getReceiptResponse(receipt);
+          addMessage(responseMsg, false);
+
+          const transactionData: Omit<Transaction, 'id'> = {
+            description: receipt.description || receipt.store || 'Compra',
+            amount: receipt.amount,
+            type: 'expense',
+            date: receipt.date || new Date().toISOString().split('T')[0],
+            categoryId: matchCat.id,
+          };
+
+          await addTransaction(transactionData);
+          addMessage(
+            `✅ Transação criada!\n` +
+            `📝 ${transactionData.description}\n` +
+            `💰 R$ ${transactionData.amount.toFixed(2).replace('.', ',')}\n` +
+            `📅 ${transactionData.date}\n` +
+            `🏷️ ${matchCat.name}`,
+            false
+          );
+        } else {
+          addMessage(
+            `📝 Texto reconhecido mas sem categoria.\n` +
+            `Crie uma com "criar categoria [nome]"`,
+            false
+          );
+        }
+        setIsProcessing(false);
+        return;
+      }
+    }
+
+    // 3. Tenta parsear como transação normal
     const parsed = parseTransactionFromMessage(text);
 
     if (!parsed) {
