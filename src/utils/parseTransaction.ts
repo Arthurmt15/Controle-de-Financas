@@ -53,7 +53,9 @@ const CATEGORY_MAP: Array<{ keywords: string[]; category: string }> = [
   {
     keywords: ['mercado', 'supermercado', 'compra', 'almoço', 'almoco',
       'jantar', 'café', 'cafe', 'restaurante', 'lanche', 'padaria',
-      'açougue', 'acougue', 'feira', 'refeição', 'refeicao', 'comida'],
+      'açougue', 'acougue', 'feira', 'refeição', 'refeicao', 'comida',
+      'leite', 'pão', 'paes', 'arroz', 'feijão', 'carne', 'ovo',
+      'frango', 'peixe', 'legume', 'fruta', 'hortifruti'],
     category: 'Alimentação',
   },
   {
@@ -411,14 +413,15 @@ function formatDate(d: Date): string {
  * @example parseTransactionFromMessage("4000 dia 20 de agosto")
  */
 export function parseTransactionFromMessage(message: string): ParsedTransaction | null {
-  // 1. Extrai valor
-  const amountResult = extractAmount(message);
+  // 1. Extrai data primeiro (para remover números de datas como "20 de agosto")
+  const dateResult = extractDate(message);
+  const textWithoutDate = dateResult?.clean || message;
+  const data = dateResult?.value || formatDate(new Date());
+
+  // 2. Extrai valor do texto sem a data
+  const amountResult = extractAmount(textWithoutDate);
   if (!amountResult) return null;
   const valor = amountResult.value;
-
-  // 2. Extrai data do texto restante
-  const dateResult = extractDate(amountResult.clean);
-  const data = dateResult?.value || formatDate(new Date());
 
   // 3. Detecta tipo
   const tipo = detectType(message);
@@ -428,7 +431,7 @@ export function parseTransactionFromMessage(message: string): ParsedTransaction 
   const categoria = catResult.category;
 
   // 5. Monta descrição do texto que sobrou
-  const textForDescription = dateResult?.clean || amountResult.clean;
+  const textForDescription = amountResult.clean;
   const descricao = extractDescription(textForDescription) || categoria;
 
   return { descricao, valor, tipo, categoria, data };
