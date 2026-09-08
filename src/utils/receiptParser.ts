@@ -6,6 +6,7 @@
 
 export interface ReceiptData {
   amount: number | null;
+  currency: string | null;
   description: string | null;
   date: string | null;
   store: string | null;
@@ -19,15 +20,19 @@ export interface ReceiptData {
 // ============================================
 
 const AMOUNT_PATTERNS = [
+  // Moedas estrangeiras: "CHF 54.50" / "EUR 36.33" / "USD 25.00"
+  /\b(CHF|EUR|USD|GBP|JPY|CAD|AUD|CNY|INR|R\$)\s*(\d{1,3}(?:[.,]\d{3})*[.,]\d{2})\b/gi,
+  // Moeda no final: "54.50 CHF" / "36.33 EUR"
+  /\b(\d{1,3}(?:[.,]\d{3})*[.,]\d{2})\s*(CHF|EUR|USD|GBP|JPY|CAD|AUD|CNY|INR|R\$)\b/gi,
   // PIX: "Transferência de R$ 1.500,00" / "enviou R$ 25,50"
   /(?:transfer[êe]ncia|envio|pagamento|pix|cr[ée]dito|d[ée]bito)\s*(?:de\s*)?R\$\s*(\d{1,3}(?:\.\d{3})*,\d{2})/gi,
-  // Valor genérico: "R$ 1.234,56"
+  // R$: "R$ 1.234,56"
   /R\$\s*(\d{1,3}(?:\.\d{3})*,\d{2})/g,
-  // "VALOR TOTAL: 1.234,56" / "Total: R$ 150"
-  /(?:valor|total|quantia|montante|pagamento)\s*(?:total|a pagar|pago)?\s*[:=]?\s*R?\$?\s*(\d{1,3}(?:\.\d{3})*,\d{2})/gi,
-  // "150,50" (número solto com vírgula)
+  // "VALOR TOTAL: 1.234,56" / "Total: CHF 54.50" / "Total: 54.50"
+  /(?:valor|total|quantia|montante|pagamento|summe|betrag|total)\s*(?:total|a pagar|pago)?\s*[:=]?\s*(?:CHF|EUR|USD|R\$)?\s*(\d{1,3}(?:[.,]\d{3})*[.,]\d{2})/gi,
+  // "150,50" (número solto com vírgula decimal - padrão BR)
   /\b(\d{1,3}(?:\.\d{3})*,\d{2})\b/g,
-  // "150.50" (ponto decimal)
+  // "54.50" / "150.50" (ponto decimal - padrão EUA/EU)
   /\b(\d{1,6}\.\d{2})\b/g,
 ];
 
@@ -36,7 +41,11 @@ const AMOUNT_PATTERNS = [
 // ============================================
 
 const DATE_PATTERNS = [
-  // "08/09/2026" / "08/09/26"
+  // "30.07.2007/13:29:17" (formato alemão com hora)
+  /\b(\d{1,2})\.(\d{1,2})\.(\d{2,4})\/\d{1,2}:\d{2}(?::\d{2})?\b/g,
+  // "30.07.2007" (formato alemão/europeu)
+  /\b(\d{1,2})\.(\d{1,2})\.(\d{2,4})\b/g,
+  // "08/09/2026" / "08/09/26" (formato BR)
   /\b(\d{1,2})\/(\d{1,2})\/(\d{2,4})\b/g,
   // "08-09-2026"
   /\b(\d{1,2})-(\d{1,2})-(\d{2,4})\b/g,
@@ -47,8 +56,13 @@ const DATE_PATTERNS = [
 ];
 
 const MONTH_MAP: Record<string, number> = {
+  // Português
   'jan': 0, 'fev': 1, 'mar': 2, 'abr': 3, 'mai': 4, 'jun': 5,
   'jul': 6, 'ago': 7, 'set': 8, 'out': 9, 'nov': 10, 'dez': 11,
+  // Alemão
+  'feb': 1, 'mär': 2, 'aug': 7, 'sep': 8, 'okt': 9,
+  // Inglês
+  'may': 4, 'oct': 9, 'dec': 11,
 };
 
 // ============================================
@@ -96,6 +110,13 @@ const NOISE_LINES = [
   'voucher',
   'troco',
   'cashback',
+  // Alemão
+  'mwst',
+  'steuer',
+  'telefon',
+  'fax',
+  'e-mail',
+  'bedienend',
 ];
 
 // ============================================
@@ -107,7 +128,7 @@ const PAYMENT_METHODS: Array<{ pattern: RegExp; method: string }> = [
   { pattern: /(?:cart[ãa]o\s+(?:de\s+)?cr[ée]dito|cr[ée]dito)/i, method: 'Cartão de Crédito' },
   { pattern: /(?:cart[ãa]o\s+(?:de\s+)?d[ée]bito|d[ée]bito)/i, method: 'Cartão de Débito' },
   { pattern: /(?:boleto|uplicidade)/i, method: 'Boleto' },
-  { pattern: /(?:dinheiro|esp[ée]cie)/i, method: 'Dinheiro' },
+  { pattern: /(?:dinheiro|esp[ée]cie|bar|bargeld)/i, method: 'Dinheiro' },
   { pattern: /(?:google\s*pay|apple\s*pay|samsung\s*pay)/i, method: 'Carteira Digital' },
   { pattern: /(?:mercado\s*pago|picpay|pagseguro|inter|iugu)/i, method: 'Pix/Transferência' },
 ];
@@ -171,28 +192,44 @@ function extractBestDescription(lines: string[]): string | null {
 /**
  * Extrai valor do texto com múltiplos padrões
  */
-function extractAmount(text: string): { value: number; raw: string } | null {
-  const allMatches: Array<{ value: number; raw: string; index: number }> = [];
+function extractAmount(text: string): { value: number; raw: string; currency: string | null } | null {
+  const allMatches: Array<{ value: number; raw: string; index: number; currency: string | null }> = [];
 
   for (const pattern of AMOUNT_PATTERNS) {
     pattern.lastIndex = 0;
     let match;
     while ((match = pattern.exec(text)) !== null) {
-      const raw = match[1];
+      // Padrões com 2 captures (moeda + valor ou valor + moeda)
+      let raw: string;
+      let currency: string | null = null;
+
+      if (match[2] && /(?:CHF|EUR|USD|GBP|JPY|CAD|AUD|CNY|INR|R\$)/i.test(match[1] || '')) {
+        // Padrão: MOEDA VALOR (ex: "CHF 54.50")
+        currency = match[1].toUpperCase();
+        raw = match[2];
+      } else if (match[2] && /(?:CHF|EUR|USD|GBP|JPY|CAD|AUD|CNY|INR|R\$)/i.test(match[2] || '')) {
+        // Padrão: VALOR MOEDA (ex: "54.50 CHF")
+        currency = match[2].toUpperCase();
+        raw = match[1];
+      } else {
+        // Padrão sem moeda
+        raw = match[2] || match[1];
+      }
+
       if (!raw) continue;
       const value = parseFloat(raw.replace(/\./g, '').replace(',', '.'));
       if (!isNaN(value) && value > 0 && value < 1000000) {
-        allMatches.push({ value, raw, index: match.index });
+        allMatches.push({ value, raw, index: match.index, currency });
       }
     }
   }
 
   if (allMatches.length === 0) return null;
 
-  // Prefer match que aparece após palavras-chave de valor
+  // Prioriza: Total > Valor > primeiro encontrado
   const prioritized = allMatches.find(m => {
-    const before = text.substring(Math.max(0, m.index - 30), m.index).toLowerCase();
-    return /(?:valor|total|pagamento|quantia|recebido|enviado)/i.test(before);
+    const before = text.substring(Math.max(0, m.index - 40), m.index).toLowerCase();
+    return /(?:total|summe|betrag|valor|pagamento|quantia)/i.test(before);
   });
 
   return prioritized || allMatches[0];
@@ -209,7 +246,12 @@ function extractDate(text: string): string | null {
       try {
         let day: number, month: number, year: number;
 
-        if (match[0].includes('/')) {
+        if (match[0].includes('.')) {
+          // Formato alemão/europeu: DD.MM.YYYY
+          day = parseInt(match[1]);
+          month = parseInt(match[2]) - 1;
+          year = parseInt(match[3]);
+        } else if (match[0].includes('/')) {
           day = parseInt(match[1]);
           month = parseInt(match[2]) - 1;
           year = parseInt(match[3]);
@@ -318,6 +360,7 @@ export function parseReceiptText(text: string): ReceiptData {
 
   return {
     amount: amountResult?.value ?? null,
+    currency: amountResult?.currency ?? null,
     description: description || store,
     date: date,
     store: store,
@@ -352,8 +395,10 @@ export function getReceiptResponse(receipt: ReceiptData): string {
       ? 'Alguns dados podem precisar de correção'
       : 'Dados incompletos - verifique antes de salvar';
 
+  const currencySymbol = receipt.currency || 'R$';
+
   let response = `${confidenceEmoji} ${confidenceText}\n\n`;
-  response += `💰 Valor: R$ ${receipt.amount.toFixed(2).replace('.', ',')}\n`;
+  response += `💰 Valor: ${currencySymbol} ${receipt.amount.toFixed(2).replace('.', ',')}\n`;
 
   if (receipt.description) {
     response += `📝 Descrição: ${receipt.description}\n`;
