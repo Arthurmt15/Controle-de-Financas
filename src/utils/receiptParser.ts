@@ -249,8 +249,16 @@ function extractAmount(text: string): { value: number; raw: string; currency: st
         if (!isNaN(value) && value > 0 && value < 100000) {
           let score = 0;
 
+          // Verifica linha atual
           if (/(?:total|summe|betrag|valor|pagamento|quantia)/i.test(line)) {
             score += 100;
+          }
+          // Verifica linha anterior (para "TOTAL LIQUIDO\n429,00")
+          if (lineIndex > 0) {
+            const prevLine = lines[lineIndex - 1];
+            if (/(?:total|summe|betrag|valor|pagamento|quantia)/i.test(prevLine)) {
+              score += 100;
+            }
           }
           if (currency) {
             score += 50;
@@ -261,6 +269,10 @@ function extractAmount(text: string): { value: number; raw: string; currency: st
           }
           if (value < 1) {
             score -= 20;
+          }
+          // Penaliza valores muito baixos (< 5) que provavelmente são quantidades
+          if (value < 5) {
+            score -= 10;
           }
 
           allMatches.push({ value, raw, index: match.index, currency, lineIndex, score });
