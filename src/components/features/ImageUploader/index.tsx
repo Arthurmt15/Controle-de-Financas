@@ -55,68 +55,103 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   /**
-   * Extrai valor do texto OCR
+   * Extrai valor do texto OCR de notas fiscais.
+   * Busca TOTAL/VALOR PAGO primeiro, depois último número decimal como fallback.
    */
   const extractAmount = (text: string): number | null => {
-    const patterns = [
-      /R\$\s*([\d.,]+)/i,
-      /valor[:\s]*R?\$?\s*([\d.,]+)/i,
-      /total[:\s]*R?\$?\s*([\d.,]+)/i,
-      /([\d]+[.,]\d{2})/,
+    const lower = text.toLowerCase();
+
+    // 1. Busca linhas com TOTAL ou VALOR PAGO seguido de número
+    const totalPatterns = [
+      /total\s+(?:liquido|geral|a\s+pagar)?\s*(\d{1,6}[.,]\d{2})/i,
+      /valor\s+pago\s+(\d{1,6}[.,]\d{2})/i,
+      /valor\s+total\s+(\d{1,6}[.,]\d{2})/i,
+      /total\s+(\d{1,6}[.,]\d{2})/i,
     ];
-    for (const pattern of patterns) {
-      const match = text.match(pattern);
+    for (const pattern of totalPatterns) {
+      const match = lower.match(pattern);
       if (match) {
-        const cleaned = match[1].replace(/\./g, '').replace(',', '.');
-        const value = parseFloat(cleaned);
-        if (!isNaN(value) && value > 0) return value;
+        const value = match[1].replace('.', '').replace(',', '.');
+        const num = parseFloat(value);
+        if (!isNaN(num) && num > 0) return num;
       }
     }
+
+    // 2. Busca "R$ XXX,XX"
+    const brlMatch = lower.match(/r\$\s*(\d{1,6}[.,]\d{2})/);
+    if (brlMatch) {
+      const value = brlMatch[1].replace('.', '').replace(',', '.');
+      const num = parseFloat(value);
+      if (!isNaN(num) && num > 0) return num;
+    }
+
+    // 3. Fallback: pega o ÚLTIMO número decimal >= 1,00 (totais ficam no final)
+    const decimalPattern = /(\d{1,6}[.,]\d{2})\b/g;
+    let lastMatch: RegExpExecArray | null = null;
+    let m: RegExpExecArray | null;
+    while ((m = decimalPattern.exec(text)) !== null) {
+      const value = m[1].replace('.', '').replace(',', '.');
+      const num = parseFloat(value);
+      if (num >= 1.00) lastMatch = m;
+    }
+    if (lastMatch) {
+      const value = lastMatch[1].replace('.', '').replace(',', '.');
+      return parseFloat(value);
+    }
+
     return null;
   };
 
   /**
-   * Extrai data do texto OCR
+   * Extrai data do texto OCR de notas fiscais.
    */
   const extractDate = (text: string): string | null => {
     const patterns = [
-      /(\d{2}\/\d{2}\/\d{4})/,
-      /(\d{2}\.\d{2}\.\d{4})/,
-      /(\d{4}-\d{2}-\d{2})/,
-      /(\d{2}\/\d{2}\/\d{2})/,
+      /(\d{2})\/(\d{2})\/(\d{4})/,
+      /(\d{2})\.(\d{2})\.(\d{4})/,
+      /(\d{2})\/(\d{2})\/(\d{2})/,
+      /(\d{4})-(\d{2})-(\d{2})/,
     ];
     for (const pattern of patterns) {
       const match = text.match(pattern);
       if (match) {
-        let dateStr = match[1];
-        if (dateStr.includes('/')) {
-          const [d, m, y] = dateStr.split('/');
-          const year = y.length === 2 ? `20${y}` : y;
-          dateStr = `${year}-${m.padStart(2, '0')}-${d.padStart(2, '0')}`;
-        } else if (dateStr.match(/^\d{2}\.\d{2}\.\d{4}$/)) {
-          const [d, m, y] = dateStr.split('.');
-          dateStr = `${y}-${m.padStart(2, '0')}-${d.padStart(2, '0')}`;
+        let [, d, m, y] = match;
+        if (y.length === 2) y = `20${y}`;
+        if (parseInt(m) >= 1 && parseInt(m) <= 12 && parseInt(d) >= 1 && parseInt(d) <= 31) {
+          return `${y}-${m}-${d}`;
         }
-        const date = new Date(dateStr + 'T12:00:00');
-        if (!isNaN(date.getTime())) return dateStr;
       }
     }
     return null;
   };
 
   /**
-   * Extrai descrição do texto OCR (primeira linha significativa)
+   * Extrai descrição do texto OCR pulando linhas de produto e lixo.
    */
   const extractDescription = (text: string): string | null => {
     const lines = text.split('\n').map(l => l.trim()).filter(l => l.length > 2);
-    const skipWords = ['comprovante', 'nota fiscal', 'recibo', 'cnpj', 'cpf', 'imposto', 'taxa'];
+
+    const noisePatterns = [
+      /^\d{4,}\s/,
+      /\b(und|x|qty|qtde)\b/i,
+      /cnpj|cpf|inscri|nota fiscal|comprovante|recibo/i,
+      /total|subtotal|liquido|pagamento|pago/i,
+      /taxa|entrega|desconto/i,
+      /eded|po pp|\*\)/i,
+    ];
+
     for (const line of lines) {
-      const lower = line.toLowerCase();
-      const isNoise = skipWords.some(w => lower.includes(w)) || /^\d+[.,/]/.test(line);
-      if (!isNoise && line.length >= 3 && line.length <= 80) {
-        return line;
+      if (/^\d{4,}\s/.test(line)) continue;
+      if (noisePatterns.some(p => p.test(line))) continue;
+      if (/^[\d\s.,xX]+$/.test(line)) continue;
+      if (line.length < 3 || line.length > 60) continue;
+
+      const cleaned = line.replace(/[^\w\sáàãâéêíóôõúç]/gi, '').trim();
+      if (cleaned.length >= 3) {
+        return cleaned.substring(0, 50);
       }
     }
+
     return null;
   };
 
@@ -235,9 +270,13 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
   const handleConfirm = async () => {
     if (!analysisResult) return;
 
-    // Tenta parsear o texto extraído para detectar tipo e categoria
+    // Usa o parser centralizado para TODOS os campos
     const parsed = parseTransactionFromMessage(analysisResult.rawText);
 
+    // Parser centralizado como fonte primária, fallback para extração local
+    const valor = parsed?.valor || analysisResult.amount || 0;
+    const descricao = parsed?.descricao || analysisResult.description || 'Compra via comprovante';
+    const data = parsed?.data || analysisResult.date || new Date().toISOString();
     const tipo = parsed?.tipo || 'despesa';
     const categoria = parsed?.categoria || 'Outros';
     const transactionType = tipo === 'receita' ? 'income' : 'expense';
@@ -249,10 +288,10 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
     const defaultCategoryId = matchCat?.id || categories[0]?.id || '';
 
     const transactionData: Omit<Transaction, 'id'> = {
-      description: analysisResult.description || 'Compra via comprovante',
-      amount: analysisResult.amount || 0,
+      description: descricao,
+      amount: valor,
       type: transactionType,
-      date: analysisResult.date || new Date().toISOString(),
+      date: data,
       categoryId: defaultCategoryId,
     };
 
