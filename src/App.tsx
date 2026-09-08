@@ -18,7 +18,7 @@ import GlobalStyle from './Styles/global';
 const LoginPage = lazy(() => import('./pages/Login'));
 const DashboardPage = lazy(() => import('./pages/Dashboard'));
 const TransactionsPage = lazy(() => import('./pages/Transactions'));
-const ReportsPage = lazy(() => import('./pages/Reports'));
+const AnalysisPage = lazy(() => import('./pages/Analysis'));
 const SettingsPage = lazy(() => import('./pages/Settings'));
 
 /**
@@ -74,7 +74,7 @@ const AuthenticatedRoutes: React.FC = () => (
         <Routes>
           <Route path="/dashboard" element={<DashboardPage />} />
           <Route path="/transactions" element={<TransactionsPage />} />
-          <Route path="/reports" element={<ReportsPage />} />
+          <Route path="/analysis" element={<AnalysisPage />} />
           <Route path="/settings" element={<SettingsPage />} />
           <Route path="*" element={<Navigate to="/dashboard" replace />} />
         </Routes>

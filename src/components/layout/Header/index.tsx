@@ -15,7 +15,7 @@ import * as C from './styles';
 const NAV_ITEMS = [
   { path: '/dashboard', label: 'Dashboard' },
   { path: '/transactions', label: 'Transações' },
-  { path: '/reports', label: 'Relatórios' },
+  { path: '/analysis', label: 'Análise' },
   { path: '/settings', label: 'Configurações' },
 ];
 
