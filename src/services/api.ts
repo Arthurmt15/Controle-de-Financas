@@ -10,9 +10,8 @@ import type { Budget } from '../types/dashboard';
 /** URL base da API (configurada via variável de ambiente) */
 const API_BASE = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
 
-if (!process.env.REACT_APP_API_URL) {
-  console.warn('⚠️ REACT_APP_API_URL não configurada. Usando localhost:5000/api (apenas desenvolvimento)');
-}
+console.log('🔗 API URL configurada:', API_BASE);
+console.log('🔗 Variável de ambiente definida:', !!process.env.REACT_APP_API_URL);
 
 /**
  * Função auxiliar para fazer requisições à API
