@@ -185,7 +185,7 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
 
     // Análise real com Tesseract.js
     setIsAnalyzing(true);
-    setAnalysisProgress('Carregando OCR...');
+    setAnalysisProgress('Carregando...');
 
     try {
       const worker = await createWorker('por');
