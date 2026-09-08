@@ -482,3 +482,20 @@ export function getExampleMessages(): string[] {
     'Jantar 85',
   ];
 }
+
+/**
+ * Estilos (cor e ícone) para cada categoria padrão.
+ * Usado para criar novas categorias no banco com a aparência correta.
+ */
+export const CATEGORY_STYLES: Record<string, { color: string; icon: string }> = {
+  'Alimentação': { color: '#FF6B6B', icon: 'FaUtensils' },
+  'Transporte': { color: '#4ECDC4', icon: 'FaCar' },
+  'Moradia': { color: '#45B7D1', icon: 'FaHome' },
+  'Saúde': { color: '#FFEAA7', icon: 'FaHeartbeat' },
+  'Educação': { color: '#DDA0DD', icon: 'FaGraduationCap' },
+  'Lazer': { color: '#96CEB4', icon: 'FaGamepad' },
+  'Salário': { color: '#00B894', icon: 'FaMoneyBillWave' },
+  'Freelance': { color: '#6C5CE7', icon: 'FaLaptop' },
+  'Investimentos': { color: '#FDCB6E', icon: 'FaChartLine' },
+  'Outros': { color: '#636E72', icon: 'FaEllipsisH' },
+};

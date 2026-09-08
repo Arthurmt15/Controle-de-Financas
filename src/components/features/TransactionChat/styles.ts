@@ -322,3 +322,84 @@ export const ExampleChip = styled.button`
     font-size: 13px;
   }
 `;
+
+/**
+ * Container dos botões de decisão de categoria
+ */
+export const PendingCategoryActions = styled.div`
+  padding: 12px 16px;
+  border-top: 1px solid ${({ theme }) => theme.colors.border};
+  background-color: ${({ theme }) => `${theme.colors.primary}08`};
+
+  @media (max-width: 480px) {
+    padding: 10px 12px;
+  }
+`;
+
+/**
+ * Container dos botões de opção
+ */
+export const PendingCategoryButtons = styled.div`
+  display: flex;
+  gap: 8px;
+
+  @media (max-width: 480px) {
+    flex-direction: column;
+  }
+`;
+
+/**
+ * Botão para usar "Outros"
+ */
+export const UseOtherButton = styled.button`
+  flex: 1;
+  padding: 10px 16px;
+  font-size: 13px;
+  font-weight: 500;
+  font-family: inherit;
+  color: ${({ theme }) => theme.colors.textSecondary};
+  background-color: ${({ theme }) => theme.colors.surface};
+  border: 1px solid ${({ theme }) => theme.colors.border};
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+
+  &:hover {
+    background-color: ${({ theme }) => theme.colors.background};
+    border-color: ${({ theme }) => theme.colors.textSecondary};
+  }
+
+  @media (max-width: 480px) {
+    padding: 10px 14px;
+  }
+`;
+
+/**
+ * Botão para criar nova categoria
+ */
+export const CreateCategoryButton = styled.button`
+  flex: 1;
+  padding: 10px 16px;
+  font-size: 13px;
+  font-weight: 500;
+  font-family: inherit;
+  color: white;
+  background-color: ${({ theme }) => theme.colors.primary};
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+
+  &:hover:not(:disabled) {
+    background-color: ${({ theme }) => theme.colors.primaryDark};
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  @media (max-width: 480px) {
+    padding: 10px 14px;
+  }
+`;
