@@ -5,7 +5,7 @@
  */
 
 import React, { useState, useRef } from 'react';
-import { createWorker } from 'tesseract.js';
+import { extractTextFromImage } from '../../../services/ocrService';
 import { useTransactions } from '../../../hooks/useTransactions';
 import { parseTransactionFromMessage } from '../../../utils/parseTransaction';
 
@@ -183,16 +183,15 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
     };
     reader.readAsDataURL(file);
 
-    // Análise real com Tesseract.js
+    // Análise real com OCR.space
     setIsAnalyzing(true);
     setAnalysisProgress('Carregando...');
 
     try {
-      const worker = await createWorker('por');
       setAnalysisProgress('Analisando imagem...');
 
-      const { data } = await worker.recognize(file);
-      const rawText = data.text;
+      const ocrResult = await extractTextFromImage(file, 'por');
+      const rawText = ocrResult.text;
 
       const amount = extractAmount(rawText);
       const date = extractDate(rawText);
@@ -200,8 +199,6 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
 
       const result: AnalysisResult = { amount, description, date, rawText };
       setAnalysisResult(result);
-
-      await worker.terminate();
     } catch (err) {
       console.error('Erro no OCR:', err);
       setError('Erro ao analisar a imagem. Tente novamente.');

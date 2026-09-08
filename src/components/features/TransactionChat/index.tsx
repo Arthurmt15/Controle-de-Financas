@@ -7,7 +7,7 @@
  */
 
 import React, { useState, useRef, useEffect } from 'react';
-import { createWorker } from 'tesseract.js';
+import { extractTextFromImage } from '../../../services/ocrService';
 import { useTransactions } from '../../../hooks/useTransactions';
 import { parseTransactionFromMessage, getExampleMessages } from '../../../utils/parseTransaction';
 import { detectCommand, executeCommand } from '../../../utils/chatCommands';
@@ -350,11 +350,9 @@ const TransactionChat: React.FC<TransactionChatProps> = ({
     addMessage('🔍 Analisando comprovante...', false);
 
     try {
-      const worker = await createWorker('por');
-      const { data } = await worker.recognize(file);
-      await worker.terminate();
+      const ocrResult = await extractTextFromImage(file, 'por');
+      const text = ocrResult.text;
 
-      const text = data.text.trim();
       if (!text) {
         addMessage('Não consegui ler texto na imagem. Por favor, digite os dados manualmente.\nEx: "Mercado 150,50"', false);
         setIsProcessing(false);
