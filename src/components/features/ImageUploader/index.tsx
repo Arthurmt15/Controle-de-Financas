@@ -7,6 +7,7 @@
 import React, { useState, useRef } from 'react';
 import { createWorker } from 'tesseract.js';
 import { useTransactions } from '../../../hooks/useTransactions';
+import { parseTransactionFromMessage } from '../../../utils/parseTransaction';
 
 import * as C from './styles';
 import type { Transaction } from '../../../types';
@@ -234,15 +235,23 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
   const handleConfirm = async () => {
     if (!analysisResult) return;
 
-    // Encontra categoria padrão
-    const defaultCategoryId = categories.length > 0
-      ? categories[0].id
-      : '';
+    // Tenta parsear o texto extraído para detectar tipo e categoria
+    const parsed = parseTransactionFromMessage(analysisResult.rawText);
+
+    const tipo = parsed?.tipo || 'despesa';
+    const categoria = parsed?.categoria || 'Outros';
+    const transactionType = tipo === 'receita' ? 'income' : 'expense';
+
+    // Encontra categoria pelo nome
+    const matchCat = categories.find(
+      c => c.name.toLowerCase() === categoria.toLowerCase()
+    );
+    const defaultCategoryId = matchCat?.id || categories[0]?.id || '';
 
     const transactionData: Omit<Transaction, 'id'> = {
       description: analysisResult.description || 'Compra via comprovante',
       amount: analysisResult.amount || 0,
-      type: 'expense',
+      type: transactionType,
       date: analysisResult.date || new Date().toISOString(),
       categoryId: defaultCategoryId,
     };
@@ -254,7 +263,6 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
         onTransactionCreated(transactionData);
       }
 
-      // Limpa após sucesso
       handleRemove();
     } catch (err) {
       setError('Erro ao criar transação. Por favor, tente novamente.');

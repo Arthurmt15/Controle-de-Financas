@@ -71,7 +71,7 @@ const TransactionChat: React.FC<TransactionChatProps> = ({
     setMessages([
       {
         id: 'welcome',
-        text: 'Olá! Digite uma mensagem para adicionar uma transação. Ex: "Almoço R$ 35" ou "Entrada R$ 2000 salário"',
+        text: 'Olá! Digite uma mensagem para adicionar uma transação.\n\nExemplos:\n• "Gastei 120 da luz dia 5 de janeiro"\n• "Mercado ontem 150,50"\n• "Entrada 4k salário"',
         isUser: false,
         timestamp: new Date(),
       },
@@ -113,7 +113,7 @@ const TransactionChat: React.FC<TransactionChatProps> = ({
 
     if (!parsed) {
       addMessage(
-        'Não consegui identificar uma transação válida. Tente algo como "Almoço R$ 25" ou "Entrada R$ 500 salário".',
+        'Não consegui identificar uma transação válida. Tente algo como:\n• "Gastei 120 da luz dia 5 de janeiro"\n• "Mercado ontem 150,50"\n• "Entrada 4k salário"',
         false
       );
       setIsProcessing(false);
@@ -140,11 +140,11 @@ const TransactionChat: React.FC<TransactionChatProps> = ({
       return;
     }
 
-    // Encontra categoria apropriada
-    const matchingCategory = categories.find(
-      c => c.defaultType === parsed.type || c.defaultType === 'both'
+    // Encontra categoria pelo nome retornado pelo parser
+    const matchCat = categories.find(
+      c => c.name.toLowerCase() === parsed.categoria.toLowerCase()
     );
-    const defaultCategoryId = matchingCategory?.id || categories[0]?.id || '';
+    const defaultCategoryId = matchCat?.id || categories[0]?.id || '';
 
     if (!defaultCategoryId) {
       addMessage(
@@ -155,12 +155,15 @@ const TransactionChat: React.FC<TransactionChatProps> = ({
       return;
     }
 
+    // Mapeia tipo para o formato do banco
+    const transactionType = parsed.tipo === 'receita' ? 'income' : 'expense';
+
     // Cria a transação
     const transactionData: Omit<Transaction, 'id'> = {
-      description: parsed.description,
-      amount: parsed.amount,
-      type: parsed.type,
-      date: parsed.date || new Date().toISOString(),
+      description: parsed.descricao,
+      amount: parsed.valor,
+      type: transactionType,
+      date: parsed.data,
       categoryId: defaultCategoryId,
     };
 
@@ -168,9 +171,9 @@ const TransactionChat: React.FC<TransactionChatProps> = ({
       await addTransaction(transactionData);
 
       // Mensagem de sucesso
-      const typeLabel = parsed.type === 'income' ? 'Entrada' : 'Saída';
+      const typeLabel = parsed.tipo === 'receita' ? '📈 Entrada' : '📉 Saída';
       addMessage(
-        `Transação criada com sucesso! ✅\n${typeLabel}: ${parsed.description}\nValor: R$ ${parsed.amount.toFixed(2).replace('.', ',')}`,
+        `Transação criada com sucesso! ✅\n${typeLabel}: ${parsed.descricao}\n💰 R$ ${parsed.valor.toFixed(2).replace('.', ',')}\n📅 ${parsed.data}\n🏷️ ${parsed.categoria}`,
         false
       );
 
@@ -251,29 +254,30 @@ const TransactionChat: React.FC<TransactionChatProps> = ({
       // Tenta parsear a transação do texto extraído
       const parsed = parseTransactionFromMessage(text);
       if (parsed) {
-        const matchingCategory = categories.find(
-          c => c.defaultType === parsed.type || c.defaultType === 'both'
+        const matchCat = categories.find(
+          c => c.name.toLowerCase() === parsed.categoria.toLowerCase()
         );
-        const defaultCategoryId = matchingCategory?.id || categories[0]?.id || '';
+        const defaultCategoryId = matchCat?.id || categories[0]?.id || '';
 
         if (defaultCategoryId) {
+          const transactionType = parsed.tipo === 'receita' ? 'income' : 'expense';
           const transactionData: Omit<Transaction, 'id'> = {
-            description: parsed.description,
-            amount: parsed.amount,
-            type: parsed.type,
-            date: parsed.date || new Date().toISOString(),
+            description: parsed.descricao,
+            amount: parsed.valor,
+            type: transactionType,
+            date: parsed.data,
             categoryId: defaultCategoryId,
           };
 
           await addTransaction(transactionData);
-          const typeLabel = parsed.type === 'income' ? 'Entrada' : 'Saída';
+          const typeLabel = parsed.tipo === 'receita' ? '📈 Entrada' : '📉 Saída';
           addMessage(
-            `✅ Transação criada!\n${typeLabel}: ${parsed.description}\nValor: R$ ${parsed.amount.toFixed(2).replace('.', ',')}`,
+            `✅ Transação criada!\n${typeLabel}: ${parsed.descricao}\n💰 R$ ${parsed.valor.toFixed(2).replace('.', ',')}\n📅 ${parsed.data}\n🏷️ ${parsed.categoria}`,
             false
           );
         }
       } else {
-        addMessage('Não consegui identificar uma transação no texto. Por favor, digite manualmente.\nEx: "Almoço R$ 35"', false);
+        addMessage('Não consegui identificar uma transação no texto. Por favor, digite manualmente.\nEx: "Mercado 150,50"', false);
       }
     } catch (err) {
       console.error('Erro no OCR:', err);
@@ -337,7 +341,7 @@ const TransactionChat: React.FC<TransactionChatProps> = ({
           value={inputValue}
           onChange={(e) => setInputValue(e.target.value)}
           onKeyPress={handleKeyPress}
-          placeholder="Ex: Almoço R$ 35"
+          placeholder="Ex: Mercado ontem 150,50"
           disabled={isProcessing}
         />
 
