@@ -5,6 +5,7 @@
  */
 
 import React, { useState, useRef, useEffect } from 'react';
+import { createWorker } from 'tesseract.js';
 import { useTransactions } from '../../../hooks/useTransactions';
 import { parseTransactionFromMessage, getExampleMessages } from '../../../utils/parseTransaction';
 import * as C from './styles';
@@ -225,26 +226,61 @@ const TransactionChat: React.FC<TransactionChatProps> = ({
     const file = e.target.files?.[0];
     if (!file) return;
 
-    // Verifica se é imagem
     if (!file.type.startsWith('image/')) {
       addMessage('Por favor, selecione uma imagem válida.', false);
       return;
     }
 
     setIsProcessing(true);
-    addMessage('📷 Analisando comprovante...', false);
+    addMessage('🔍 Analisando comprovante...', false);
 
-    // Simula análise de imagem (em produção, usaria OCR real)
-    setTimeout(() => {
-      // Por enquanto, pede para o usuário digitar os dados
-      addMessage(
-        'Imagem recebida! Por favor, digite os dados do comprovante.\nEx: "Supermercado R$ 150,50"',
-        false
-      );
-      setIsProcessing(false);
-    }, 1000);
+    try {
+      const worker = await createWorker('por');
+      const { data } = await worker.recognize(file);
+      await worker.terminate();
 
-    // Limpa o input de arquivo
+      const text = data.text.trim();
+      if (!text) {
+        addMessage('Não consegui ler texto na imagem. Por favor, digite os dados manualmente.\nEx: "Supermercado R$ 150,50"', false);
+        setIsProcessing(false);
+        return;
+      }
+
+      addMessage(`📝 Texto extraído:\n${text}`, false);
+
+      // Tenta parsear a transação do texto extraído
+      const parsed = parseTransactionFromMessage(text);
+      if (parsed) {
+        const matchingCategory = categories.find(
+          c => c.defaultType === parsed.type || c.defaultType === 'both'
+        );
+        const defaultCategoryId = matchingCategory?.id || categories[0]?.id || '';
+
+        if (defaultCategoryId) {
+          const transactionData: Omit<Transaction, 'id'> = {
+            description: parsed.description,
+            amount: parsed.amount,
+            type: parsed.type,
+            date: parsed.date || new Date().toISOString(),
+            categoryId: defaultCategoryId,
+          };
+
+          await addTransaction(transactionData);
+          const typeLabel = parsed.type === 'income' ? 'Entrada' : 'Saída';
+          addMessage(
+            `✅ Transação criada!\n${typeLabel}: ${parsed.description}\nValor: R$ ${parsed.amount.toFixed(2).replace('.', ',')}`,
+            false
+          );
+        }
+      } else {
+        addMessage('Não consegui identificar uma transação no texto. Por favor, digite manualmente.\nEx: "Almoço R$ 35"', false);
+      }
+    } catch (err) {
+      console.error('Erro no OCR:', err);
+      addMessage('Erro ao analisar a imagem. Por favor, digite os dados manualmente.', false);
+    }
+
+    setIsProcessing(false);
     e.target.value = '';
   };
 

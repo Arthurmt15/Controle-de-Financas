@@ -18,6 +18,7 @@
     "react-scripts": "5.0.1",
     "recharts": "^3.10.1",
     "styled-components": "^6.1.9",
+    "tesseract.js": "^7.0.0",
     "typescript": "^5.3.3",
     "web-vitals": "^2.1.4"
   },
