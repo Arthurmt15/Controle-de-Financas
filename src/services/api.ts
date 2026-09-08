@@ -10,6 +10,10 @@ import type { Budget } from '../types/dashboard';
 /** URL base da API (configurada via variável de ambiente) */
 const API_BASE = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
 
+if (!process.env.REACT_APP_API_URL) {
+  console.warn('⚠️ REACT_APP_API_URL não configurada. Usando localhost:5000/api (apenas desenvolvimento)');
+}
+
 /**
  * Função auxiliar para fazer requisições à API
  * Trata erros e retorna resposta formatada
@@ -31,11 +35,25 @@ async function apiRequest<T>(
     ...options,
   };
 
-  const response = await fetch(url, config);
-  const data = await response.json();
+  let response: Response;
+  try {
+    response = await fetch(url, config);
+  } catch (fetchError: any) {
+    console.error(`❌ Falha de rede ao acessar ${url}:`, fetchError.message);
+    throw new Error(`Falha de conexão com o servidor. Verifique sua internet e tente novamente.`);
+  }
+
+  let data: any;
+  try {
+    data = await response.json();
+  } catch {
+    console.error(`❌ Resposta inválida de ${url} (status ${response.status})`);
+    throw new Error(`Servidor retornou uma resposta inválida (status ${response.status}).`);
+  }
 
   if (!response.ok) {
-    throw new Error(data.error || 'Erro na requisição à API');
+    console.error(`❌ Erro HTTP ${response.status} em ${url}:`, data);
+    throw new Error(data.error || `Erro na requisição à API (status ${response.status})`);
   }
 
   return data;
