@@ -128,7 +128,7 @@ const TransactionForm: React.FC<TransactionFormProps> = ({
         type: formData.type,
         date: new Date(formData.date).toISOString(),
         categoryId: formData.categoryId,
-        notes: formData.notes.trim() || undefined,
+        notes: formData.notes.trim() || '',
       };
 
       if (editingTransaction) {

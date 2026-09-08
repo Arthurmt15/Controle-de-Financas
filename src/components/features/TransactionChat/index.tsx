@@ -170,8 +170,9 @@ const TransactionChat: React.FC<TransactionChatProps> = ({
             description: receipt.description || receipt.store || 'Compra',
             amount: receipt.amount,
             type: 'expense',
-            date: receipt.date || new Date().toISOString().split('T')[0],
+            date: receipt.date ? new Date(receipt.date + 'T12:00:00').toISOString() : new Date().toISOString(),
             categoryId: matchCat.id,
+            notes: '',
           };
 
           await addTransaction(transactionData);
@@ -279,8 +280,9 @@ const TransactionChat: React.FC<TransactionChatProps> = ({
       description: parsed.descricao,
       amount: parsed.valor,
       type: transactionType,
-      date: parsed.data,
+      date: new Date(parsed.data + 'T12:00:00').toISOString(),
       categoryId,
+      notes: '',
     };
 
     try {
@@ -433,8 +435,9 @@ const TransactionChat: React.FC<TransactionChatProps> = ({
               description: parsed.descricao,
               amount: parsed.valor,
               type: transactionType,
-              date: parsed.data,
+              date: new Date(parsed.data + 'T12:00:00').toISOString(),
               categoryId: defaultCategoryId,
+              notes: '',
             };
 
             await addTransaction(transactionData);
@@ -487,8 +490,9 @@ const TransactionChat: React.FC<TransactionChatProps> = ({
           description: receipt.description || receipt.store || 'Comprovante',
           amount: receipt.amount,
           type: 'expense',
-          date: receipt.date || new Date().toISOString().split('T')[0],
+          date: receipt.date ? new Date(receipt.date + 'T12:00:00').toISOString() : new Date().toISOString(),
           categoryId: matchCat.id,
+          notes: '',
         };
 
         await addTransaction(transactionData);

@@ -200,6 +200,16 @@ export const AnalysisTitle = styled.h4`
 `;
 
 /**
+ * Dica de edição
+ */
+export const EditHint = styled.span`
+  font-size: 11px;
+  font-weight: 400;
+  color: ${({ theme }) => theme.colors.textSecondary};
+  font-style: italic;
+`;
+
+/**
  * Campo da análise
  */
 export const AnalysisField = styled.div`
@@ -229,6 +239,56 @@ export const FieldValue = styled.span`
   font-size: 14px;
   font-weight: 500;
   color: ${({ theme }) => theme.colors.text};
+`;
+
+/**
+ * Input editável do campo
+ */
+export const FieldInput = styled.input`
+  font-size: 14px;
+  font-weight: 500;
+  color: ${({ theme }) => theme.colors.text};
+  background-color: ${({ theme }) => theme.colors.background};
+  border: 1px solid ${({ theme }) => theme.colors.border};
+  border-radius: 6px;
+  padding: 6px 10px;
+  max-width: 200px;
+  text-align: right;
+  transition: border-color 0.2s ease;
+
+  &:focus {
+    outline: none;
+    border-color: ${({ theme }) => theme.colors.primary};
+  }
+
+  &[type="date"] {
+    max-width: 160px;
+  }
+
+  &[type="text"] {
+    text-align: left;
+    max-width: 250px;
+  }
+`;
+
+/**
+ * Select editável do campo
+ */
+export const FieldSelect = styled.select`
+  font-size: 14px;
+  font-weight: 500;
+  color: ${({ theme }) => theme.colors.text};
+  background-color: ${({ theme }) => theme.colors.background};
+  border: 1px solid ${({ theme }) => theme.colors.border};
+  border-radius: 6px;
+  padding: 6px 10px;
+  max-width: 250px;
+  transition: border-color 0.2s ease;
+
+  &:focus {
+    outline: none;
+    border-color: ${({ theme }) => theme.colors.primary};
+  }
 `;
 
 /**

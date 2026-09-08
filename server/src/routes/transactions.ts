@@ -90,11 +90,14 @@ router.post('/', async (req: Request, res: Response) => {
       data: result.rows[0],
       message: 'Transação criada com sucesso',
     });
-  } catch (error) {
+  } catch (error: any) {
     console.error('Erro ao criar transação:', error);
+    console.error('Dados recebidos:', { userId, description, amount, type, date, categoryId, notes });
+    console.error('Detalhes do erro:', error?.message || error?.detail || error?.hint || 'sem detalhes');
     res.status(500).json({
       success: false,
       error: 'Erro ao criar transação',
+      details: error?.message || error?.detail || 'Erro desconhecido',
     });
   }
 });

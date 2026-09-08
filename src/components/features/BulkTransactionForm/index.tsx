@@ -114,6 +114,7 @@ const BulkTransactionForm: React.FC = () => {
           type,
           date: new Date(date).toISOString(),
           categoryId: item.categoryId || categories[0]?.id || '',
+          notes: '',
         });
       });
 

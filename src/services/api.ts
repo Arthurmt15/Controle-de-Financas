@@ -51,8 +51,9 @@ async function apiRequest<T>(
   }
 
   if (!response.ok) {
+    const errorMsg = data.details || data.error || `Erro na requisição à API (status ${response.status})`;
     console.error(`❌ Erro HTTP ${response.status} em ${url}:`, data);
-    throw new Error(data.error || `Erro na requisição à API (status ${response.status})`);
+    throw new Error(errorMsg);
   }
 
   return data;

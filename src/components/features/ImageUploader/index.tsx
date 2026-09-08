@@ -54,6 +54,12 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
   const [analysisProgress, setAnalysisProgress] = useState('');
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  // Estado editável para os campos OCR
+  const [editableDescription, setEditableDescription] = useState('');
+  const [editableAmount, setEditableAmount] = useState('');
+  const [editableDate, setEditableDate] = useState('');
+  const [editableCategoryId, setEditableCategoryId] = useState('');
+
   /**
    * Extrai valor do texto OCR de notas fiscais.
    * Busca TOTAL/VALOR PAGO primeiro, depois último número decimal como fallback.
@@ -199,6 +205,19 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
 
       const result: AnalysisResult = { amount, description, date, rawText };
       setAnalysisResult(result);
+
+      // Inicializa campos editáveis
+      setEditableDescription(description || '');
+      setEditableAmount(amount ? amount.toFixed(2).replace('.', ',') : '');
+      setEditableDate(date || new Date().toISOString().split('T')[0]);
+
+      // Inicializa categoria editável
+      const parsed = parseTransactionFromMessage(rawText);
+      const categoria = parsed?.categoria || 'Outros';
+      const matchCat = categories.find(
+        c => c.name.toLowerCase() === categoria.toLowerCase()
+      );
+      setEditableCategoryId(matchCat?.id || categories[0]?.id || '');
     } catch (err) {
       console.error('Erro no OCR:', err);
       setError('Erro ao analisar a imagem. Tente novamente.');
@@ -256,6 +275,10 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
     setPreviewUrl(null);
     setAnalysisResult(null);
     setError(null);
+    setEditableDescription('');
+    setEditableAmount('');
+    setEditableDate('');
+    setEditableCategoryId('');
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
     }
@@ -267,30 +290,38 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
   const handleConfirm = async () => {
     if (!analysisResult) return;
 
-    // Usa o parser centralizado para TODOS os campos
+    // Validações
+    if (!editableCategoryId) {
+      setError('Selecione uma categoria antes de confirmar.');
+      return;
+    }
+
+    const valorStr = editableAmount.replace('.', '').replace(',', '.');
+    const valor = parseFloat(valorStr) || 0;
+    if (valor <= 0) {
+      setError('Informe um valor válido maior que zero.');
+      return;
+    }
+
+    // Usa o parser centralizado para obter tipo
     const parsed = parseTransactionFromMessage(analysisResult.rawText);
 
-    // Parser centralizado como fonte primária, fallback para extração local
-    const valor = parsed?.valor || analysisResult.amount || 0;
-    const descricao = parsed?.descricao || analysisResult.description || 'Compra via comprovante';
-    const data = parsed?.data || analysisResult.date || new Date().toISOString();
+    // Valores editáveis pelo usuário
+    const descricao = editableDescription.trim() || 'Compra via comprovante';
+    const data = editableDate || new Date().toISOString().split('T')[0];
     const tipo = parsed?.tipo || 'despesa';
-    const categoria = parsed?.categoria || 'Outros';
     const transactionType = tipo === 'receita' ? 'income' : 'expense';
-
-    // Encontra categoria pelo nome
-    const matchCat = categories.find(
-      c => c.name.toLowerCase() === categoria.toLowerCase()
-    );
-    const defaultCategoryId = matchCat?.id || categories[0]?.id || '';
 
     const transactionData: Omit<Transaction, 'id'> = {
       description: descricao,
       amount: valor,
       type: transactionType,
-      date: data,
-      categoryId: defaultCategoryId,
+      date: data.includes('T') ? data : new Date(data + 'T12:00:00').toISOString(),
+      categoryId: editableCategoryId,
+      notes: '',
     };
+
+    console.log('📤 Enviando transação:', transactionData);
 
     try {
       await addTransaction(transactionData);
@@ -358,29 +389,51 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
         <C.AnalysisResult>
           <C.AnalysisTitle>
             ✅ Dados Identificados
+            <C.EditHint>(edite antes de confirmar)</C.EditHint>
           </C.AnalysisTitle>
 
           <C.AnalysisField>
             <C.FieldLabel>Valor:</C.FieldLabel>
-            <C.FieldValue>
-              {analysisResult.amount
-                ? `R$ ${analysisResult.amount.toFixed(2).replace('.', ',')}`
-                : 'Não identificado'}
-            </C.FieldValue>
+            <C.FieldInput
+              type="text"
+              value={editableAmount}
+              onChange={(e) => { setEditableAmount(e.target.value); setError(null); }}
+              placeholder="0,00"
+            />
           </C.AnalysisField>
 
           <C.AnalysisField>
             <C.FieldLabel>Data:</C.FieldLabel>
-            <C.FieldValue>
-              {analysisResult.date || 'Não identificada'}
-            </C.FieldValue>
+            <C.FieldInput
+              type="date"
+              value={editableDate}
+              onChange={(e) => { setEditableDate(e.target.value); setError(null); }}
+            />
+          </C.AnalysisField>
+
+          <C.AnalysisField>
+            <C.FieldLabel>Categoria:</C.FieldLabel>
+            <C.FieldSelect
+              value={editableCategoryId}
+              onChange={(e) => { setEditableCategoryId(e.target.value); setError(null); }}
+            >
+              <option value="">Selecione...</option>
+              {categories.map((cat) => (
+                <option key={cat.id} value={cat.id}>
+                  {cat.name}
+                </option>
+              ))}
+            </C.FieldSelect>
           </C.AnalysisField>
 
           <C.AnalysisField>
             <C.FieldLabel>Descrição:</C.FieldLabel>
-            <C.FieldValue>
-              {analysisResult.description || 'Não identificada'}
-            </C.FieldValue>
+            <C.FieldInput
+              type="text"
+              value={editableDescription}
+              onChange={(e) => { setEditableDescription(e.target.value); setError(null); }}
+              placeholder="Descrição da transação"
+            />
           </C.AnalysisField>
 
           {analysisResult.rawText && (
