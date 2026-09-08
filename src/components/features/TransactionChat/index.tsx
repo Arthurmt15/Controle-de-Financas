@@ -45,11 +45,7 @@ interface TransactionChatProps {
 const TransactionChat: React.FC<TransactionChatProps> = ({
   onTransactionCreated,
 }) => {
-<<<<<<< HEAD
-  const { addTransaction, categories, isLoading, error } = useTransactions();
-=======
   const { addTransaction, addCategory, categories, isLoading, error: txError } = useTransactions();
->>>>>>> 67d125b0dcd7cea617933e8829471436a6e68883
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [inputValue, setInputValue] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
@@ -140,9 +136,9 @@ const TransactionChat: React.FC<TransactionChatProps> = ({
     }
 
     // Verifica se houve erro ao carregar categorias
-    if (error) {
+    if (txError) {
       addMessage(
-        `Erro ao carregar categorias: ${error}\nVerifique sua conexão e recarregue a página (F5).`,
+        `Erro ao carregar categorias: ${txError}\nVerifique sua conexão e recarregue a página (F5).`,
         false
       );
       setIsProcessing(false);
@@ -155,11 +151,7 @@ const TransactionChat: React.FC<TransactionChatProps> = ({
         ? `Erro ao carregar categorias: ${txError}`
         : 'Nenhuma categoria encontrada.';
       addMessage(
-<<<<<<< HEAD
-        'Nenhuma categoria encontrada. Verifique se você está logado corretamente e recarregue a página (F5).',
-=======
         `${errorMsg}\n\nPossíveis causas:\n• Conexão com o servidor falhou\n• Usuário ainda não foi criado no banco\n\nTente recarregar a página (F5).`,
->>>>>>> 67d125b0dcd7cea617933e8829471436a6e68883
         false
       );
       setIsProcessing(false);
