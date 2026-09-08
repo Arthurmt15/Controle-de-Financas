@@ -403,7 +403,6 @@ const TransactionChat: React.FC<TransactionChatProps> = ({
     try {
       const ocrResult = await extractTextFromImage(file, 'por');
       const text = ocrResult.text;
-      const rawText = ocrResult.rawText;
 
       if (!text) {
         addMessage('Não consegui ler texto na imagem. Por favor, digite os dados manualmente.\nEx: "Mercado 150,50"', false);
@@ -413,7 +412,7 @@ const TransactionChat: React.FC<TransactionChatProps> = ({
 
       // Mostra texto bruto para debug (apenas em desenvolvimento)
       if (process.env.NODE_ENV === 'development') {
-        addMessage(`🔍 **Texto OCR bruto:**\n\`\`\`\n${rawText.substring(0, 500)}\n\`\`\``, false);
+        addMessage(`🔍 **Texto OCR bruto:**\n\`\`\`\n${text.substring(0, 500)}\n\`\`\``, false);
       }
 
       // Processa o texto do OCR com o parser inteligente de comprovantes
@@ -447,7 +446,7 @@ const TransactionChat: React.FC<TransactionChatProps> = ({
           } else {
             // Categoria não encontrada - pede para criar
             addMessage(
-              `📝 **Texto OCR:**\n\`\`\`\n${rawText.substring(0, 300)}\n\`\`\`\n\n` +
+              `📝 **Texto OCR:**\n\`\`\`\n${text.substring(0, 300)}\n\`\`\`\n\n` +
               `❌ Não consegui identificar a categoria. Crie uma com:\n` +
               `• "criar categoria [nome]"`,
               false
@@ -455,7 +454,7 @@ const TransactionChat: React.FC<TransactionChatProps> = ({
           }
         } else {
           addMessage(
-            `📝 **Texto OCR:**\n\`\`\`\n${rawText.substring(0, 300)}\n\`\`\`\n\n` +
+            `📝 **Texto OCR:**\n\`\`\`\n${text.substring(0, 300)}\n\`\`\`\n\n` +
             `❌ Não consegui identificar uma transação no comprovante.\n` +
             `Por favor, digite manualmente.\nEx: "Mercado 150,50"`,
             false

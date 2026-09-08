@@ -1,108 +1,99 @@
 /**
- * Serviço de OCR simplificado
- * Usa tesseract.js com configurações otimizadas para comprovantes
+ * Serviço de OCR usando Puter.js (gratuito, sem cadastro, sem limite)
+ * https://developer.puter.com/tutorials/free-unlimited-ocr-api
  */
 
 import { createWorker } from 'tesseract.js';
 
+declare const puter: any;
+
 export interface OcrResult {
   text: string;
   confidence: number;
-  rawText: string; // Texto bruto para debug
+  source: 'puter' | 'tesseract';
+  rawText?: string;
   error?: string;
 }
 
 /**
- * Pré-processa imagem para melhorar OCR
- * Converte para preto e branco com alto contraste
+ * OCR via Puter.js (gratuito, sem cadastro)
  */
-async function preprocessImage(file: File): Promise<File> {
-  return new Promise((resolve) => {
-    const canvas = document.createElement('canvas');
-    const ctx = canvas.getContext('2d');
-    const img = new Image();
-
-    img.onload = () => {
-      // Escala para 2x se muito pequena
-      const scale = Math.min(2, Math.max(1, 1500 / Math.max(img.width, img.height)));
-      canvas.width = img.width * scale;
-      canvas.height = img.height * scale;
-
-      ctx!.drawImage(img, 0, 0, canvas.width, canvas.height);
-
-      // Converte para tons de cinza
-      const imageData = ctx!.getImageData(0, 0, canvas.width, canvas.height);
-      const data = imageData.data;
-
-      for (let i = 0; i < data.length; i += 4) {
-        const gray = data[i] * 0.299 + data[i + 1] * 0.587 + data[i + 2] * 0.114;
-        data[i] = gray;
-        data[i + 1] = gray;
-        data[i + 2] = gray;
-      }
-
-      // Threshold binário
-      const threshold = 128;
-      for (let i = 0; i < data.length; i += 4) {
-        const value = data[i] > threshold ? 255 : 0;
-        data[i] = value;
-        data[i + 1] = value;
-        data[i + 2] = value;
-      }
-
-      ctx!.putImageData(imageData, 0, 0);
-
-      canvas.toBlob((blob) => {
-        if (blob) {
-          resolve(new File([blob], file.name, { type: 'image/png' }));
-        } else {
-          resolve(file);
-        }
-      }, 'image/png');
-    };
-
-    img.onerror = () => resolve(file);
-    img.src = URL.createObjectURL(file);
-  });
-}
-
-/**
- * OCR principal - tesseract.js com configurações otimizadas
- */
-export async function extractTextFromImage(
-  file: File,
-  language: string = 'por'
-): Promise<OcrResult> {
+async function puterOcr(file: File): Promise<OcrResult> {
   try {
-    // Pré-processa a imagem
-    const processedFile = await preprocessImage(file);
-
-    // Cria worker com português + inglês
-    const worker = await createWorker(`${language}+eng`, 1, {
-      logger: (m) => console.log(m),
+    // Converte file para data URL
+    const dataUrl = await new Promise<string>((resolve) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result as string);
+      reader.readAsDataURL(file);
     });
 
-    // Configurações otimizadas para comprovantes
-    await worker.setParameters({
-      tessedit_char_whitelist: 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789.,;:/- R$%áéíóúãõâêôàèìòùçñÁÉÍÓÚÃÕÂÊÔÀÈÌÒÙÇÑ',
-    });
+    // Usa puter.ai.img2txt para extrair texto
+    const text = await puter.ai.img2txt(dataUrl);
 
-    const { data } = await worker.recognize(processedFile);
-    await worker.terminate();
+    if (!text || text.trim().length === 0) {
+      return { text: '', confidence: 0, source: 'puter', error: 'Nenhum texto encontrado' };
+    }
 
     return {
-      text: data.text.trim(),
-      confidence: data.confidence,
-      rawText: data.text, // Texto bruto para debug
+      text: text.trim(),
+      confidence: 95,
+      source: 'puter',
+      rawText: text,
     };
   } catch (error) {
     return {
       text: '',
       confidence: 0,
-      rawText: '',
+      source: 'puter',
       error: error instanceof Error ? error.message : 'Erro desconhecido',
     };
   }
+}
+
+/**
+ * OCR via tesseract.js (fallback)
+ */
+async function tesseractOcr(file: File): Promise<OcrResult> {
+  try {
+    const worker = await createWorker('por+eng');
+    const { data } = await worker.recognize(file);
+    await worker.terminate();
+
+    return {
+      text: data.text.trim(),
+      confidence: data.confidence,
+      source: 'tesseract',
+    };
+  } catch (error) {
+    return {
+      text: '',
+      confidence: 0,
+      source: 'tesseract',
+      error: error instanceof Error ? error.message : 'Erro desconhecido',
+    };
+  }
+}
+
+/**
+ * OCR principal - tenta Puter.js primeiro, fallback para tesseract
+ */
+export async function extractTextFromImage(
+  file: File,
+  language: string = 'por'
+): Promise<OcrResult> {
+  // Tenta Puter.js primeiro
+  const puterResult = await puterOcr(file);
+
+  // Se Puter.js funcionou e tem texto, usa
+  if (puterResult.text && puterResult.text.length > 5) {
+    return puterResult;
+  }
+
+  // Fallback para tesseract
+  const tesseractResult = await tesseractOcr(file);
+
+  // Retorna o que tem mais texto
+  return puterResult.text.length > tesseractResult.text.length ? puterResult : tesseractResult;
 }
 
 /**
@@ -113,15 +104,23 @@ export async function extractTextFromUrl(
   language: string = 'por'
 ): Promise<OcrResult> {
   try {
-    const response = await fetch(url);
-    const blob = await response.blob();
-    const file = new File([blob], 'image.jpg', { type: 'image/jpeg' });
-    return await extractTextFromImage(file, language);
+    // Usa puter.ai.img2txt diretamente com URL
+    const text = await puter.ai.img2txt(url);
+
+    if (!text || text.trim().length === 0) {
+      return { text: '', confidence: 0, source: 'puter', error: 'Nenhum texto encontrado' };
+    }
+
+    return {
+      text: text.trim(),
+      confidence: 95,
+      source: 'puter',
+    };
   } catch (error) {
     return {
       text: '',
       confidence: 0,
-      rawText: '',
+      source: 'puter',
       error: error instanceof Error ? error.message : 'Erro desconhecido',
     };
   }
