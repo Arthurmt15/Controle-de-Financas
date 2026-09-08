@@ -192,6 +192,32 @@ function extractBestDescription(lines: string[]): string | null {
 // Padrões que indicam que o número NÃO é um valor monetário
 const NON_MONEY_PATTERNS = /(?:rech\.?\s*nr|nr\.|número|num|tel\.?|telefone|fax|mwst|cnpj|cpf|cep|código|nsu|tid|tisch|datum|uhrzeit)/i;
 
+/**
+ * Converte string de valor para número
+ * Lida com formatos BR (1.234,56) e US/EU (1,234.56 ou 1234.56)
+ */
+function parseValue(raw: string): number {
+  // Se tem vírgula E ponto, precisa decidir qual é decimal
+  if (raw.includes(',') && raw.includes('.')) {
+    const lastComma = raw.lastIndexOf(',');
+    const lastPeriod = raw.lastIndexOf('.');
+    // O que vem DEPOIS é o decimal
+    if (lastComma > lastPeriod) {
+      // Formato BR: 1.234,56
+      return parseFloat(raw.replace(/\./g, '').replace(',', '.'));
+    } else {
+      // Formato US: 1,234.56
+      return parseFloat(raw.replace(/,/g, ''));
+    }
+  }
+  // Só vírgula → é decimal (BR)
+  if (raw.includes(',')) {
+    return parseFloat(raw.replace(',', '.'));
+  }
+  // Só ponto → é decimal (US/EU)
+  return parseFloat(raw);
+}
+
 interface AmountMatch {
   value: number;
   raw: string;
@@ -245,7 +271,7 @@ function extractAmount(text: string): { value: number; raw: string; currency: st
         }
 
         if (!raw) continue;
-        const value = parseFloat(raw.replace(/\./g, '').replace(',', '.'));
+        const value = parseValue(raw);
         if (!isNaN(value) && value > 0 && value < 100000) {
           let score = 0;
 
@@ -282,7 +308,7 @@ function extractAmount(text: string): { value: number; raw: string; currency: st
 
     // Se a linha termina com moeda e a próxima linha é um valor
     if (nextLineValue) {
-      const value = parseFloat(nextLineValue.replace(/\./g, '').replace(',', '.'));
+      const value = parseValue(nextLineValue);
       const currencyMatch = line.match(/(CHF|EUR|USD|GBP|JPY|CAD|AUD|CNY|INR|R\$)/i);
       const currency = currencyMatch ? currencyMatch[1].toUpperCase() : null;
 
