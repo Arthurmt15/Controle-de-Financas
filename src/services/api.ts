@@ -146,14 +146,14 @@ export const transactionService = {
     transaction: Omit<Transaction, 'id'>,
     userId: string
   ) {
-    const response = await apiRequest<{ success: boolean; data: Transaction }>(
+    const response = await apiRequest<{ success: boolean; data: any }>(
       '/transactions',
       {
         method: 'POST',
         body: JSON.stringify({ ...transaction, userId }),
       }
     );
-    return response.data;
+    return mapTransaction(response.data);
   },
 
   /**
@@ -162,14 +162,14 @@ export const transactionService = {
    * @returns Transação atualizada
    */
   async update(transaction: Transaction) {
-    const response = await apiRequest<{ success: boolean; data: Transaction }>(
+    const response = await apiRequest<{ success: boolean; data: any }>(
       `/transactions/${transaction.id}`,
       {
         method: 'PUT',
         body: JSON.stringify(transaction),
       }
     );
-    return response.data;
+    return mapTransaction(response.data);
   },
 
   /**
