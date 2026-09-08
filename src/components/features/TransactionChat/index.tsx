@@ -3,6 +3,7 @@
  * @description Componente de chat para adicionar transações por mensagem.
  * Permite ao usuário digitar mensagens como "Almoço R$ 25" e cria a transação.
  * Suporta comandos como "criar categoria", "resumo", "análise" e "ajuda".
+ * Suporta upload de comprovantes via OCR com processamento inteligente.
  */
 
 import React, { useState, useRef, useEffect } from 'react';
@@ -12,6 +13,7 @@ import { parseTransactionFromMessage, getExampleMessages } from '../../../utils/
 import { detectCommand, executeCommand } from '../../../utils/chatCommands';
 import { generateSummary, generateAnalysis } from '../../../utils/analysisEngine';
 import { CATEGORY_STYLES } from '../../../utils/categories';
+import { parseReceiptText, getReceiptResponse } from '../../../utils/receiptParser';
 import * as C from './styles';
 import type { Transaction } from '../../../types';
 import type { ParsedTransaction } from '../../../utils/parseTransaction';
@@ -332,7 +334,8 @@ const TransactionChat: React.FC<TransactionChatProps> = ({
   };
 
   /**
-   * Trata upload de imagem
+   * Trata upload de imagem (comprovante/nota fiscal)
+   * Usa processador inteligente para extrair valor, data, loja e método de pagamento
    */
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -353,40 +356,104 @@ const TransactionChat: React.FC<TransactionChatProps> = ({
 
       const text = data.text.trim();
       if (!text) {
-        addMessage('Não consegui ler texto na imagem. Por favor, digite os dados manualmente.\nEx: "Supermercado R$ 150,50"', false);
+        addMessage('Não consegui ler texto na imagem. Por favor, digite os dados manualmente.\nEx: "Mercado 150,50"', false);
         setIsProcessing(false);
         return;
       }
 
-      addMessage(`📝 Texto extraído:\n${text}`, false);
+      // Processa o texto do OCR com o parser inteligente de comprovantes
+      const receipt = parseReceiptText(text);
 
-      // Tenta parsear a transação do texto extraído
-      const parsed = parseTransactionFromMessage(text);
-      if (parsed) {
-        const matchCat = categories.find(
-          c => c.name.toLowerCase() === parsed.categoria.toLowerCase()
-        );
-        const defaultCategoryId = matchCat?.id || categories[0]?.id || '';
+      // Se não conseguiu extrair valor, tenta o parser de transação
+      if (!receipt.amount) {
+        const parsed = parseTransactionFromMessage(text);
+        if (parsed) {
+          const matchCat = categories.find(
+            c => c.name.toLowerCase() === parsed.categoria.toLowerCase()
+          );
+          const defaultCategoryId = matchCat?.id || categories[0]?.id || '';
 
-        if (defaultCategoryId) {
-          const transactionType = parsed.tipo === 'receita' ? 'income' : 'expense';
-          const transactionData: Omit<Transaction, 'id'> = {
-            description: parsed.descricao,
-            amount: parsed.valor,
-            type: transactionType,
-            date: parsed.data,
-            categoryId: defaultCategoryId,
-          };
+          if (defaultCategoryId) {
+            const transactionType = parsed.tipo === 'receita' ? 'income' : 'expense';
+            const transactionData: Omit<Transaction, 'id'> = {
+              description: parsed.descricao,
+              amount: parsed.valor,
+              type: transactionType,
+              date: parsed.data,
+              categoryId: defaultCategoryId,
+            };
 
-          await addTransaction(transactionData);
-          const typeLabel = parsed.tipo === 'receita' ? '📈 Entrada' : '📉 Saída';
+            await addTransaction(transactionData);
+            const typeLabel = parsed.tipo === 'receita' ? '📈 Entrada' : '📉 Saída';
+            addMessage(
+              `✅ Transação criada!\n${typeLabel}: ${parsed.descricao}\n💰 R$ ${parsed.valor.toFixed(2).replace('.', ',')}\n📅 ${parsed.data}\n🏷️ ${parsed.categoria}`,
+              false
+            );
+          } else {
+            // Categoria não encontrada - pede para criar
+            addMessage(
+              `📝 Texto extraído:\n${text.substring(0, 200)}\n\n` +
+              `❌ Não consegui identificar a categoria. Crie uma com:\n` +
+              `• "criar categoria [nome]"`,
+              false
+            );
+          }
+        } else {
           addMessage(
-            `✅ Transação criada!\n${typeLabel}: ${parsed.descricao}\n💰 R$ ${parsed.valor.toFixed(2).replace('.', ',')}\n📅 ${parsed.data}\n🏷️ ${parsed.categoria}`,
+            `📝 Texto extraído:\n${text.substring(0, 200)}\n\n` +
+            `❌ Não consegui identificar uma transação no comprovante.\n` +
+            `Por favor, digite manualmente.\nEx: "Mercado 150,50"`,
             false
           );
         }
+        setIsProcessing(false);
+        e.target.value = '';
+        return;
+      }
+
+      // Valor extraído com sucesso - mostra resumo e cria transação
+      const responseMsg = getReceiptResponse(receipt);
+      addMessage(responseMsg, false);
+
+      // Tenta encontrar categoria baseada na descrição/loja
+      const searchTerms = [receipt.description, receipt.store].filter(Boolean).join(' ').toLowerCase();
+      let matchCat = categories.find(c => {
+        const catName = c.name.toLowerCase();
+        return searchTerms.includes(catName) ||
+          catName.includes(searchTerms.split(' ')[0]);
+      });
+
+      // Se não encontrou, usa "Outros"
+      if (!matchCat) {
+        matchCat = categories.find(c => c.name.toLowerCase() === 'outros') || categories[0];
+      }
+
+      if (matchCat) {
+        const transactionData: Omit<Transaction, 'id'> = {
+          description: receipt.description || receipt.store || 'Comprovante',
+          amount: receipt.amount,
+          type: 'expense',
+          date: receipt.date || new Date().toISOString().split('T')[0],
+          categoryId: matchCat.id,
+        };
+
+        await addTransaction(transactionData);
+        addMessage(
+          `✅ Transação criada automaticamente!\n` +
+          `📉 Saída: ${transactionData.description}\n` +
+          `💰 R$ ${receipt.amount.toFixed(2).replace('.', ',')}\n` +
+          `📅 ${transactionData.date}\n` +
+          `🏷️ ${matchCat.name}`,
+          false
+        );
       } else {
-        addMessage('Não consegui identificar uma transação no texto. Por favor, digite manualmente.\nEx: "Mercado 150,50"', false);
+        addMessage(
+          `💡 Valor identificado: R$ ${receipt.amount.toFixed(2).replace('.', ',')}\n\n` +
+          `⚠️ Não consegui criar a transação automaticamente.\n` +
+          `Por favor, crie uma categoria primeiro:\n` +
+          `• "criar categoria [nome]"`,
+          false
+        );
       }
     } catch (err) {
       console.error('Erro no OCR:', err);
