@@ -110,9 +110,9 @@ function mapTransaction(row: any): Transaction {
   return {
     id: row.id,
     description: row.description,
-    amount: row.amount,
+    amount: Number(row.amount),
     type: row.type,
-    date: row.date,
+    date: typeof row.date === 'string' ? row.date.split('T')[0] : row.date,
     categoryId: row.categoryId ?? row.category_id ?? '',
     notes: row.notes,
   };
@@ -254,7 +254,7 @@ function mapBudget(row: any): Budget {
   return {
     id: row.id,
     categoryId: row.categoryId ?? row.category_id ?? '',
-    limit: row.limit ?? row.budget_limit ?? 0,
+    limit: Number(row.limit ?? row.budget_limit ?? 0),
     month: row.month,
   };
 }
