@@ -21,7 +21,7 @@ const TransactionsList: React.FC = () => {
   /** Transações mais recentes (últimas 5) */
   const recentTransactions = useMemo(() => {
     return [...transactions]
-      .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+      .sort((a, b) => new Date(b.createdAt || b.date).getTime() - new Date(a.createdAt || a.date).getTime())
       .slice(0, 5);
   }, [transactions]);
 

@@ -115,6 +115,7 @@ function mapTransaction(row: any): Transaction {
     date: typeof row.date === 'string' ? row.date.split('T')[0] : row.date,
     categoryId: row.categoryId ?? row.category_id ?? '',
     notes: row.notes,
+    createdAt: row.created_at,
   };
 }
 

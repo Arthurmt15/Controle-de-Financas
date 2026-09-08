@@ -24,7 +24,7 @@ router.get('/:userId', async (req: Request, res: Response) => {
        FROM transactions t
        LEFT JOIN categories c ON t.category_id = c.id
        WHERE t.user_id = $1
-       ORDER BY t.date DESC`,
+       ORDER BY t.created_at DESC`,
       [userId]
     );
 

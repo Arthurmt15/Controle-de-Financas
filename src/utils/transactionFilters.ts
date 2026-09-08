@@ -53,7 +53,7 @@ export function filterTransactions(
 
     switch (filters.sortBy) {
       case 'date':
-        comparison = new Date(a.date).getTime() - new Date(b.date).getTime();
+        comparison = new Date(a.createdAt || a.date).getTime() - new Date(b.createdAt || b.date).getTime();
         break;
       case 'amount':
         comparison = a.amount - b.amount;

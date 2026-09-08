@@ -23,6 +23,8 @@ export interface Transaction {
   categoryId: string;
   /** Observações adicionais (opcional) */
   notes?: string;
+  /** Data de criação da transação no banco */
+  createdAt?: string;
 }
 
 /**
