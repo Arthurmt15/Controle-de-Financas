@@ -6,8 +6,7 @@
 
 import React, { useState, useRef } from 'react';
 import { useTransactions } from '../../../hooks/useTransactions';
-import { parseImageText } from '../../../utils/parseTransaction';
-import { toInputDate } from '../../../utils/formatters';
+
 import * as C from './styles';
 import type { Transaction } from '../../../types';
 
@@ -47,7 +46,6 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [isDragging, setIsDragging] = useState(false);
-  const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [analysisResult, setAnalysisResult] = useState<AnalysisResult | null>(null);
   const [error, setError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -81,7 +79,6 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
     reader.readAsDataURL(file);
 
     // Simula análise de imagem (em produção, usaria OCR real)
-    setIsAnalyzing(true);
 
     setTimeout(() => {
       // Simula dados extraídos da imagem
@@ -94,7 +91,6 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
       };
 
       setAnalysisResult(simulatedResult);
-      setIsAnalyzing(false);
     }, 1500);
   };
 

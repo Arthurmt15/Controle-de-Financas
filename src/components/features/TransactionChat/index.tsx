@@ -7,7 +7,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useTransactions } from '../../../hooks/useTransactions';
 import { parseTransactionFromMessage, getExampleMessages } from '../../../utils/parseTransaction';
-import { toInputDate } from '../../../utils/formatters';
 import * as C from './styles';
 import type { Transaction } from '../../../types';
 

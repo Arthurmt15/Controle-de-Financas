@@ -206,7 +206,7 @@ export function parseImageText(text: string): ImageParseResult {
     // Pega a primeira linha que não seja só número
     for (const line of lines) {
       const cleaned = line.trim();
-      if (cleaned.length > 3 && !/^\d+[\.,]?\d*$/.test(cleaned)) {
+      if (cleaned.length > 3 && !/^\d+[.,]?\d*$/.test(cleaned)) {
         result.description = cleaned.substring(0, 50);
         break;
       }
