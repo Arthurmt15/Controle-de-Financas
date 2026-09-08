@@ -1,22 +1,25 @@
 /**
  * @file utils/parseTransaction.ts
  * @description Utilitário para interpretar mensagens de texto e fotos
- * como transações financeiras.
+ * como transações financeiras. Suporta linguagem informal, datas relativas,
+ * valores com "k"/"conto" e qualquer ordem dos campos na mensagem.
+ *
+ * Abordagem: cada componente (valor, data, tipo, categoria) é extraído
+ * independentemente do texto. A descrição é montada com o que sobra.
  */
 
-/**
- * Interface representando uma transação parseada de mensagem
- */
+// ============================================
+// INTERFACES
+// ============================================
+
 export interface ParsedTransaction {
-  description: string;
-  amount: number;
-  type: 'income' | 'expense';
-  date: string;
+  descricao: string;
+  valor: number;
+  tipo: 'despesa' | 'receita';
+  categoria: string;
+  data: string; // YYYY-MM-DD
 }
 
-/**
- * Interface para resultado do parse de imagem
- */
 export interface ImageParseResult {
   amount: number | null;
   description: string | null;
@@ -24,162 +27,418 @@ export interface ImageParseResult {
   rawText: string;
 }
 
-/**
- * Palavras-chave que indicam tipo de transação
- */
+// ============================================
+// CONSTANTES
+// ============================================
+
 const INCOME_KEYWORDS = [
-  'entrada', 'recebi', 'recebido', 'salário', 'salario', 'pagamento',
+  'entrada', 'recebi', 'recebido', 'ganhei', 'ganho',
+  'salário', 'salario', 'pagamento', 'ordenha',
   'depósito', 'deposito', 'transferência recebida', 'rendimento',
-  'cashback', 'estorno', 'reembolso', 'prêmio', 'premio', ' dividendos',
+  'cashback', 'estorno', 'reembolso', 'prêmio', 'premio',
+  'dividendos', 'caiu', 'entrou', 'crédito', 'credito',
 ];
 
 const EXPENSE_KEYWORDS = [
-  'saída', 'saida', 'gastei', 'paguei', 'pagamento', 'comprei',
-  'compra', 'despesa', 'aluguel', 'conta', 'mercado', 'supermercado',
+  'saída', 'saida', 'gastei', 'paguei', 'comprei', 'saiu',
+  'perdi', 'compra', 'despesa', 'conta', 'mercado', 'supermercado',
   'restaurante', 'almoço', 'almoco', 'jantar', 'café', 'cafe',
   'farmácia', 'farmacia', 'posto', 'combustível', 'combustivel',
-  'transporte', 'uber', '99', 'taxi', 'ônibus', 'onibus',
+  'transporte', 'uber', 'taxi', 'ônibus', 'onibus',
+  'aluguel', 'condomínio', 'condominio', 'luz', 'água', 'agua',
+  'internet', 'telefone', 'iptu',
 ];
 
+const CATEGORY_MAP: Array<{ keywords: string[]; category: string }> = [
+  {
+    keywords: ['mercado', 'supermercado', 'compra', 'almoço', 'almoco',
+      'jantar', 'café', 'cafe', 'restaurante', 'lanche', 'padaria',
+      'açougue', 'acougue', 'feira', 'refeição', 'refeicao', 'comida',
+      'leite', 'pão', 'paes', 'arroz', 'feijão', 'carne', 'ovo',
+      'frango', 'peixe', 'legume', 'fruta', 'hortifruti'],
+    category: 'Alimentação',
+  },
+  {
+    keywords: ['uber', '99', 'taxi', 'ônibus', 'onibus', 'combustível',
+      'combustivel', 'posto', 'gasolina', 'etanol', 'estacionamento',
+      'pedágio', 'pedagio', 'van', 'táxi'],
+    category: 'Transporte',
+  },
+  {
+    keywords: ['aluguel', 'luz', 'água', 'agua', 'internet', 'condomínio',
+      'condominio', 'telefone', 'encargos', 'iptu', 'conta de luz',
+      'conta de água', 'conta de agua', 'energia', 'gás', 'gas'],
+    category: 'Moradia',
+  },
+  {
+    keywords: ['farmácia', 'farmacia', 'remédio', 'remedio', 'médico',
+      'medico', 'hospital', 'exame', 'dentista', 'consulta', 'plano de saúde',
+      'plano de saude', 'vacina', 'laboratório', 'laboratorio'],
+    category: 'Saúde',
+  },
+  {
+    keywords: ['escola', 'faculdade', 'curso', 'livro', 'material',
+      'matrícula', 'matricula', 'mensalidade', 'aula', 'universidade'],
+    category: 'Educação',
+  },
+  {
+    keywords: ['cinema', 'show', 'teatro', 'parque', 'bar', 'balada',
+      'jogo', 'netflix', 'spotify', 'amazon prime', 'hbo', 'streaming',
+      'viagem', 'hotel', 'passeio', 'lazer', 'playstation', 'xbox', 'steam'],
+    category: 'Lazer',
+  },
+  {
+    keywords: ['roupa', 'calçado', 'calcado', 'sapato', 'tênis', 'tenis',
+      'camisa', 'calça', 'calca', 'vestido', 'renner', 'zara'],
+    category: 'Lazer',
+  },
+  {
+    keywords: ['salário', 'salario', 'pagamento', 'ordenha', 'proventos'],
+    category: 'Salário',
+  },
+  {
+    keywords: ['freelance', 'freela', 'bico', 'trabalho extra'],
+    category: 'Freelance',
+  },
+  {
+    keywords: ['investimento', 'ações', 'acoes', 'renda fixa', 'tesouro',
+      'dividendo', 'cripto', 'bitcoin', 'criptomoeda'],
+    category: 'Investimentos',
+  },
+];
+
+const WEEKDAY_MAP: Record<string, number> = {
+  'domingo': 0, 'dom': 0,
+  'segunda': 1, 'seg': 1, 'segunda-feira': 1,
+  'terça': 2, 'terca': 2, 'ter': 2, 'terça-feira': 2, 'terca-feira': 2,
+  'quarta': 3, 'qua': 3, 'quarta-feira': 3,
+  'quinta': 4, 'qui': 4, 'quinta-feira': 4,
+  'sexta': 5, 'sex': 5, 'sexta-feira': 5,
+  'sábado': 6, 'sabado': 6, 'sab': 6,
+};
+
+const MONTH_MAP: Record<string, number> = {
+  'janeiro': 0, 'jan': 0,
+  'fevereiro': 1, 'fev': 1,
+  'março': 2, 'marco': 2, 'mar': 2,
+  'abril': 3, 'abr': 3,
+  'maio': 4, 'mai': 4,
+  'junho': 5, 'jun': 5,
+  'julho': 6, 'jul': 6,
+  'agosto': 7, 'ago': 7,
+  'setembro': 8, 'set': 8,
+  'outubro': 9, 'out': 9,
+  'novembro': 10, 'nov': 10,
+  'dezembro': 11, 'dez': 11,
+};
+
+// ============================================
+// FUNÇÕES DE EXTRACÇÃO INDEPENDENTE
+// Cada função recebe o texto original e retorna
+// o componente extraído + o texto limpo.
+// ============================================
+
 /**
- * Extrai valor numérico de uma string
- * Suporta formatos: R$ 2000 | R$ 25,50 | 25.50 | 25,50 | R$25
+ * Extrai valor numérico e retorna o texto sem ele.
+ * Suporta qualquer posição: "150 mercado", "mercado 150", "gastei 150 no mercado"
  */
-function extractAmount(text: string): number | null {
-  // Padrão para R$ seguido de número (inteiro ou decimal)
-  // Aceita: R$ 2000, R$ 2000,50, R$ 1.500, R$ 1.500,50
+function extractAmount(text: string): { value: number; clean: string } | null {
+  const lower = text.toLowerCase();
+
+  // "4k", "2.5k", "1,5k"
+  const kPattern = /(\d+(?:[.,]\d+)?)\s*k\b/i;
+  const kMatch = lower.match(kPattern);
+  if (kMatch) {
+    const num = parseFloat(kMatch[1].replace(',', '.'));
+    if (!isNaN(num) && num > 0) {
+      return { value: num * 1000, clean: text.replace(kMatch[0], ' ').trim() };
+    }
+  }
+
+  // "50 conto", "200 pila", "100 paus", "30 reais"
+  const slangPattern = /(\d+(?:[.,]\d+)?)\s*(?:conto|pila|paus|reais)\b/i;
+  const slangMatch = lower.match(slangPattern);
+  if (slangMatch) {
+    const num = parseFloat(slangMatch[1].replace(',', '.'));
+    if (!isNaN(num) && num > 0) {
+      return { value: num, clean: text.replace(slangMatch[0], ' ').trim() };
+    }
+  }
+
+  // R$ 2000,50 | R$ 1.500 | R$25
   const brlPattern = /R\$\s*(\d{1,6}(?:\.\d{3})*(?:,\d{1,2})?)/i;
   const brlMatch = text.match(brlPattern);
   if (brlMatch) {
     const value = brlMatch[1].replace(/\./g, '').replace(',', '.');
     const num = parseFloat(value);
-    if (!isNaN(num) && num > 0) return num;
+    if (!isNaN(num) && num > 0) {
+      return { value: num, clean: text.replace(brlMatch[0], ' ').trim() };
+    }
   }
 
-  // Padrão para número com vírgula decimal (ex: 25,50)
+  // Número com vírgula decimal: 150,50 | 25,50
   const commaDecimalPattern = /(\d{1,6}(?:\.\d{3})*,\d{1,2})\b/g;
-  const commaMatches = text.match(commaDecimalPattern);
-  if (commaMatches) {
-    // Pega o último valor encontrado (geralmente o total)
-    const lastMatch = commaMatches[commaMatches.length - 1];
-    const value = lastMatch.replace(/\./g, '').replace(',', '.');
+  const commaMatches: RegExpExecArray[] = [];
+  let commaMatch: RegExpExecArray | null;
+  while ((commaMatch = commaDecimalPattern.exec(text)) !== null) {
+    commaMatches.push(commaMatch);
+  }
+  if (commaMatches.length > 0) {
+    const match = commaMatches[commaMatches.length - 1];
+    const value = match[1].replace(/\./g, '').replace(',', '.');
     const num = parseFloat(value);
-    if (!isNaN(num) && num > 0) return num;
+    if (!isNaN(num) && num > 0) {
+      return { value: num, clean: text.slice(0, match.index).trim() + ' ' + text.slice(match.index! + match[0].length).trim() };
+    }
   }
 
-  // Padrão para número com ponto decimal (ex: 25.50)
+  // Número com ponto decimal: 25.50
   const dotDecimalPattern = /\b(\d{1,6}(?:,\d{3})*\.\d{1,2})\b/g;
-  const dotMatches = text.match(dotDecimalPattern);
-  if (dotMatches) {
-    const lastMatch = dotMatches[dotMatches.length - 1];
-    const num = parseFloat(lastMatch);
-    if (!isNaN(num) && num > 0) return num;
+  const dotMatches: RegExpExecArray[] = [];
+  let dotMatch: RegExpExecArray | null;
+  while ((dotMatch = dotDecimalPattern.exec(text)) !== null) {
+    dotMatches.push(dotMatch);
+  }
+  if (dotMatches.length > 0) {
+    const match = dotMatches[dotMatches.length - 1];
+    const num = parseFloat(match[1]);
+    if (!isNaN(num) && num > 0) {
+      return { value: num, clean: text.slice(0, match.index).trim() + ' ' + text.slice(match.index! + match[0].length).trim() };
+    }
   }
 
-  // Padrão para número inteiro (ex: 50, 100, 2000)
+  // Número inteiro: 50, 100, 2000 (pega o ÚLTIMO número que pareça valor)
   const integerPattern = /\b(\d{2,6})\b/g;
-  const integerMatches = text.match(integerPattern);
-  if (integerMatches) {
-    const lastMatch = integerMatches[integerMatches.length - 1];
-    const num = parseFloat(lastMatch);
-    if (!isNaN(num) && num > 0) return num;
+  const integerMatches: RegExpExecArray[] = [];
+  let integerMatch: RegExpExecArray | null;
+  while ((integerMatch = integerPattern.exec(text)) !== null) {
+    integerMatches.push(integerMatch);
+  }
+  if (integerMatches.length > 0) {
+    const match = integerMatches[integerMatches.length - 1];
+    const num = parseFloat(match[1]);
+    if (!isNaN(num) && num > 0) {
+      return { value: num, clean: text.slice(0, match.index).trim() + ' ' + text.slice(match.index! + match[0].length).trim() };
+    }
   }
 
   return null;
 }
 
 /**
- * Determina o tipo da transação baseado em palavras-chave
+ * Extrai data e retorna o texto sem ela.
+ * Suporta qualquer posição.
  */
-function detectType(text: string): 'income' | 'expense' {
-  const lowerText = text.toLowerCase();
+function extractDate(text: string): { value: string; clean: string } | null {
+  const lower = text.toLowerCase();
+  const today = new Date();
+  today.setHours(12, 0, 0, 0);
+
+  // "hoje"
+  const hojeMatch = lower.match(/\bhoje\b/i);
+  if (hojeMatch) {
+    return { value: formatDate(today), clean: text.replace(hojeMatch[0], ' ').trim() };
+  }
+
+  // "ontem"
+  const ontemMatch = lower.match(/\bontem\b/i);
+  if (ontemMatch) {
+    const d = new Date(today);
+    d.setDate(d.getDate() - 1);
+    return { value: formatDate(d), clean: text.replace(ontemMatch[0], ' ').trim() };
+  }
+
+  // "anteontem"
+  const anteontemMatch = lower.match(/\banteontem\b/i);
+  if (anteontemMatch) {
+    const d = new Date(today);
+    d.setDate(d.getDate() - 2);
+    return { value: formatDate(d), clean: text.replace(anteontemMatch[0], ' ').trim() };
+  }
+
+  // Dias da semana
+  for (const [dayName, dayNum] of Object.entries(WEEKDAY_MAP)) {
+    const regex = new RegExp(`\\b${dayName}\\b`, 'i');
+    const match = lower.match(regex);
+    if (match) {
+      const d = new Date(today);
+      const currentDay = d.getDay();
+      let diff = currentDay - dayNum;
+      if (diff <= 0) diff += 7;
+      d.setDate(d.getDate() - diff);
+      return { value: formatDate(d), clean: text.replace(match[0], ' ').trim() };
+    }
+  }
+
+  // "dia 20 de agosto" | "20 de agosto" | "dia 20 de agosto de 2025"
+  const dmyPattern = /(?:dia\s+)?(\d{1,2})\s+de\s+(\w+)(?:\s+de\s+(\d{4}))?/i;
+  const dmyMatch = lower.match(dmyPattern);
+  if (dmyMatch) {
+    const day = parseInt(dmyMatch[1]);
+    const monthStr = dmyMatch[2];
+    const month = MONTH_MAP[monthStr];
+    if (month !== undefined) {
+      let year = dmyMatch[3] ? parseInt(dmyMatch[3]) : today.getFullYear();
+      const d = new Date(year, month, day, 12, 0, 0, 0);
+      if (!dmyMatch[3] && d > today) {
+        d.setFullYear(d.getFullYear() - 1);
+      }
+      return { value: formatDate(d), clean: text.replace(dmyMatch[0], ' ').trim() };
+    }
+  }
+
+  // "dia 05/03" | "05/03" | "dia 05/03/2025"
+  const slashPattern = /(?:dia\s+)?(\d{1,2})\/(\d{1,2})(?:\/(\d{4}))?/i;
+  const slashMatch = lower.match(slashPattern);
+  if (slashMatch) {
+    const day = parseInt(slashMatch[1]);
+    const month = parseInt(slashMatch[2]) - 1;
+    if (month >= 0 && month <= 11 && day >= 1 && day <= 31) {
+      let year = slashMatch[3] ? parseInt(slashMatch[3]) : today.getFullYear();
+      const d = new Date(year, month, day, 12, 0, 0, 0);
+      if (!slashMatch[3] && d > today) {
+        d.setFullYear(d.getFullYear() - 1);
+      }
+      return { value: formatDate(d), clean: text.replace(slashMatch[0], ' ').trim() };
+    }
+  }
+
+  return null;
+}
+
+/**
+ * Detecta tipo (despesa/receita) a partir do texto
+ */
+function detectType(text: string): 'despesa' | 'receita' {
+  const lower = text.toLowerCase();
 
   for (const keyword of INCOME_KEYWORDS) {
-    if (lowerText.includes(keyword)) {
-      return 'income';
-    }
+    if (lower.includes(keyword)) return 'receita';
   }
 
   for (const keyword of EXPENSE_KEYWORDS) {
-    if (lowerText.includes(keyword)) {
-      return 'expense';
+    if (lower.includes(keyword)) return 'despesa';
+  }
+
+  if (/R\$/i.test(text)) return 'despesa';
+
+  return 'despesa';
+}
+
+/**
+ * Detecta categoria e retorna o texto sem as palavras-chave da categoria
+ */
+function detectCategory(text: string, tipo: 'despesa' | 'receita'): { category: string; clean: string } {
+  const lower = text.toLowerCase();
+
+  for (const { keywords, category } of CATEGORY_MAP) {
+    for (const keyword of keywords) {
+      if (lower.includes(keyword)) {
+        // Verifica se a categoria faz sentido com o tipo
+        if (tipo === 'receita' && ['Salário', 'Freelance', 'Investimentos'].includes(category)) {
+          return { category, clean: text };
+        }
+        if (tipo === 'despesa' && ['Alimentação', 'Transporte', 'Moradia', 'Saúde', 'Educação', 'Lazer'].includes(category)) {
+          return { category, clean: text };
+        }
+      }
     }
   }
 
-  // Padrão: se mencionar "R$" sem contexto claro, assume despesa
-  return 'expense';
+  return { category: tipo === 'receita' ? 'Salário' : 'Outros', clean: text };
 }
 
 /**
- * Extrai descrição removendo valor e tipo
+ * Extrai descrição do texto restante após remover valor, data, tipo e preposições.
+ * Não depende da ordem dos campos.
  */
-function extractDescription(text: string, amount: number | null): string {
-  let description = text;
+function extractDescription(remainingText: string): string {
+  let desc = remainingText;
 
-  // Remove valores R$ xx,xx (com ou sem ponto de milhar)
-  description = description.replace(/R\$\s*\d{1,6}(?:\.\d{3})*(?:,\d{1,2})?/gi, '');
+  // Remove preposições e artigos soltos no início
+  desc = desc.replace(/^\s*(de|da|do|das|dos|no|na|nas|nos|em|e|a|o|as|os|um|uma|uns|umas)\s+/gi, '');
 
-  // Remove números soltos
-  description = description.replace(/\b\d{1,6}(?:\.\d{3})*,\d{1,2}\b/g, '');
-  description = description.replace(/\b\d{1,6}(?:,\d{3})*\.\d{1,2}\b/g, '');
-  description = description.replace(/\b\d{2,6}\b/g, '');
+  // Remove preposições no meio também
+  desc = desc.replace(/\s+(de|da|do|das|dos|no|na|nas|nos|em)\s+/gi, ' ');
 
-  // Remove palavras de tipo
-  const typeWords = [
-    'entrada', 'saída', 'saida', 'recebi', 'recebido', 'gastei',
-    'paguei', 'comprei', 'compra', 'despesa', 'pagamento',
-  ];
-  for (const word of typeWords) {
-    description = description.replace(new RegExp(`\\b${word}\\b`, 'gi'), '');
+  // Remove números soltos que possam ter sobrado
+  desc = desc.replace(/\b\d{1,6}(?:\.\d{3})*(?:,\d{1,2})?\b/g, '');
+  desc = desc.replace(/\b\d{2,6}\b/g, '');
+
+  // Limpa espaços extras, vírgulas e pontos soltos
+  desc = desc.replace(/[,.\s]+/g, ' ').trim();
+
+  // Se ficou vazio, retorna vazio (será tratado depois)
+  if (desc.length < 2) {
+    return '';
   }
 
-  // Limpa espaços extras e capitaliza
-  description = description
-    .replace(/\s+/g, ' ')
-    .trim()
-    .replace(/^./, (str) => str.toUpperCase());
-
-  return description || 'Transação via chat';
+  // Capitaliza primeira letra
+  return desc.charAt(0).toUpperCase() + desc.slice(1);
 }
 
 /**
- * Parseia uma mensagem de texto em uma transação
- * @param message - Mensagem do usuário
- * @returns Transação parseada ou null se não conseguir interpretar
+ * Formata Date para YYYY-MM-DD
+ */
+function formatDate(d: Date): string {
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
+// ============================================
+// FUNÇÃO PRINCIPAL
+// ============================================
+
+/**
+ * Parseia uma mensagem de texto em uma transação financeira.
+ * Extrai cada componente independentemente da ordem na mensagem.
  *
- * @example
- * parseTransactionFromMessage("Almoço R$ 25,50")
- * // { description: "Almoço", amount: 25.50, type: "expense", date: "2026-09-03" }
+ * Suporta:
+ * - Valor em qualquer posição: "mercado 150", "150 mercado", "gastei 150 no mercado"
+ * - Data em qualquer posição: "ontem 150 mercado", "mercado ontem 150"
+ * - Tipo em qualquer posição: "entrada 4k", "4k caiu"
+ * - Gírias: "4k", "50 conto", "200 pila"
+ * - Datas: "hoje", "ontem", "terça", "dia 20 de agosto", "05/03"
  *
- * @example
- * parseTransactionFromMessage("Entrada R$ 500 salário")
- * // { description: "Salário", amount: 500, type: "income", date: "2026-09-03" }
+ * @example parseTransactionFromMessage("mercado 150,50")
+ * @example parseTransactionFromMessage("150,50 mercado")
+ * @example parseTransactionFromMessage("gastei 150 no mercado")
+ * @example parseTransactionFromMessage("mercado ontem 150,50")
+ * @example parseTransactionFromMessage("ontem 150 mercado")
+ * @example parseTransactionFromMessage("entrada 4k")
+ * @example parseTransactionFromMessage("4k entrada")
+ * @example parseTransactionFromMessage("dia 20 de agosto 4000")
+ * @example parseTransactionFromMessage("4000 dia 20 de agosto")
  */
 export function parseTransactionFromMessage(message: string): ParsedTransaction | null {
-  const amount = extractAmount(message);
+  // 1. Extrai data primeiro (para remover números de datas como "20 de agosto")
+  const dateResult = extractDate(message);
+  const textWithoutDate = dateResult?.clean || message;
+  const data = dateResult?.value || formatDate(new Date());
 
-  if (amount === null) {
-    return null;
-  }
+  // 2. Extrai valor do texto sem a data
+  const amountResult = extractAmount(textWithoutDate);
+  if (!amountResult) return null;
+  const valor = amountResult.value;
 
-  const type = detectType(message);
-  const description = extractDescription(message, amount);
+  // 3. Detecta tipo
+  const tipo = detectType(message);
 
-  const today = new Date().toISOString().split('T')[0];
+  // 4. Detecta categoria
+  const catResult = detectCategory(message, tipo);
+  const categoria = catResult.category;
 
-  return {
-    description,
-    amount,
-    type,
-    date: today,
-  };
+  // 5. Monta descrição do texto que sobrou
+  const textForDescription = amountResult.clean;
+  const descricao = extractDescription(textForDescription) || categoria;
+
+  return { descricao, valor, tipo, categoria, data };
 }
 
 /**
- * Analisa texto extraído de imagem (OCR básico)
- * Procura por padrões de valores e datas
- * @param text - Texto extraído da imagem
- * @returns Resultado da análise
+ * Analisa texto extraído de imagem (OCR).
  */
 export function parseImageText(text: string): ImageParseResult {
   const result: ImageParseResult = {
@@ -189,27 +448,18 @@ export function parseImageText(text: string): ImageParseResult {
     rawText: text,
   };
 
-  // Extrai valor
-  result.amount = extractAmount(text);
+  const amountResult = extractAmount(text);
+  if (amountResult) result.amount = amountResult.value;
 
-  // Extrai data (padrão brasileiro: dd/mm/aaaa)
-  const datePattern = /(\d{2})\/(\d{2})\/(\d{4})/;
-  const dateMatch = text.match(datePattern);
-  if (dateMatch) {
-    const [, day, month, year] = dateMatch;
-    result.date = `${year}-${month}-${day}`;
-  }
+  const dateResult = extractDate(text);
+  if (dateResult) result.date = dateResult.value;
 
-  // Tenta extrair descrição (primeira linha significativa)
   const lines = text.split('\n').filter(line => line.trim().length > 3);
-  if (lines.length > 0) {
-    // Pega a primeira linha que não seja só número
-    for (const line of lines) {
-      const cleaned = line.trim();
-      if (cleaned.length > 3 && !/^\d+[\.,]?\d*$/.test(cleaned)) {
-        result.description = cleaned.substring(0, 50);
-        break;
-      }
+  for (const line of lines) {
+    const cleaned = line.trim();
+    if (cleaned.length > 3 && !/^\d+[.,]?\d*$/.test(cleaned)) {
+      result.description = cleaned.substring(0, 50);
+      break;
     }
   }
 
@@ -221,11 +471,29 @@ export function parseImageText(text: string): ImageParseResult {
  */
 export function getExampleMessages(): string[] {
   return [
-    'Almoço R$ 35',
-    'Mercado R$ 150,50',
-    'Entrada R$ 2500 salário',
-    'Uber R$ 22',
-    'Farmácia R$ 45,90',
-    'Saída R$ 800 aluguel',
+    'Mercado ontem 150,50',
+    '150,50 mercado',
+    'Entrada 4k salário',
+    '4k caiu na conta',
+    'Paguei 200 pila no aluguel',
+    '200 aluguel',
+    'Farmácia 89,90',
+    'Ganhei 500 freelance sexta',
   ];
 }
+
+/**
+ * Estilos (cor e ícone) para cada categoria padrão.
+ */
+export const CATEGORY_STYLES: Record<string, { color: string; icon: string }> = {
+  'Alimentação': { color: '#FF6B6B', icon: 'FaUtensils' },
+  'Transporte': { color: '#4ECDC4', icon: 'FaCar' },
+  'Moradia': { color: '#45B7D1', icon: 'FaHome' },
+  'Saúde': { color: '#FFEAA7', icon: 'FaHeartbeat' },
+  'Educação': { color: '#DDA0DD', icon: 'FaGraduationCap' },
+  'Lazer': { color: '#96CEB4', icon: 'FaGamepad' },
+  'Salário': { color: '#00B894', icon: 'FaMoneyBillWave' },
+  'Freelance': { color: '#6C5CE7', icon: 'FaLaptop' },
+  'Investimentos': { color: '#FDCB6E', icon: 'FaChartLine' },
+  'Outros': { color: '#636E72', icon: 'FaEllipsisH' },
+};

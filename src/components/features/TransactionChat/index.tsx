@@ -5,11 +5,12 @@
  */
 
 import React, { useState, useRef, useEffect } from 'react';
+import { createWorker } from 'tesseract.js';
 import { useTransactions } from '../../../hooks/useTransactions';
-import { parseTransactionFromMessage, getExampleMessages } from '../../../utils/parseTransaction';
-import { toInputDate } from '../../../utils/formatters';
+import { parseTransactionFromMessage, getExampleMessages, CATEGORY_STYLES } from '../../../utils/parseTransaction';
 import * as C from './styles';
 import type { Transaction } from '../../../types';
+import type { ParsedTransaction } from '../../../utils/parseTransaction';
 
 /**
  * Interface para mensagens do chat
@@ -44,10 +45,18 @@ interface TransactionChatProps {
 const TransactionChat: React.FC<TransactionChatProps> = ({
   onTransactionCreated,
 }) => {
+<<<<<<< HEAD
   const { addTransaction, categories, isLoading, error } = useTransactions();
+=======
+  const { addTransaction, addCategory, categories, isLoading, error: txError } = useTransactions();
+>>>>>>> 67d125b0dcd7cea617933e8829471436a6e68883
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [inputValue, setInputValue] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
+  const [pendingTransaction, setPendingTransaction] = useState<{
+    parsed: ParsedTransaction;
+    suggestedCategory: string;
+  } | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -71,7 +80,7 @@ const TransactionChat: React.FC<TransactionChatProps> = ({
     setMessages([
       {
         id: 'welcome',
-        text: 'Olá! Digite uma mensagem para adicionar uma transação. Ex: "Almoço R$ 35" ou "Entrada R$ 2000 salário"',
+        text: 'Olá! Digite uma mensagem para adicionar uma transação.\n\nExemplos:\n• "Gastei 120 da luz dia 5 de janeiro"\n• "Mercado ontem 150,50"\n• "Entrada 4k salário"',
         isUser: false,
         timestamp: new Date(),
       },
@@ -113,7 +122,7 @@ const TransactionChat: React.FC<TransactionChatProps> = ({
 
     if (!parsed) {
       addMessage(
-        'Não consegui identificar uma transação válida. Tente algo como "Almoço R$ 25" ou "Entrada R$ 500 salário".',
+        'Não consegui identificar uma transação válida. Tente algo como:\n• "Gastei 120 da luz dia 5 de janeiro"\n• "Mercado ontem 150,50"\n• "Entrada 4k salário"',
         false
       );
       setIsProcessing(false);
@@ -142,62 +151,126 @@ const TransactionChat: React.FC<TransactionChatProps> = ({
 
     // Verifica se existem categorias
     if (categories.length === 0) {
+      const errorMsg = txError
+        ? `Erro ao carregar categorias: ${txError}`
+        : 'Nenhuma categoria encontrada.';
       addMessage(
+<<<<<<< HEAD
         'Nenhuma categoria encontrada. Verifique se você está logado corretamente e recarregue a página (F5).',
+=======
+        `${errorMsg}\n\nPossíveis causas:\n• Conexão com o servidor falhou\n• Usuário ainda não foi criado no banco\n\nTente recarregar a página (F5).`,
+>>>>>>> 67d125b0dcd7cea617933e8829471436a6e68883
         false
       );
       setIsProcessing(false);
       return;
     }
 
-    // Encontra categoria apropriada
-    const matchingCategory = categories.find(
-      c => c.defaultType === parsed.type || c.defaultType === 'both'
+    // Encontra categoria pelo nome retornado pelo parser
+    const matchCat = categories.find(
+      c => c.name.toLowerCase() === parsed.categoria.toLowerCase()
     );
-    const defaultCategoryId = matchingCategory?.id || categories[0]?.id || '';
 
-    if (!defaultCategoryId) {
+    // Se a categoria não existe, pergunta ao usuário
+    if (!matchCat) {
+      setPendingTransaction({ parsed, suggestedCategory: parsed.categoria });
       addMessage(
-        'Erro: nenhuma categoria válida encontrada. Recarregue a página (F5).',
+        `A categoria "${parsed.categoria}" não foi encontrada. O que deseja?`,
         false
       );
       setIsProcessing(false);
       return;
     }
 
-    // Cria a transação
+    // Categoria encontrada — cria a transação
+    await createTransaction(parsed, matchCat.id);
+    setIsProcessing(false);
+  };
+
+  /**
+   * Cria a transação com a categoria definida
+   */
+  const createTransaction = async (parsed: ParsedTransaction, categoryId: string) => {
+    const transactionType = parsed.tipo === 'receita' ? 'income' : 'expense';
+
     const transactionData: Omit<Transaction, 'id'> = {
-      description: parsed.description,
-      amount: parsed.amount,
-      type: parsed.type,
-      date: parsed.date || new Date().toISOString(),
-      categoryId: defaultCategoryId,
+      description: parsed.descricao,
+      amount: parsed.valor,
+      type: transactionType,
+      date: parsed.data,
+      categoryId,
     };
 
     try {
       await addTransaction(transactionData);
 
-      // Mensagem de sucesso
-      const typeLabel = parsed.type === 'income' ? 'Entrada' : 'Saída';
+      const typeLabel = parsed.tipo === 'receita' ? '📈 Entrada' : '📉 Saída';
       addMessage(
-        `Transação criada com sucesso! ✅\n${typeLabel}: ${parsed.description}\nValor: R$ ${parsed.amount.toFixed(2).replace('.', ',')}`,
+        `Transação criada com sucesso! ✅\n${typeLabel}: ${parsed.descricao}\n💰 R$ ${parsed.valor.toFixed(2).replace('.', ',')}\n📅 ${parsed.data}\n🏷️ ${parsed.categoria}`,
         false
       );
 
-      // Chama callback se fornecido
       if (onTransactionCreated) {
         onTransactionCreated(transactionData);
       }
     } catch (error: any) {
       console.error('Erro ao criar transação:', error);
       const errorMsg = error?.message || 'Erro desconhecido';
-      addMessage(
-        `Erro ao criar a transação: ${errorMsg}`,
-        false
-      );
+      addMessage(`Erro ao criar a transação: ${errorMsg}`, false);
+    }
+  };
+
+  /**
+   * Usuário escolheu usar "Outros" para a categoria pendente
+   */
+  const handleUseOutros = async () => {
+    if (!pendingTransaction) return;
+
+    const outrosCat = categories.find(c => c.name.toLowerCase() === 'outros');
+    if (!outrosCat) {
+      addMessage('Erro: categoria "Outros" não encontrada.', false);
+      setPendingTransaction(null);
+      return;
     }
 
-    setIsProcessing(false);
+    const { parsed } = pendingTransaction;
+    setPendingTransaction(null);
+    addMessage(`Usando categoria "Outros"`, true);
+    await createTransaction(parsed, outrosCat.id);
+  };
+
+  /**
+   * Usuário escolheu criar a categoria sugerida
+   */
+  const handleCreateCategory = async () => {
+    if (!pendingTransaction) return;
+
+    const { parsed, suggestedCategory } = pendingTransaction;
+    const styles = CATEGORY_STYLES[suggestedCategory] || { color: '#636E72', icon: 'FaEllipsisH' };
+    const tipo = parsed.tipo === 'receita' ? 'income' : 'expense';
+
+    setPendingTransaction(null);
+    addMessage(`Criando categoria "${suggestedCategory}"...`, true);
+
+    try {
+      const newCategory = await addCategory({
+        name: suggestedCategory,
+        color: styles.color,
+        icon: styles.icon,
+        defaultType: tipo,
+      });
+
+      addMessage(`✅ Categoria "${suggestedCategory}" criada!`, false);
+      await createTransaction(parsed, newCategory.id);
+    } catch (error: any) {
+      console.error('Erro ao criar categoria:', error);
+      addMessage(`Erro ao criar categoria: ${error?.message || 'desconhecido'}.\nUsando "Outros" como alternativa.`, false);
+
+      const outrosCat = categories.find(c => c.name.toLowerCase() === 'outros');
+      if (outrosCat) {
+        await createTransaction(parsed, outrosCat.id);
+      }
+    }
   };
 
   /**
@@ -236,26 +309,62 @@ const TransactionChat: React.FC<TransactionChatProps> = ({
     const file = e.target.files?.[0];
     if (!file) return;
 
-    // Verifica se é imagem
     if (!file.type.startsWith('image/')) {
       addMessage('Por favor, selecione uma imagem válida.', false);
       return;
     }
 
     setIsProcessing(true);
-    addMessage('📷 Analisando comprovante...', false);
+    addMessage('🔍 Analisando comprovante...', false);
 
-    // Simula análise de imagem (em produção, usaria OCR real)
-    setTimeout(() => {
-      // Por enquanto, pede para o usuário digitar os dados
-      addMessage(
-        'Imagem recebida! Por favor, digite os dados do comprovante.\nEx: "Supermercado R$ 150,50"',
-        false
-      );
-      setIsProcessing(false);
-    }, 1000);
+    try {
+      const worker = await createWorker('por');
+      const { data } = await worker.recognize(file);
+      await worker.terminate();
 
-    // Limpa o input de arquivo
+      const text = data.text.trim();
+      if (!text) {
+        addMessage('Não consegui ler texto na imagem. Por favor, digite os dados manualmente.\nEx: "Supermercado R$ 150,50"', false);
+        setIsProcessing(false);
+        return;
+      }
+
+      addMessage(`📝 Texto extraído:\n${text}`, false);
+
+      // Tenta parsear a transação do texto extraído
+      const parsed = parseTransactionFromMessage(text);
+      if (parsed) {
+        const matchCat = categories.find(
+          c => c.name.toLowerCase() === parsed.categoria.toLowerCase()
+        );
+        const defaultCategoryId = matchCat?.id || categories[0]?.id || '';
+
+        if (defaultCategoryId) {
+          const transactionType = parsed.tipo === 'receita' ? 'income' : 'expense';
+          const transactionData: Omit<Transaction, 'id'> = {
+            description: parsed.descricao,
+            amount: parsed.valor,
+            type: transactionType,
+            date: parsed.data,
+            categoryId: defaultCategoryId,
+          };
+
+          await addTransaction(transactionData);
+          const typeLabel = parsed.tipo === 'receita' ? '📈 Entrada' : '📉 Saída';
+          addMessage(
+            `✅ Transação criada!\n${typeLabel}: ${parsed.descricao}\n💰 R$ ${parsed.valor.toFixed(2).replace('.', ',')}\n📅 ${parsed.data}\n🏷️ ${parsed.categoria}`,
+            false
+          );
+        }
+      } else {
+        addMessage('Não consegui identificar uma transação no texto. Por favor, digite manualmente.\nEx: "Mercado 150,50"', false);
+      }
+    } catch (err) {
+      console.error('Erro no OCR:', err);
+      addMessage('Erro ao analisar a imagem. Por favor, digite os dados manualmente.', false);
+    }
+
+    setIsProcessing(false);
     e.target.value = '';
   };
 
@@ -289,6 +398,20 @@ const TransactionChat: React.FC<TransactionChatProps> = ({
         <div ref={messagesEndRef} />
       </C.MessagesArea>
 
+      {/* Botões de decisão quando categoria não existe */}
+      {pendingTransaction && (
+        <C.PendingCategoryActions>
+          <C.PendingCategoryButtons>
+            <C.UseOtherButton onClick={handleUseOutros}>
+              Usar "Outros"
+            </C.UseOtherButton>
+            <C.CreateCategoryButton onClick={handleCreateCategory}>
+              Criar "{pendingTransaction.suggestedCategory}"
+            </C.CreateCategoryButton>
+          </C.PendingCategoryButtons>
+        </C.PendingCategoryActions>
+      )}
+
       {/* Input */}
       <C.InputContainer>
         <C.UploadButton
@@ -312,11 +435,14 @@ const TransactionChat: React.FC<TransactionChatProps> = ({
           value={inputValue}
           onChange={(e) => setInputValue(e.target.value)}
           onKeyPress={handleKeyPress}
-          placeholder="Ex: Almoço R$ 35"
-          disabled={isProcessing}
+          placeholder={pendingTransaction ? "Escolha uma opção acima" : "Ex: Mercado ontem 150,50"}
+          disabled={isProcessing || !!pendingTransaction}
         />
 
-        <C.SendButton onClick={handleSend} disabled={!inputValue.trim() || isProcessing}>
+        <C.SendButton
+          onClick={handleSend}
+          disabled={!inputValue.trim() || isProcessing || !!pendingTransaction}
+        >
           <C.SendIcon>➤</C.SendIcon>
         </C.SendButton>
       </C.InputContainer>

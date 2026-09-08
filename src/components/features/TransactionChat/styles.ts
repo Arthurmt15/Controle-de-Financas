@@ -13,6 +13,8 @@ export const ChatContainer = styled.div`
   border-radius: ${({ theme }) => theme.borderRadius};
   box-shadow: ${({ theme }) => theme.shadows.sm};
   overflow: hidden;
+  display: flex;
+  flex-direction: column;
 `;
 
 /**
@@ -22,9 +24,13 @@ export const ChatHeader = styled.div`
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 16px 20px;
+  padding: 12px 16px;
   border-bottom: 1px solid ${({ theme }) => theme.colors.border};
   background-color: ${({ theme }) => theme.colors.surface};
+
+  @media (max-width: 480px) {
+    padding: 10px 12px;
+  }
 `;
 
 /**
@@ -54,10 +60,19 @@ export const MessagesArea = styled.div`
   display: flex;
   flex-direction: column;
   gap: 12px;
-  padding: 16px 20px;
+  padding: 16px;
   max-height: 300px;
   overflow-y: auto;
   background-color: ${({ theme }) => theme.colors.background};
+  flex: 1;
+  min-height: 200px;
+
+  @media (max-width: 480px) {
+    padding: 12px;
+    max-height: none;
+    min-height: 180px;
+    flex: 1 1 0;
+  }
 `;
 
 /**
@@ -85,6 +100,13 @@ export const MessageBubble = styled.div<{ $isUser: boolean }>`
     $isUser ? 'white' : theme.colors.text};
   border: ${({ $isUser, theme }) =>
     $isUser ? 'none' : `1px solid ${theme.colors.border}`};
+  word-break: break-word;
+
+  @media (max-width: 480px) {
+    max-width: 85%;
+    padding: 8px 12px;
+    font-size: 13px;
+  }
 `;
 
 /**
@@ -125,9 +147,14 @@ export const InputContainer = styled.div`
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 12px 16px;
+  padding: 10px 12px;
   border-top: 1px solid ${({ theme }) => theme.colors.border};
   background-color: ${({ theme }) => theme.colors.surface};
+
+  @media (max-width: 480px) {
+    gap: 6px;
+    padding: 8px 10px;
+  }
 `;
 
 /**
@@ -135,6 +162,7 @@ export const InputContainer = styled.div`
  */
 export const MessageInput = styled.input`
   flex: 1;
+  min-width: 0;
   padding: 10px 14px;
   font-size: 14px;
   font-family: inherit;
@@ -153,6 +181,11 @@ export const MessageInput = styled.input`
     border-color: ${({ theme }) => theme.colors.primary};
     box-shadow: 0 0 0 2px ${({ theme }) => `${theme.colors.primary}20`};
   }
+
+  @media (max-width: 480px) {
+    padding: 8px 12px;
+    font-size: 16px;
+  }
 `;
 
 /**
@@ -164,6 +197,7 @@ export const SendButton = styled.button`
   justify-content: center;
   width: 40px;
   height: 40px;
+  min-width: 40px;
   border: none;
   border-radius: 50%;
   background-color: ${({ theme }) => theme.colors.primary};
@@ -179,6 +213,12 @@ export const SendButton = styled.button`
   &:disabled {
     opacity: 0.5;
     cursor: not-allowed;
+  }
+
+  @media (max-width: 480px) {
+    width: 36px;
+    height: 36px;
+    min-width: 36px;
   }
 `;
 
@@ -198,6 +238,7 @@ export const UploadButton = styled.button`
   justify-content: center;
   width: 40px;
   height: 40px;
+  min-width: 40px;
   border: 1px dashed ${({ theme }) => theme.colors.border};
   border-radius: 50%;
   background-color: transparent;
@@ -209,6 +250,12 @@ export const UploadButton = styled.button`
     border-color: ${({ theme }) => theme.colors.primary};
     color: ${({ theme }) => theme.colors.primary};
     background-color: ${({ theme }) => `${theme.colors.primary}10`};
+  }
+
+  @media (max-width: 480px) {
+    width: 36px;
+    height: 36px;
+    min-width: 36px;
   }
 `;
 
@@ -223,9 +270,13 @@ export const UploadIcon = styled.span`
  * Dicas de uso
  */
 export const TipsContainer = styled.div`
-  padding: 12px 16px;
+  padding: 10px 14px;
   background-color: ${({ theme }) => `${theme.colors.primary}08`};
   border-top: 1px solid ${({ theme }) => theme.colors.border};
+
+  @media (max-width: 480px) {
+    padding: 8px 10px;
+  }
 `;
 
 /**
@@ -252,7 +303,7 @@ export const ExamplesList = styled.div`
  * Exemplo clicável
  */
 export const ExampleChip = styled.button`
-  padding: 4px 10px;
+  padding: 6px 12px;
   font-size: 12px;
   font-family: inherit;
   color: ${({ theme }) => theme.colors.primary};
@@ -264,5 +315,91 @@ export const ExampleChip = styled.button`
 
   &:hover {
     background-color: ${({ theme }) => `${theme.colors.primary}20`};
+  }
+
+  @media (max-width: 480px) {
+    padding: 8px 14px;
+    font-size: 13px;
+  }
+`;
+
+/**
+ * Container dos botões de decisão de categoria
+ */
+export const PendingCategoryActions = styled.div`
+  padding: 12px 16px;
+  border-top: 1px solid ${({ theme }) => theme.colors.border};
+  background-color: ${({ theme }) => `${theme.colors.primary}08`};
+
+  @media (max-width: 480px) {
+    padding: 10px 12px;
+  }
+`;
+
+/**
+ * Container dos botões de opção
+ */
+export const PendingCategoryButtons = styled.div`
+  display: flex;
+  gap: 8px;
+
+  @media (max-width: 480px) {
+    flex-direction: column;
+  }
+`;
+
+/**
+ * Botão para usar "Outros"
+ */
+export const UseOtherButton = styled.button`
+  flex: 1;
+  padding: 10px 16px;
+  font-size: 13px;
+  font-weight: 500;
+  font-family: inherit;
+  color: ${({ theme }) => theme.colors.textSecondary};
+  background-color: ${({ theme }) => theme.colors.surface};
+  border: 1px solid ${({ theme }) => theme.colors.border};
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+
+  &:hover {
+    background-color: ${({ theme }) => theme.colors.background};
+    border-color: ${({ theme }) => theme.colors.textSecondary};
+  }
+
+  @media (max-width: 480px) {
+    padding: 10px 14px;
+  }
+`;
+
+/**
+ * Botão para criar nova categoria
+ */
+export const CreateCategoryButton = styled.button`
+  flex: 1;
+  padding: 10px 16px;
+  font-size: 13px;
+  font-weight: 500;
+  font-family: inherit;
+  color: white;
+  background-color: ${({ theme }) => theme.colors.primary};
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+
+  &:hover:not(:disabled) {
+    background-color: ${({ theme }) => theme.colors.primaryDark};
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  @media (max-width: 480px) {
+    padding: 10px 14px;
   }
 `;

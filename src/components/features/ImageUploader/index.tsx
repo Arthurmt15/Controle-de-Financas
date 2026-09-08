@@ -5,9 +5,10 @@
  */
 
 import React, { useState, useRef } from 'react';
+import { createWorker } from 'tesseract.js';
 import { useTransactions } from '../../../hooks/useTransactions';
-import { parseImageText } from '../../../utils/parseTransaction';
-import { toInputDate } from '../../../utils/formatters';
+import { parseTransactionFromMessage } from '../../../utils/parseTransaction';
+
 import * as C from './styles';
 import type { Transaction } from '../../../types';
 
@@ -47,10 +48,112 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [isDragging, setIsDragging] = useState(false);
-  const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [analysisResult, setAnalysisResult] = useState<AnalysisResult | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [analysisProgress, setAnalysisProgress] = useState('');
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  /**
+   * Extrai valor do texto OCR de notas fiscais.
+   * Busca TOTAL/VALOR PAGO primeiro, depois último número decimal como fallback.
+   */
+  const extractAmount = (text: string): number | null => {
+    const lower = text.toLowerCase();
+
+    // 1. Busca linhas com TOTAL ou VALOR PAGO seguido de número
+    const totalPatterns = [
+      /total\s+(?:liquido|geral|a\s+pagar)?\s*(\d{1,6}[.,]\d{2})/i,
+      /valor\s+pago\s+(\d{1,6}[.,]\d{2})/i,
+      /valor\s+total\s+(\d{1,6}[.,]\d{2})/i,
+      /total\s+(\d{1,6}[.,]\d{2})/i,
+    ];
+    for (const pattern of totalPatterns) {
+      const match = lower.match(pattern);
+      if (match) {
+        const value = match[1].replace('.', '').replace(',', '.');
+        const num = parseFloat(value);
+        if (!isNaN(num) && num > 0) return num;
+      }
+    }
+
+    // 2. Busca "R$ XXX,XX"
+    const brlMatch = lower.match(/r\$\s*(\d{1,6}[.,]\d{2})/);
+    if (brlMatch) {
+      const value = brlMatch[1].replace('.', '').replace(',', '.');
+      const num = parseFloat(value);
+      if (!isNaN(num) && num > 0) return num;
+    }
+
+    // 3. Fallback: pega o ÚLTIMO número decimal >= 1,00 (totais ficam no final)
+    const decimalPattern = /(\d{1,6}[.,]\d{2})\b/g;
+    let lastMatch: RegExpExecArray | null = null;
+    let m: RegExpExecArray | null;
+    while ((m = decimalPattern.exec(text)) !== null) {
+      const value = m[1].replace('.', '').replace(',', '.');
+      const num = parseFloat(value);
+      if (num >= 1.00) lastMatch = m;
+    }
+    if (lastMatch) {
+      const value = lastMatch[1].replace('.', '').replace(',', '.');
+      return parseFloat(value);
+    }
+
+    return null;
+  };
+
+  /**
+   * Extrai data do texto OCR de notas fiscais.
+   */
+  const extractDate = (text: string): string | null => {
+    const patterns = [
+      /(\d{2})\/(\d{2})\/(\d{4})/,
+      /(\d{2})\.(\d{2})\.(\d{4})/,
+      /(\d{2})\/(\d{2})\/(\d{2})/,
+      /(\d{4})-(\d{2})-(\d{2})/,
+    ];
+    for (const pattern of patterns) {
+      const match = text.match(pattern);
+      if (match) {
+        let [, d, m, y] = match;
+        if (y.length === 2) y = `20${y}`;
+        if (parseInt(m) >= 1 && parseInt(m) <= 12 && parseInt(d) >= 1 && parseInt(d) <= 31) {
+          return `${y}-${m}-${d}`;
+        }
+      }
+    }
+    return null;
+  };
+
+  /**
+   * Extrai descrição do texto OCR pulando linhas de produto e lixo.
+   */
+  const extractDescription = (text: string): string | null => {
+    const lines = text.split('\n').map(l => l.trim()).filter(l => l.length > 2);
+
+    const noisePatterns = [
+      /^\d{4,}\s/,
+      /\b(und|x|qty|qtde)\b/i,
+      /cnpj|cpf|inscri|nota fiscal|comprovante|recibo/i,
+      /total|subtotal|liquido|pagamento|pago/i,
+      /taxa|entrega|desconto/i,
+      /eded|po pp|\*\)/i,
+    ];
+
+    for (const line of lines) {
+      if (/^\d{4,}\s/.test(line)) continue;
+      if (noisePatterns.some(p => p.test(line))) continue;
+      if (/^[\d\s.,xX]+$/.test(line)) continue;
+      if (line.length < 3 || line.length > 60) continue;
+
+      const cleaned = line.replace(/[^\w\sáàãâéêíóôõúç]/gi, '').trim();
+      if (cleaned.length >= 3) {
+        return cleaned.substring(0, 50);
+      }
+    }
+
+    return null;
+  };
 
   /**
    * Processa o arquivo selecionado
@@ -80,22 +183,32 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
     };
     reader.readAsDataURL(file);
 
-    // Simula análise de imagem (em produção, usaria OCR real)
+    // Análise real com Tesseract.js
     setIsAnalyzing(true);
+    setAnalysisProgress('Carregando OCR...');
 
-    setTimeout(() => {
-      // Simula dados extraídos da imagem
-      // Em produção, aqui seria chamado um serviço de OCR
-      const simulatedResult: AnalysisResult = {
-        amount: null,
-        description: null,
-        date: null,
-        rawText: 'Análise de imagem - Por favor, preencha os dados manualmente ou use o chat.',
-      };
+    try {
+      const worker = await createWorker('por');
+      setAnalysisProgress('Analisando imagem...');
 
-      setAnalysisResult(simulatedResult);
+      const { data } = await worker.recognize(file);
+      const rawText = data.text;
+
+      const amount = extractAmount(rawText);
+      const date = extractDate(rawText);
+      const description = extractDescription(rawText);
+
+      const result: AnalysisResult = { amount, description, date, rawText };
+      setAnalysisResult(result);
+
+      await worker.terminate();
+    } catch (err) {
+      console.error('Erro no OCR:', err);
+      setError('Erro ao analisar a imagem. Tente novamente.');
+    } finally {
       setIsAnalyzing(false);
-    }, 1500);
+      setAnalysisProgress('');
+    }
   };
 
   /**
@@ -157,16 +270,28 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
   const handleConfirm = async () => {
     if (!analysisResult) return;
 
-    // Encontra categoria padrão
-    const defaultCategoryId = categories.length > 0
-      ? categories[0].id
-      : '';
+    // Usa o parser centralizado para TODOS os campos
+    const parsed = parseTransactionFromMessage(analysisResult.rawText);
+
+    // Parser centralizado como fonte primária, fallback para extração local
+    const valor = parsed?.valor || analysisResult.amount || 0;
+    const descricao = parsed?.descricao || analysisResult.description || 'Compra via comprovante';
+    const data = parsed?.data || analysisResult.date || new Date().toISOString();
+    const tipo = parsed?.tipo || 'despesa';
+    const categoria = parsed?.categoria || 'Outros';
+    const transactionType = tipo === 'receita' ? 'income' : 'expense';
+
+    // Encontra categoria pelo nome
+    const matchCat = categories.find(
+      c => c.name.toLowerCase() === categoria.toLowerCase()
+    );
+    const defaultCategoryId = matchCat?.id || categories[0]?.id || '';
 
     const transactionData: Omit<Transaction, 'id'> = {
-      description: analysisResult.description || 'Compra via comprovante',
-      amount: analysisResult.amount || 0,
-      type: 'expense',
-      date: analysisResult.date || new Date().toISOString(),
+      description: descricao,
+      amount: valor,
+      type: transactionType,
+      date: data,
       categoryId: defaultCategoryId,
     };
 
@@ -177,7 +302,6 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
         onTransactionCreated(transactionData);
       }
 
-      // Limpa após sucesso
       handleRemove();
     } catch (err) {
       setError('Erro ao criar transação. Por favor, tente novamente.');
@@ -225,6 +349,13 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
         </C.ImagePreview>
       )}
 
+      {/* Indicador de análise */}
+      {isAnalyzing && (
+        <C.AnalysisResult>
+          <C.AnalysisTitle>🔍 {analysisProgress}</C.AnalysisTitle>
+        </C.AnalysisResult>
+      )}
+
       {/* Resultado da análise */}
       {analysisResult && (
         <C.AnalysisResult>
@@ -254,6 +385,27 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
               {analysisResult.description || 'Não identificada'}
             </C.FieldValue>
           </C.AnalysisField>
+
+          {analysisResult.rawText && (
+            <details style={{ marginTop: 8 }}>
+              <summary style={{ fontSize: 12, color: '#888', cursor: 'pointer' }}>
+                Ver texto extraído
+              </summary>
+              <pre style={{
+                fontSize: 11,
+                marginTop: 4,
+                padding: 8,
+                background: '#f5f5f5',
+                borderRadius: 6,
+                whiteSpace: 'pre-wrap',
+                wordBreak: 'break-word',
+                maxHeight: 120,
+                overflow: 'auto',
+              }}>
+                {analysisResult.rawText}
+              </pre>
+            </details>
+          )}
         </C.AnalysisResult>
       )}
 
@@ -263,7 +415,7 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
       )}
 
       {/* Botões */}
-      {selectedFile && (
+      {selectedFile && !isAnalyzing && (
         <C.Actions>
           <button onClick={handleRemove}>Cancelar</button>
           <button onClick={handleConfirm}>Confirmar</button>
