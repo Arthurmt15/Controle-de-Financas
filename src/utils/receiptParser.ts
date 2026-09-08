@@ -20,20 +20,14 @@ export interface ReceiptData {
 // ============================================
 
 const AMOUNT_PATTERNS = [
-  // Moedas estrangeiras: "CHF 54.50" / "EUR 36.33" / "USD 25.00"
-  /\b(CHF|EUR|USD|GBP|JPY|CAD|AUD|CNY|INR|R\$)\s*(\d{1,3}(?:[.,]\d{3})*[.,]\d{2})\b/gi,
-  // Moeda no final: "54.50 CHF" / "36.33 EUR"
-  /\b(\d{1,3}(?:[.,]\d{3})*[.,]\d{2})\s*(CHF|EUR|USD|GBP|JPY|CAD|AUD|CNY|INR|R\$)\b/gi,
-  // PIX: "Transferência de R$ 1.500,00" / "enviou R$ 25,50"
-  /(?:transfer[êe]ncia|envio|pagamento|pix|cr[ée]dito|d[ée]bito)\s*(?:de\s*)?R\$\s*(\d{1,3}(?:\.\d{3})*,\d{2})/gi,
-  // R$: "R$ 1.234,56"
-  /R\$\s*(\d{1,3}(?:\.\d{3})*,\d{2})/g,
-  // "VALOR TOTAL: 1.234,56" / "Total: CHF 54.50" / "Total: 54.50"
-  /(?:valor|total|quantia|montante|pagamento|summe|betrag|total)\s*(?:total|a pagar|pago)?\s*[:=]?\s*(?:CHF|EUR|USD|R\$)?\s*(\d{1,3}(?:[.,]\d{3})*[.,]\d{2})/gi,
-  // "150,50" (número solto com vírgula decimal - padrão BR)
-  /\b(\d{1,3}(?:\.\d{3})*,\d{2})\b/g,
-  // "54.50" / "150.50" (ponto decimal - padrão EUA/EU)
-  /\b(\d{1,6}\.\d{2})\b/g,
+  // Moedas: "R$ 1.234,56" / "CHF 54.50" / "EUR 36.33"
+  /\b(?:R\$|CHF|EUR|USD|GBP|JPY|CAD|AUD|CNY|INR)\s*(\d{1,6}[.,]\d{2})\b/gi,
+  // Moeda no final: "54.50 CHF" / "150,50 R$"
+  /\b(\d{1,6}[.,]\d{2})\s*(?:R\$|CHF|EUR|USD|GBP|JPY|CAD|AUD|CNY|INR)\b/gi,
+  // "Total: 429,00" / "Total: 429.00" / "VALOR: 1.234,56"
+  /(?:valor|total|quantia|montante|pagamento|summe|betrag)\s*(?:total|a pagar|pago)?\s*[:=]?\s*(?:R\$|CHF|EUR|USD)?\s*(\d{1,6}[.,]\d{2})/gi,
+  // "429,00" ou "429.00" (número solto com 2 casas decimais)
+  /\b(\d{1,6}[.,]\d{2})\b/g,
 ];
 
 // ============================================
@@ -194,28 +188,34 @@ const NON_MONEY_PATTERNS = /(?:rech\.?\s*nr|nr\.|número|num|tel\.?|telefone|fax
 
 /**
  * Converte string de valor para número
- * Lida com formatos BR (1.234,56) e US/EU (1,234.56 ou 1234.56)
+ * Aceita: 429,00 | 429.00 | 1.234,56 | 1,234.56
  */
 function parseValue(raw: string): number {
-  // Se tem vírgula E ponto, precisa decidir qual é decimal
-  if (raw.includes(',') && raw.includes('.')) {
-    const lastComma = raw.lastIndexOf(',');
-    const lastPeriod = raw.lastIndexOf('.');
+  // Remove espaços
+  const clean = raw.replace(/\s/g, '');
+
+  // Se tem vírgula E ponto
+  if (clean.includes(',') && clean.includes('.')) {
+    const lastComma = clean.lastIndexOf(',');
+    const lastPeriod = clean.lastIndexOf('.');
     // O que vem DEPOIS é o decimal
     if (lastComma > lastPeriod) {
-      // Formato BR: 1.234,56
-      return parseFloat(raw.replace(/\./g, '').replace(',', '.'));
+      // BR: 1.234,56
+      return parseFloat(clean.replace(/\./g, '').replace(',', '.'));
     } else {
-      // Formato US: 1,234.56
-      return parseFloat(raw.replace(/,/g, ''));
+      // US: 1,234.56
+      return parseFloat(clean.replace(/,/g, ''));
     }
   }
-  // Só vírgula → é decimal (BR)
-  if (raw.includes(',')) {
-    return parseFloat(raw.replace(',', '.'));
+
+  // Só vírgula → decimal BR: 429,00 → 429.00
+  if (clean.includes(',')) {
+    return parseFloat(clean.replace(',', '.'));
   }
-  // Só ponto → é decimal (US/EU)
-  return parseFloat(raw);
+
+  // Só ponto → decimal US: 429.00 → 429.00
+  // Ou inteiro: 429 → 429
+  return parseFloat(clean);
 }
 
 interface AmountMatch {
