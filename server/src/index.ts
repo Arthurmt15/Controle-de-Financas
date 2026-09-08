@@ -70,10 +70,17 @@ app.use('/api/budgets', budgetsRouter);
 
 /**
  * Middleware de tratamento de erros globais
- * Captura erros não tratados nas rotas
+ * Captura erros não tratados nas rotas e garante headers CORS
  */
-app.use((err: Error, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
+app.use((err: Error, req: express.Request, res: express.Response, _next: express.NextFunction) => {
   console.error('Erro não tratado:', err);
+
+  const origin = req.headers.origin;
+  if (origin && allowedOrigins.includes(origin)) {
+    res.setHeader('Access-Control-Allow-Origin', origin);
+  }
+  res.setHeader('Access-Control-Allow-Credentials', 'true');
+
   res.status(500).json({
     success: false,
     error: 'Erro interno do servidor',
