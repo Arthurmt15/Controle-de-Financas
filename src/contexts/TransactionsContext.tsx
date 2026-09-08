@@ -90,10 +90,15 @@ export function TransactionsProvider({ children }: { children: React.ReactNode }
 
         dispatch({ type: 'SET_TRANSACTIONS', payload: transactions });
         dispatch({ type: 'SET_CATEGORIES', payload: categories });
-        dispatch({ type: 'SET_ERROR', payload: null });
+
+        if (categories.length === 0) {
+          dispatch({ type: 'SET_ERROR', payload: 'Nenhuma categoria encontrada. Verifique a conexão com o servidor.' });
+        } else {
+          dispatch({ type: 'SET_ERROR', payload: null });
+        }
       } catch (error) {
         console.error('Erro ao carregar dados:', error);
-        dispatch({ type: 'SET_ERROR', payload: 'Erro ao carregar dados do servidor' });
+        dispatch({ type: 'SET_ERROR', payload: 'Erro ao carregar dados do servidor. Verifique sua conexão.' });
       } finally {
         dispatch({ type: 'SET_LOADING', payload: false });
       }

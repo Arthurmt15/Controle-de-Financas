@@ -44,7 +44,7 @@ interface TransactionChatProps {
 const TransactionChat: React.FC<TransactionChatProps> = ({
   onTransactionCreated,
 }) => {
-  const { addTransaction, categories, isLoading } = useTransactions();
+  const { addTransaction, categories, isLoading, error: txError } = useTransactions();
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [inputValue, setInputValue] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
@@ -132,8 +132,11 @@ const TransactionChat: React.FC<TransactionChatProps> = ({
 
     // Verifica se existem categorias
     if (categories.length === 0) {
+      const errorMsg = txError
+        ? `Erro ao carregar categorias: ${txError}`
+        : 'Nenhuma categoria encontrada.';
       addMessage(
-        'Nenhuma categoria encontrada. Recarregue a página (F5) e tente novamente.',
+        `${errorMsg}\n\nPossíveis causas:\n• Conexão com o servidor falhou\n• Usuário ainda não foi criado no banco\n\nTente recarregar a página (F5).`,
         false
       );
       setIsProcessing(false);
