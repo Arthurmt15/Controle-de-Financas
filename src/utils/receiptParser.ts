@@ -189,50 +189,109 @@ function extractBestDescription(lines: string[]): string | null {
 // FUNÇÕES DE EXTRAÇÃO
 // ============================================
 
+// Padrões que indicam que o número NÃO é um valor monetário
+const NON_MONEY_PATTERNS = /(?:rech\.?\s*nr|nr\.|número|num|tel\.?|telefone|fax|mwst|cnpj|cpf|cep|código|nsu|tid|tisch|datum|uhrzeit)/i;
+
+interface AmountMatch {
+  value: number;
+  raw: string;
+  index: number;
+  currency: string | null;
+  lineIndex: number;
+  score: number;
+}
+
 /**
  * Extrai valor do texto com múltiplos padrões
  */
 function extractAmount(text: string): { value: number; raw: string; currency: string | null } | null {
-  const allMatches: Array<{ value: number; raw: string; index: number; currency: string | null }> = [];
+  const lines = text.split('\n');
+  const allMatches: AmountMatch[] = [];
 
-  for (const pattern of AMOUNT_PATTERNS) {
-    pattern.lastIndex = 0;
-    let match;
-    while ((match = pattern.exec(text)) !== null) {
-      // Padrões com 2 captures (moeda + valor ou valor + moeda)
-      let raw: string;
-      let currency: string | null = null;
+  for (let lineIndex = 0; lineIndex < lines.length; lineIndex++) {
+    const line = lines[lineIndex];
 
-      if (match[2] && /(?:CHF|EUR|USD|GBP|JPY|CAD|AUD|CNY|INR|R\$)/i.test(match[1] || '')) {
-        // Padrão: MOEDA VALOR (ex: "CHF 54.50")
-        currency = match[1].toUpperCase();
-        raw = match[2];
-      } else if (match[2] && /(?:CHF|EUR|USD|GBP|JPY|CAD|AUD|CNY|INR|R\$)/i.test(match[2] || '')) {
-        // Padrão: VALOR MOEDA (ex: "54.50 CHF")
-        currency = match[2].toUpperCase();
-        raw = match[1];
-      } else {
-        // Padrão sem moeda
-        raw = match[2] || match[1];
+    // Pula linhas que são claramente números de identificação
+    if (NON_MONEY_PATTERNS.test(line)) continue;
+
+    // Pula linhas muito curtas (1-2 chars)
+    if (line.trim().length <= 2) continue;
+
+    // Se a linha termina com moeda (ex: "Total: CHF"), olha a próxima linha
+    let nextLineValue: string | null = null;
+    const currencyEndMatch = line.match(/(?:CHF|EUR|USD|GBP|JPY|CAD|AUD|CNY|INR|R\$)\s*$/i);
+    if (currencyEndMatch && lineIndex + 1 < lines.length) {
+      const nextLine = lines[lineIndex + 1].trim();
+      if (/^\d+[.,]\d{2}$/.test(nextLine)) {
+        nextLineValue = nextLine;
       }
+    }
 
-      if (!raw) continue;
-      const value = parseFloat(raw.replace(/\./g, '').replace(',', '.'));
-      if (!isNaN(value) && value > 0 && value < 1000000) {
-        allMatches.push({ value, raw, index: match.index, currency });
+    for (const pattern of AMOUNT_PATTERNS) {
+      pattern.lastIndex = 0;
+      let match;
+      while ((match = pattern.exec(line)) !== null) {
+        let raw: string;
+        let currency: string | null = null;
+
+        if (match[2] && /(?:CHF|EUR|USD|GBP|JPY|CAD|AUD|CNY|INR|R\$)/i.test(match[1] || '')) {
+          currency = match[1].toUpperCase();
+          raw = match[2];
+        } else if (match[2] && /(?:CHF|EUR|USD|GBP|JPY|CAD|AUD|CNY|INR|R\$)/i.test(match[2] || '')) {
+          currency = match[2].toUpperCase();
+          raw = match[1];
+        } else {
+          raw = match[2] || match[1];
+        }
+
+        if (!raw) continue;
+        const value = parseFloat(raw.replace(/\./g, '').replace(',', '.'));
+        if (!isNaN(value) && value > 0 && value < 100000) {
+          let score = 0;
+
+          if (/(?:total|summe|betrag|valor|pagamento|quantia)/i.test(line)) {
+            score += 100;
+          }
+          if (currency) {
+            score += 50;
+          }
+          const numsInLine = line.match(/\d+[.,]\d{2}/g);
+          if (numsInLine && numsInLine.length === 1) {
+            score += 30;
+          }
+          if (value < 1) {
+            score -= 20;
+          }
+
+          allMatches.push({ value, raw, index: match.index, currency, lineIndex, score });
+        }
+      }
+    }
+
+    // Se a linha termina com moeda e a próxima linha é um valor
+    if (nextLineValue) {
+      const value = parseFloat(nextLineValue.replace(/\./g, '').replace(',', '.'));
+      const currencyMatch = line.match(/(CHF|EUR|USD|GBP|JPY|CAD|AUD|CNY|INR|R\$)/i);
+      const currency = currencyMatch ? currencyMatch[1].toUpperCase() : null;
+
+      if (!isNaN(value) && value > 0 && value < 100000) {
+        allMatches.push({
+          value,
+          raw: nextLineValue,
+          index: 0,
+          currency,
+          lineIndex: lineIndex + 1,
+          score: 150, // Prioridade máxima para "Total: CHF\n54.50"
+        });
       }
     }
   }
 
   if (allMatches.length === 0) return null;
 
-  // Prioriza: Total > Valor > primeiro encontrado
-  const prioritized = allMatches.find(m => {
-    const before = text.substring(Math.max(0, m.index - 40), m.index).toLowerCase();
-    return /(?:total|summe|betrag|valor|pagamento|quantia)/i.test(before);
-  });
+  allMatches.sort((a, b) => b.score - a.score);
 
-  return prioritized || allMatches[0];
+  return allMatches[0];
 }
 
 /**
