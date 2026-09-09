@@ -2,11 +2,12 @@ FROM node:20-slim
 
 WORKDIR /app
 
-# Force full rebuild - v2
 COPY server/package*.json ./server/
-RUN cd server && npm install --omit=dev
+RUN cd server && npm install
 
-COPY server/dist ./server/dist/
+COPY server/src ./server/src/
+COPY server/tsconfig.json ./server/
+RUN cd server && npm run build
 
 EXPOSE 3001
 
