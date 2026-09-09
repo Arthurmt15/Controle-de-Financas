@@ -435,27 +435,6 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
               placeholder="Descrição da transação"
             />
           </C.AnalysisField>
-
-          {analysisResult.rawText && (
-            <details style={{ marginTop: 8 }}>
-              <summary style={{ fontSize: 12, color: '#888', cursor: 'pointer' }}>
-                Ver texto extraído
-              </summary>
-              <pre style={{
-                fontSize: 11,
-                marginTop: 4,
-                padding: 8,
-                background: '#f5f5f5',
-                borderRadius: 6,
-                whiteSpace: 'pre-wrap',
-                wordBreak: 'break-word',
-                maxHeight: 120,
-                overflow: 'auto',
-              }}>
-                {analysisResult.rawText}
-              </pre>
-            </details>
-          )}
         </C.AnalysisResult>
       )}
 
