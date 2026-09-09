@@ -9,7 +9,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { extractTextFromImage } from '../../../services/ocrService';
 import { useTransactions } from '../../../hooks/useTransactions';
-import { getExampleMessages } from '../../../utils/parseTransaction';
+import { getExampleMessages, parseTransactionFromMessage } from '../../../utils/parseTransaction';
 import { detectCommand, executeCommand } from '../../../utils/chatCommands';
 import { generateSummary, generateAnalysis } from '../../../utils/analysisEngine';
 import { parseReceiptText, getReceiptResponse } from '../../../utils/receiptParser';
@@ -187,7 +187,44 @@ const TransactionChat: React.FC = () => {
       }
     }
 
-    // 3. Tudo o resto vai para a IA
+    // 3. Tentar parsear como transação simples (ex: "uber 7", "almoço 25")
+    const parsed = parseTransactionFromMessage(text);
+    if (parsed) {
+      const searchTerms = parsed.descricao.toLowerCase();
+      let matchCat = categories.find(c => {
+        const catName = c.name.toLowerCase();
+        return catName.includes(searchTerms) || searchTerms.includes(catName);
+      });
+
+      if (!matchCat) {
+        matchCat = categories.find(c => c.name.toLowerCase() === 'outros') || categories[0];
+      }
+
+      if (matchCat) {
+        const transactionData: Omit<Transaction, 'id'> = {
+          description: parsed.descricao,
+          amount: parsed.valor,
+          type: parsed.tipo === 'despesa' ? 'expense' : 'income',
+          date: new Date(parsed.data + 'T12:00:00').toISOString(),
+          categoryId: matchCat.id,
+          notes: '',
+        };
+
+        await addTransaction(transactionData);
+        addMessage(
+          `✅ Transação registrada!\n` +
+          `📝 ${transactionData.description}\n` +
+          `💰 R$ ${transactionData.amount.toFixed(2).replace('.', ',')}\n` +
+          `📅 ${formatDateBR(transactionData.date)}\n` +
+          `🏷️ ${matchCat.name}`,
+          false
+        );
+        setIsProcessing(false);
+        return;
+      }
+    }
+
+    // 4. Tudo o resto vai para a IA
     const aiMsg: ChatMessage = {
       id: generateMessageId(),
       text: '',
