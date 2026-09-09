@@ -6,18 +6,16 @@
  * Suporta upload de comprovantes via OCR com processamento inteligente.
  */
 
-import React, { useState, useRef, useEffect, useCallback } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { extractTextFromImage } from '../../../services/ocrService';
 import { useTransactions } from '../../../hooks/useTransactions';
-import { parseTransactionFromMessage, getExampleMessages } from '../../../utils/parseTransaction';
+import { getExampleMessages } from '../../../utils/parseTransaction';
 import { detectCommand, executeCommand } from '../../../utils/chatCommands';
 import { generateSummary, generateAnalysis } from '../../../utils/analysisEngine';
-import { CATEGORY_STYLES } from '../../../utils/categories';
 import { parseReceiptText, getReceiptResponse } from '../../../utils/receiptParser';
 import { buildFinancialContext, streamAdvisor } from '../../../services/financialAdvisorService';
 import * as C from './styles';
 import type { Transaction } from '../../../types';
-import type { ParsedTransaction } from '../../../utils/parseTransaction';
 
 /**
  * Interface para mensagens do chat
@@ -43,32 +41,18 @@ function renderMarkdown(text: string): string {
  * Props do componente TransactionChat
  */
 interface TransactionChatProps {
-  /** Função chamada quando uma transação é criada (para opcionalmente preencher o formulário) */
+  /** Função chamada quando uma transação é criada */
   onTransactionCreated?: (transaction: Omit<Transaction, 'id'>) => void;
 }
 
 /**
- * Componente de chat para adicionar transações
- * @param {TransactionChatProps} props - Props do componente
- * @returns {JSX.Element} Componente TransactionChat renderizado
- *
- * @example
- * <TransactionChat />
- *
- * @example
- * <TransactionChat onTransactionCreated={(t) => console.log(t)} />
+ * Componente de chat rápido com IA
  */
-const TransactionChat: React.FC<TransactionChatProps> = ({
-  onTransactionCreated,
-}) => {
-  const { transactions, addTransaction, addCategory, deleteCategory, categories, isLoading, error: txError } = useTransactions();
+const TransactionChat: React.FC<TransactionChatProps> = () => {
+  const { transactions, addTransaction, categories, isLoading, error: txError } = useTransactions();
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [inputValue, setInputValue] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
-  const [pendingTransaction, setPendingTransaction] = useState<{
-    parsed: ParsedTransaction;
-    suggestedCategory: string;
-  } | null>(null);
   const [pendingReceiptType, setPendingReceiptType] = useState<{
     description: string;
     amount: string;
@@ -98,15 +82,16 @@ const TransactionChat: React.FC<TransactionChatProps> = ({
     setMessages([
       {
         id: 'welcome',
-        text: 'Olá! Sou seu assistente financeiro. 💬\n\n' +
+        text: 'Olá! Sou seu assistente financeiro com IA. 💬\n\n' +
           '📝 Para adicionar transações:\n' +
           '• "Mercado ontem 150,50"\n' +
-          '• "Entrada 4k salário"\n\n' +
+          '• "Recebi 4k de salário"\n\n' +
+          '📊 Para ver análises:\n' +
+          '• "Como estão meus gastos?"\n' +
+          '• "Posso viajar este mês?"\n\n' +
           '📂 Para criar categorias:\n' +
           '• "criar categoria [nome]"\n\n' +
-          '📊 Para ver análises:\n' +
-          '• "resumo" ou "análise"\n\n' +
-          '❓ Digite "ajuda" para ver todos os comandos',
+          '❓ Pergunte qualquer coisa sobre suas finanças!',
         isUser: false,
         timestamp: new Date(),
       },
@@ -136,7 +121,7 @@ const TransactionChat: React.FC<TransactionChatProps> = ({
 
   /**
    * Processa mensagem do usuário
-   * Primeiro verifica se é um comando, depois tenta parsear como transação
+   * Comandos e OCR vão direto. Todo o resto vai para a IA.
    */
   const processMessage = async (text: string) => {
     setIsProcessing(true);
@@ -144,7 +129,7 @@ const TransactionChat: React.FC<TransactionChatProps> = ({
     // Adiciona mensagem do usuário
     addMessage(text, true);
 
-    // 1. Verifica se é um comando (criar categoria, resumo, análise, etc.)
+    // 1. Comandos locais (criar categoria, resumo, análise, ajuda)
     const command = detectCommand(text);
     if (command.type !== null) {
       const response = await executeCommand(
@@ -160,12 +145,11 @@ const TransactionChat: React.FC<TransactionChatProps> = ({
       return;
     }
 
-    // 2. Se o texto tem 2+ linhas, trata como texto de OCR colado
+    // 2. Texto colado de comprovante (2+ linhas)
     const lines = text.split('\n').filter(l => l.trim().length > 0);
     if (lines.length >= 2) {
       const receipt = parseReceiptText(text);
       if (receipt.amount) {
-        // Tenta encontrar categoria baseada na descrição/loja
         const searchTerms = [receipt.description, receipt.store].filter(Boolean).join(' ').toLowerCase();
         let matchCat = categories.find(c => {
           const catName = c.name.toLowerCase();
@@ -173,7 +157,6 @@ const TransactionChat: React.FC<TransactionChatProps> = ({
             catName.includes(searchTerms.split(' ')[0]);
         });
 
-        // Se não encontrou, usa "Outros"
         if (!matchCat) {
           matchCat = categories.find(c => c.name.toLowerCase() === 'outros') || categories[0];
         }
@@ -212,186 +195,41 @@ const TransactionChat: React.FC<TransactionChatProps> = ({
       }
     }
 
-    // 3. Tenta parsear como transação normal
-    const parsed = parseTransactionFromMessage(text);
+    // 3. Tudo o resto vai para a IA
+    const aiMsg: ChatMessage = {
+      id: generateMessageId(),
+      text: '',
+      isUser: false,
+      timestamp: new Date(),
+    };
+    setMessages((prev) => [...prev, aiMsg]);
 
-    if (!parsed) {
-      // 4. Fallback para IA — pergunta geral sobre finanças
-      const aiMsg: ChatMessage = {
-        id: generateMessageId(),
-        text: '',
-        isUser: false,
-        timestamp: new Date(),
-      };
-      setMessages((prev) => [...prev, aiMsg]);
+    try {
+      const context = buildFinancialContext(transactions, categories);
+      const history = messages.slice(-6).map((m) => ({
+        role: m.isUser ? ('user' as const) : ('assistant' as const),
+        content: m.text,
+      }));
 
-      try {
-        const context = buildFinancialContext(transactions, categories);
-        const history = messages.slice(-6).map((m) => ({
-          role: m.isUser ? ('user' as const) : ('assistant' as const),
-          content: m.text,
-        }));
-
-        let accumulated = '';
-        const chunks = streamAdvisor(text, context, history);
-        for await (const chunk of chunks) {
-          accumulated += chunk;
-          setMessages((prev) =>
-            prev.map((m) => (m.id === aiMsg.id ? { ...m, text: accumulated } : m))
-          );
-        }
-      } catch {
+      let accumulated = '';
+      const chunks = streamAdvisor(text, context, history);
+      for await (const chunk of chunks) {
+        accumulated += chunk;
         setMessages((prev) =>
-          prev.map((m) =>
-            m.id === aiMsg.id
-              ? { ...m, text: 'Não consegui entender. Tente:\n• "Mercado 150"\n• "Resumo"\n• "Ajuda"' }
-              : m
-          )
+          prev.map((m) => (m.id === aiMsg.id ? { ...m, text: accumulated } : m))
         );
       }
-      setIsProcessing(false);
-      return;
-    }
-
-    // Verifica se categorias estão carregadas
-    if (isLoading) {
-      addMessage(
-        'Carregando categorias... aguarde um momento e tente novamente.',
-        false
+    } catch {
+      setMessages((prev) =>
+        prev.map((m) =>
+          m.id === aiMsg.id
+            ? { ...m, text: 'Erro ao conectar com a IA. Tente novamente.' }
+            : m
+        )
       );
-      setIsProcessing(false);
-      return;
     }
 
-    // Verifica se houve erro ao carregar categorias
-    if (txError) {
-      addMessage(
-        `Erro ao carregar categorias: ${txError}\nVerifique sua conexão e recarregue a página (F5).`,
-        false
-      );
-      setIsProcessing(false);
-      return;
-    }
-
-    // Verifica se existem categorias
-    if (categories.length === 0) {
-      const errorMsg = txError
-        ? `Erro ao carregar categorias: ${txError}`
-        : 'Nenhuma categoria encontrada.';
-      addMessage(
-        `${errorMsg}\n\nPossíveis causas:\n• Conexão com o servidor falhou\n• Usuário ainda não foi criado no banco\n\nTente recarregar a página (F5).`,
-        false
-      );
-      setIsProcessing(false);
-      return;
-    }
-
-    // Encontra categoria pelo nome retornado pelo parser
-    const matchCat = categories.find(
-      c => c.name.toLowerCase() === parsed.categoria.toLowerCase()
-    );
-
-    // Se a categoria não existe, pergunta ao usuário
-    if (!matchCat) {
-      setPendingTransaction({ parsed, suggestedCategory: parsed.categoria });
-      addMessage(
-        `A categoria "${parsed.categoria}" não foi encontrada. O que deseja?`,
-        false
-      );
-      setIsProcessing(false);
-      return;
-    }
-
-    // Categoria encontrada — cria a transação
-    await createTransaction(parsed, matchCat.id);
     setIsProcessing(false);
-  };
-
-  /**
-   * Cria a transação com a categoria definida
-   */
-  const createTransaction = async (parsed: ParsedTransaction, categoryId: string) => {
-    const transactionType = parsed.tipo === 'receita' ? 'income' : 'expense';
-
-    const transactionData: Omit<Transaction, 'id'> = {
-      description: parsed.descricao,
-      amount: parsed.valor,
-      type: transactionType,
-      date: new Date(parsed.data + 'T12:00:00').toISOString(),
-      categoryId,
-      notes: '',
-    };
-
-    try {
-      await addTransaction(transactionData);
-
-      const typeLabel = parsed.tipo === 'receita' ? '📈 Entrada' : '📉 Saída';
-      addMessage(
-        `Transação criada com sucesso! ✅\n${typeLabel}: ${parsed.descricao}\n💰 R$ ${parsed.valor.toFixed(2).replace('.', ',')}\n📅 ${formatDateBR(parsed.data + 'T12:00:00')}\n🏷️ ${parsed.categoria}`,
-        false
-      );
-
-      if (onTransactionCreated) {
-        onTransactionCreated(transactionData);
-      }
-    } catch (error: any) {
-      console.error('Erro ao criar transação:', error);
-      const errorMsg = error?.message || 'Erro desconhecido';
-      addMessage(`Erro ao criar a transação: ${errorMsg}`, false);
-    }
-  };
-
-  /**
-   * Usuário escolheu usar "Outros" para a categoria pendente
-   */
-  const handleUseOutros = async () => {
-    if (!pendingTransaction) return;
-
-    const outrosCat = categories.find(c => c.name.toLowerCase() === 'outros');
-    if (!outrosCat) {
-      addMessage('Erro: categoria "Outros" não encontrada.', false);
-      setPendingTransaction(null);
-      return;
-    }
-
-    const { parsed } = pendingTransaction;
-    setPendingTransaction(null);
-    addMessage(`Usando categoria "Outros"`, true);
-    await createTransaction(parsed, outrosCat.id);
-  };
-
-  /**
-   * Usuário escolheu criar a categoria sugerida
-   */
-  const handleCreateCategory = async () => {
-    if (!pendingTransaction) return;
-
-    const { parsed, suggestedCategory } = pendingTransaction;
-    const styles = CATEGORY_STYLES[suggestedCategory] || { color: '#636E72', icon: 'FaEllipsisH' };
-    const tipo = parsed.tipo === 'receita' ? 'income' : 'expense';
-
-    setPendingTransaction(null);
-    addMessage(`Criando categoria "${suggestedCategory}"...`, true);
-
-    try {
-      const newCategory = await addCategory({
-        name: suggestedCategory,
-        color: styles.color,
-        icon: styles.icon,
-        defaultType: tipo,
-      });
-
-      addMessage(`✅ Categoria "${suggestedCategory}" criada!`, false);
-      await createTransaction(parsed, newCategory.id);
-    } catch (error: any) {
-      console.error('Erro ao criar categoria:', error);
-      addMessage(`Erro ao criar categoria: ${error?.message || 'desconhecido'}.\nUsando "Outros" como alternativa.`, false);
-
-      const outrosCat = categories.find(c => c.name.toLowerCase() === 'outros');
-      if (outrosCat) {
-        await createTransaction(parsed, outrosCat.id);
-      }
-    }
   };
 
   /**
@@ -675,21 +513,7 @@ const TransactionChat: React.FC<TransactionChatProps> = ({
         <div ref={messagesEndRef} />
       </C.MessagesArea>
 
-      {/* Botões de decisão quando categoria não existe */}
-      {pendingTransaction && (
-        <C.PendingCategoryActions>
-          <C.PendingCategoryButtons>
-            <C.UseOtherButton onClick={handleUseOutros}>
-              Usar "Outros"
-            </C.UseOtherButton>
-            <C.CreateCategoryButton onClick={handleCreateCategory}>
-              Criar "{pendingTransaction.suggestedCategory}"
-            </C.CreateCategoryButton>
-          </C.PendingCategoryButtons>
-        </C.PendingCategoryActions>
-      )}
-
-      {/* Formulário editável de comprovante */}
+      {/* Botões de comprovante */}
       {pendingReceiptType && (
         <C.ReceiptForm>
           <C.FormRow>
@@ -763,14 +587,14 @@ const TransactionChat: React.FC<TransactionChatProps> = ({
           value={inputValue}
           onChange={(e) => setInputValue(e.target.value)}
           onKeyPress={handleKeyPress}
-          placeholder={pendingTransaction || pendingReceiptType ? "Escolha uma opção acima" : "Ex: Mercado 150 ou criar categoria"}
-          disabled={isProcessing || !!pendingTransaction || !!pendingReceiptType}
+          placeholder={pendingReceiptType ? "Escolha uma opção acima" : "Pergunte sobre suas finanças..."}
+          disabled={isProcessing || !!pendingReceiptType}
           aria-label="Digite sua mensagem"
         />
 
         <C.SendButton
           onClick={handleSend}
-          disabled={!inputValue.trim() || isProcessing || !!pendingTransaction || !!pendingReceiptType}
+          disabled={!inputValue.trim() || isProcessing || !!pendingReceiptType}
           aria-label="Enviar mensagem"
         >
           <C.SendIcon>➤</C.SendIcon>
