@@ -104,3 +104,41 @@ export const TwoColumns = styled.div`
     grid-template-columns: 1fr;
   }
 `;
+
+/** Layout responsivo: gráficos à esquerda, chat à direita */
+export const ContentLayout = styled.div`
+  display: grid;
+  grid-template-columns: 1fr 380px;
+  gap: 24px;
+  align-items: start;
+
+  @media (max-width: 1024px) {
+    grid-template-columns: 1fr;
+
+    /* Mobile: chat primeiro */
+    & > *:nth-child(2) {
+      order: -1;
+    }
+  }
+`;
+
+/** Coluna dos gráficos e cards */
+export const ChartsColumn = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  min-width: 0;
+`;
+
+/** Coluna do chat (sticky no desktop) */
+export const ChatColumn = styled.div`
+  position: sticky;
+  top: 80px;
+  height: calc(100vh - 100px);
+
+  @media (max-width: 1024px) {
+    position: static;
+    height: auto;
+    max-height: 500px;
+  }
+`;
