@@ -7,7 +7,7 @@
 
 import React, { createContext, useContext, useCallback, useEffect, useReducer } from 'react';
 import { useLocalStorage } from '../hooks/useLocalStorage';
-import { userService, setAuthToken } from '../services/api';
+import { userService, setAuthToken, hasStoredToken } from '../services/api';
 import type { User, AuthState, AuthAction } from '../types';
 
 /**
@@ -99,9 +99,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   // Sincroniza com localStorage ao inicializar
   useEffect(() => {
     if (storedUser) {
+      // Sessão antiga sem token JWT (antes da correção) → força re-login
+      if (!hasStoredToken()) {
+        removeStoredUser();
+        return;
+      }
       dispatch({ type: 'LOGIN_SUCCESS', payload: storedUser });
     }
-  }, [storedUser, dispatch]);
+  }, [storedUser, dispatch, removeStoredUser]);
 
   /**
    * Realiza o login com Google OAuth

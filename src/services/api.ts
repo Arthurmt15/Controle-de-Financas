@@ -30,6 +30,14 @@ export function setAuthToken(token: string | null): void {
 }
 
 /**
+ * Verifica se existe um token salvo no localStorage
+ * @returns true se existe token persistido
+ */
+export function hasStoredToken(): boolean {
+  return !!localStorage.getItem(TOKEN_KEY);
+}
+
+/**
  * Função auxiliar para fazer requisições à API
  * Trata erros e retorna resposta formatada
  * @param endpoint - Caminho do endpoint

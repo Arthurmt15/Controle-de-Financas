@@ -56,7 +56,7 @@ const TransactionsContext = createContext<TransactionsContextValue | undefined>(
  * Carrega dados da API ao montar e sincroniza mudanças
  */
 export function TransactionsProvider({ children }: { children: React.ReactNode }) {
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
   const userId = user?.id || '';
 
   /** Contador de operações em andamento para evitar race condition */
@@ -118,6 +118,10 @@ export function TransactionsProvider({ children }: { children: React.ReactNode }
       } catch (error) {
         console.error('Erro ao carregar dados:', error);
         if (!cancelled) {
+          if (error instanceof Error && error.message === 'Autenticação necessária') {
+            logout();
+            return;
+          }
           dispatch({ type: 'SET_ERROR', payload: 'Erro ao carregar dados do servidor' });
         }
       } finally {
@@ -129,7 +133,7 @@ export function TransactionsProvider({ children }: { children: React.ReactNode }
 
     loadData();
     return () => { cancelled = true; };
-  }, [userId, setLoading]);
+  }, [userId, setLoading, logout]);
 
   /**
    * Adiciona uma nova transação via API
