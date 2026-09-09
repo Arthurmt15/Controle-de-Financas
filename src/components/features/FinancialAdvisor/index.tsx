@@ -1,6 +1,6 @@
 /**
  * @file components/features/FinancialAdvisor/index.tsx
- * @description Chat com consultor financeiro IA (Puter.js).
+ * @description Chat com consultor financeiro IA (via backend proxy).
  * Analisa dados reais do usuário e responde sobre gastos e investimentos.
  */
 
@@ -8,8 +8,6 @@ import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { useTransactions } from '../../../hooks/useTransactions';
 import { buildFinancialContext, streamAdvisor } from '../../../services/financialAdvisorService';
 import * as C from './styles';
-
-declare const puter: any;
 
 /** Mensagem do chat */
 interface Message {
@@ -28,27 +26,15 @@ const SUGGESTIONS = [
   'Quanto posso gastar com lazer?',
 ];
 
-/** Verifica se o erro é de autenticação Puter */
-function isAuthError(error: unknown): boolean {
-  if (error && typeof error === 'object' && 'code' in error) {
-    return (error as { code: string }).code === 'auth_canceled';
-  }
-  if (error instanceof Error) {
-    return error.message.toLowerCase().includes('auth');
-  }
-  return false;
-}
-
 /**
  * Componente de chat com consultor financeiro IA.
- * Recebe dados reais do usuário via TransactionsContext e usa Puter.js para streaming.
+ * Recebe dados reais do usuário via TransactionsContext e usa backend proxy para streaming.
  */
 const FinancialAdvisor: React.FC = () => {
   const { transactions, categories } = useTransactions();
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [isStreaming, setIsStreaming] = useState(false);
-  const [authError, setAuthError] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -60,18 +46,6 @@ const FinancialAdvisor: React.FC = () => {
   useEffect(() => {
     scrollToBottom();
   }, [messages, scrollToBottom]);
-
-  /** Tenta autenticar com Puter */
-  const handlePuterAuth = useCallback(async () => {
-    try {
-      setAuthError(false);
-      // Força o popup de autenticação do Puter
-      await puter.auth.login();
-      setAuthError(false);
-    } catch {
-      setAuthError(true);
-    }
-  }, []);
 
   /** Envia mensagem e recebe resposta com streaming */
   const sendMessage = useCallback(
@@ -88,7 +62,6 @@ const FinancialAdvisor: React.FC = () => {
       setMessages((prev) => [...prev, userMsg]);
       setInput('');
       setIsStreaming(true);
-      setAuthError(false);
 
       const assistantMsg: Message = {
         id: (Date.now() + 1).toString(),
@@ -119,27 +92,13 @@ const FinancialAdvisor: React.FC = () => {
         }
       } catch (error) {
         console.error('Erro no consultor financeiro:', error);
-
-        if (isAuthError(error)) {
-          setAuthError(true);
-          setMessages((prev) =>
-            prev.map((m) =>
-              m.id === assistantMsg.id
-                ? { ...m, content: '' }
-                : m
-            )
-          );
-          // Remove a mensagem do assistente vazia
-          setMessages((prev) => prev.filter((m) => m.id !== assistantMsg.id));
-        } else {
-          setMessages((prev) =>
-            prev.map((m) =>
-              m.id === assistantMsg.id
-                ? { ...m, content: 'Erro ao conectar com o consultor. Tente novamente.' }
-                : m
-            )
-          );
-        }
+        setMessages((prev) =>
+          prev.map((m) =>
+            m.id === assistantMsg.id
+              ? { ...m, content: 'Erro ao conectar com o consultor. Tente novamente.' }
+              : m
+          )
+        );
       } finally {
         setIsStreaming(false);
         inputRef.current?.focus();
@@ -173,7 +132,7 @@ const FinancialAdvisor: React.FC = () => {
       </C.Header>
 
       <C.MessagesArea>
-        {messages.length === 0 && !authError && (
+        {messages.length === 0 && (
           <C.Welcome>
             <C.WelcomeIcon>💡</C.WelcomeIcon>
             <C.WelcomeTitle>Olá! Sou seu consultor financeiro.</C.WelcomeTitle>
@@ -189,23 +148,6 @@ const FinancialAdvisor: React.FC = () => {
               ))}
             </C.Suggestions>
           </C.Welcome>
-        )}
-
-        {authError && (
-          <C.AuthRequired>
-            <C.AuthIcon>🔐</C.AuthIcon>
-            <C.AuthTitle>Conta Puter necessária</C.AuthTitle>
-            <C.AuthText>
-              Para usar o consultor financeiro, faça login gratuito na Puter.
-              É rápido e sem cadastro繁琐oso.
-            </C.AuthText>
-            <C.AuthButton onClick={handlePuterAuth}>
-              Fazer login na Puter
-            </C.AuthButton>
-            <C.AuthNote>
-              clique em qualquer pergunta abaixo após o login
-            </C.AuthNote>
-          </C.AuthRequired>
         )}
 
         {messages.map((msg) => (
@@ -231,10 +173,10 @@ const FinancialAdvisor: React.FC = () => {
           value={input}
           onChange={(e) => setInput(e.target.value)}
           onKeyDown={handleKeyDown}
-          placeholder={authError ? 'Faça login na Puter primeiro...' : 'Pergunte sobre suas finanças...'}
-          disabled={isStreaming || authError}
+          placeholder="Pergunte sobre suas finanças..."
+          disabled={isStreaming}
         />
-        <C.SendButton type="submit" disabled={!input.trim() || isStreaming || authError}>
+        <C.SendButton type="submit" disabled={!input.trim() || isStreaming}>
           {isStreaming ? '⏳' : '➤'}
         </C.SendButton>
       </C.InputForm>

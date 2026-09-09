@@ -1,12 +1,11 @@
 /**
  * @file services/financialAdvisorService.ts
- * @description Serviço de consultor financeiro com IA (Puter.js).
+ * @description Serviço de consultor financeiro com IA (via backend proxy).
  * Constrói contexto financeiro real do usuário e consulta IA para conselhos.
  */
 
 import type { Transaction, Category } from '../types';
-
-declare const puter: any;
+import api from './api';
 
 /** Mensagem no formato do chat */
 interface ChatMessage {
@@ -39,7 +38,6 @@ export function buildFinancialContext(
     .reduce((s, t) => s + t.amount, 0);
   const balance = monthlyIncome - monthlyExpense;
 
-  // Top categorias de gasto
   const categoryTotals: Record<string, number> = {};
   monthly
     .filter((t) => t.type === 'expense')
@@ -54,7 +52,6 @@ export function buildFinancialContext(
     .map(([name, total]) => `  - ${name}: R$ ${total.toFixed(2)}`)
     .join('\n');
 
-  // Últimas 10 transações
   const recent = transactions
     .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
     .slice(0, 10)
@@ -64,7 +61,6 @@ export function buildFinancialContext(
     )
     .join('\n');
 
-  // Tendência últimos 3 meses
   const monthNames = [
     'Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun',
     'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez',
@@ -112,7 +108,7 @@ ${recent || '  Nenhuma transação recente'}
 }
 
 /**
- * Envia pergunta ao consultor financeiro IA com streaming.
+ * Envia pergunta ao consultor financeiro IA via backend proxy com streaming.
  * Retorna um AsyncGenerator que yield cada chunk de texto.
  */
 export async function* streamAdvisor(
@@ -120,36 +116,43 @@ export async function* streamAdvisor(
   financialContext: string,
   history: ChatMessage[]
 ): AsyncGenerator<string> {
-  const messages: ChatMessage[] = [
-    {
-      role: 'system',
-      content: `Você é um consultor financeiro pessoal experiente e direto. Analise os dados reais do usuário abaixo para dar conselhos personalizados.
-
-DADOS FINANCEIROS DO USUÁRIO:
-${financialContext}
-
-REGRAS:
-- Responda SEMPRE em português brasileiro
-- Seja direto, prático e objetivo
-- Fundamente suas respostas nos dados REAIS do usuário (não invente dados)
-- Use valores específicos do usuário quando possível
-- Considere: reserva de emergência (6 meses de despesas), regra 50-30-20 (necessidades/desejos/futuro)
-- Se não tiver dados suficientes, peça mais informações
-- Formatando: use **negrito** para valores e listas para recomendações
-- Máximo de 200 palavras por resposta`,
-    },
-    ...history,
-    { role: 'user', content: userMessage },
-  ];
-
-  const response = await puter.ai.chat(messages, {
-    stream: true,
-    model: 'gpt-5-nano',
+  const response = await api.post('/ai/chat', {
+    message: userMessage,
+    financialContext,
+    history,
   });
 
-  for await (const chunk of response) {
-    if (chunk?.text) {
-      yield chunk.text;
+  const reader = response.body?.getReader();
+  if (!reader) {
+    throw new Error('Não foi possível ler a resposta do servidor');
+  }
+
+  const decoder = new TextDecoder();
+  let buffer = '';
+
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+
+    buffer += decoder.decode(value, { stream: true });
+    const lines = buffer.split('\n');
+    buffer = lines.pop() || '';
+
+    for (const line of lines) {
+      if (line.startsWith('data: ')) {
+        const data = line.slice(6);
+        if (data === '[DONE]') {
+          return;
+        }
+        try {
+          const parsed = JSON.parse(data);
+          if (parsed.content) {
+            yield parsed.content;
+          }
+        } catch {
+          // Ignora linhas JSON inválidas
+        }
+      }
     }
   }
 }

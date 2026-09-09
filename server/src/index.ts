@@ -12,6 +12,7 @@ import usersRouter from './routes/users';
 import transactionsRouter from './routes/transactions';
 import categoriesRouter from './routes/categories';
 import budgetsRouter from './routes/budgets';
+import aiRouter from './routes/ai';
 
 dotenv.config();
 
@@ -67,6 +68,7 @@ app.use('/api/users', usersRouter);
 app.use('/api/transactions', transactionsRouter);
 app.use('/api/categories', categoriesRouter);
 app.use('/api/budgets', budgetsRouter);
+app.use('/api/ai', aiRouter);
 
 /**
  * Middleware de tratamento de erros globais
