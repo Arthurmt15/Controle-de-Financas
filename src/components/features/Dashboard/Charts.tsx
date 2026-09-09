@@ -18,6 +18,25 @@ import * as C from './styles';
 /** Cores para o gráfico de pizza (paleta indigo) */
 const PIE_COLORS = ['#6366f1', '#8b5cf6', '#a78bfa', '#c4b5fd', '#ddd6fe'];
 
+/** Legenda customizada para o gráfico de pizza */
+const PieLegend: React.FC<{ data: Array<{ name: string; value: number; color: string }> }> = ({ data }) => {
+  const total = data.reduce((sum, item) => sum + item.value, 0);
+  return (
+    <C.PieLegendContainer>
+      {data.map((item, index) => (
+        <C.PieLegendItem key={`legend-${index}`}>
+          <C.PieLegendDot $color={item.color || PIE_COLORS[index % PIE_COLORS.length]} />
+          <C.PieLegendText>
+            <C.PieLegendName>{item.name}</C.PieLegendName>
+            <C.PieLegendValue>{formatCurrency(item.value)}</C.PieLegendValue>
+            <C.PieLegendPercent>{((item.value / total) * 100).toFixed(1)}%</C.PieLegendPercent>
+          </C.PieLegendText>
+        </C.PieLegendItem>
+      ))}
+    </C.PieLegendContainer>
+  );
+};
+
 /**
  * Componente Charts
  * Exibe gráficos de evolução mensal e despesas por categoria
@@ -124,24 +143,26 @@ const Charts: React.FC = () => {
           </C.PanelSelect>
         </C.PanelHeader>
         {categoryData.length > 0 ? (
-          <ResponsiveContainer width="100%" height={285}>
-            <PieChart>
-              <Pie
-                data={categoryData}
-                cx="50%"
-                cy="50%"
-                labelLine={false}
-                label={({ name, percent }) => `${name} (${((percent ?? 0) * 100).toFixed(0)}%)`}
-                outerRadius={100}
-                dataKey="value"
-              >
-                {categoryData.map((entry, index) => (
-                  <Cell key={`cell-${index}`} fill={entry.color || PIE_COLORS[index % PIE_COLORS.length]} />
-                ))}
-              </Pie>
-              <Tooltip formatter={(value) => formatCurrency(Number(value))} contentStyle={tooltipStyle} />
-            </PieChart>
-          </ResponsiveContainer>
+          <>
+            <ResponsiveContainer width="100%" height={200}>
+              <PieChart>
+                <Pie
+                  data={categoryData}
+                  cx="50%"
+                  cy="50%"
+                  labelLine={false}
+                  outerRadius={80}
+                  dataKey="value"
+                >
+                  {categoryData.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={entry.color || PIE_COLORS[index % PIE_COLORS.length]} />
+                  ))}
+                </Pie>
+                <Tooltip formatter={(value) => formatCurrency(Number(value))} contentStyle={tooltipStyle} />
+              </PieChart>
+            </ResponsiveContainer>
+            <PieLegend data={categoryData} />
+          </>
         ) : (
           <C.CategoryEmpty>
             <C.CategoryIcon>📁</C.CategoryIcon>

@@ -15,6 +15,12 @@ export const ChatContainer = styled.div`
   overflow: hidden;
   display: flex;
   flex-direction: column;
+  height: 100%;
+  min-height: 450px;
+
+  @media (max-width: 480px) {
+    min-height: 500px;
+  }
 `;
 
 /**
@@ -44,6 +50,10 @@ export const ChatTitle = styled.h3`
   display: flex;
   align-items: center;
   gap: 8px;
+
+  @media (max-width: 480px) {
+    font-size: 17px;
+  }
 `;
 
 /**
@@ -51,6 +61,10 @@ export const ChatTitle = styled.h3`
  */
 export const TitleIcon = styled.span`
   font-size: 20px;
+
+  @media (max-width: 480px) {
+    font-size: 22px;
+  }
 `;
 
 /**
@@ -68,9 +82,9 @@ export const MessagesArea = styled.div`
   min-height: 200px;
 
   @media (max-width: 480px) {
-    padding: 12px;
+    padding: 14px;
     max-height: none;
-    min-height: 180px;
+    min-height: 280px;
     flex: 1 1 0;
   }
 `;
@@ -103,9 +117,9 @@ export const MessageBubble = styled.div<{ $isUser: boolean }>`
   word-break: break-word;
 
   @media (max-width: 480px) {
-    max-width: 85%;
-    padding: 8px 12px;
-    font-size: 13px;
+    max-width: 88%;
+    padding: 10px 14px;
+    font-size: 14px;
   }
 `;
 
@@ -116,6 +130,10 @@ export const MessageTime = styled.span`
   font-size: 11px;
   color: ${({ theme }) => theme.colors.textSecondary};
   padding: 0 4px;
+
+  @media (max-width: 480px) {
+    font-size: 12px;
+  }
 `;
 
 /**
@@ -131,6 +149,11 @@ export const TransactionCreated = styled.div`
   background-color: ${({ theme }) => `${theme.colors.success}15`};
   color: ${({ theme }) => theme.colors.success};
   border: 1px solid ${({ theme }) => `${theme.colors.success}30`};
+
+  @media (max-width: 480px) {
+    padding: 12px 14px;
+    font-size: 14px;
+  }
 `;
 
 /**
@@ -138,6 +161,10 @@ export const TransactionCreated = styled.div`
  */
 export const SuccessIcon = styled.span`
   font-size: 16px;
+
+  @media (max-width: 480px) {
+    font-size: 18px;
+  }
 `;
 
 /**
@@ -147,13 +174,13 @@ export const InputContainer = styled.div`
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 10px 12px;
+  padding: 12px 14px;
   border-top: 1px solid ${({ theme }) => theme.colors.border};
   background-color: ${({ theme }) => theme.colors.surface};
 
   @media (max-width: 480px) {
-    gap: 6px;
-    padding: 8px 10px;
+    gap: 8px;
+    padding: 12px;
   }
 `;
 
@@ -183,7 +210,7 @@ export const MessageInput = styled.input`
   }
 
   @media (max-width: 480px) {
-    padding: 8px 12px;
+    padding: 10px 14px;
     font-size: 16px;
   }
 `;
@@ -216,9 +243,9 @@ export const SendButton = styled.button`
   }
 
   @media (max-width: 480px) {
-    width: 36px;
-    height: 36px;
-    min-width: 36px;
+    width: 42px;
+    height: 42px;
+    min-width: 42px;
   }
 `;
 
@@ -227,6 +254,10 @@ export const SendButton = styled.button`
  */
 export const SendIcon = styled.span`
   font-size: 18px;
+
+  @media (max-width: 480px) {
+    font-size: 20px;
+  }
 `;
 
 /**
@@ -253,9 +284,9 @@ export const UploadButton = styled.button`
   }
 
   @media (max-width: 480px) {
-    width: 36px;
-    height: 36px;
-    min-width: 36px;
+    width: 42px;
+    height: 42px;
+    min-width: 42px;
   }
 `;
 
@@ -264,18 +295,22 @@ export const UploadButton = styled.button`
  */
 export const UploadIcon = styled.span`
   font-size: 18px;
+
+  @media (max-width: 480px) {
+    font-size: 20px;
+  }
 `;
 
 /**
  * Dicas de uso
  */
 export const TipsContainer = styled.div`
-  padding: 10px 14px;
+  padding: 12px 16px;
   background-color: ${({ theme }) => `${theme.colors.primary}08`};
   border-top: 1px solid ${({ theme }) => theme.colors.border};
 
   @media (max-width: 480px) {
-    padding: 10px 14px;
+    padding: 14px 16px;
   }
 `;
 
@@ -288,7 +323,7 @@ export const ReceiptForm = styled.div`
   background-color: ${({ theme }) => `${theme.colors.primary}08`};
 
   @media (max-width: 480px) {
-    padding: 10px 12px;
+    padding: 14px 16px;
   }
 `;
 
@@ -304,6 +339,8 @@ export const FormRow = styled.div`
   @media (max-width: 480px) {
     flex-direction: column;
     align-items: stretch;
+    gap: 10px;
+    margin-bottom: 12px;
   }
 `;
 
@@ -318,6 +355,7 @@ export const FormLabel = styled.span`
 
   @media (max-width: 480px) {
     min-width: auto;
+    font-size: 13px;
   }
 `;
 
@@ -342,7 +380,7 @@ export const FormInput = styled.input`
   }
 
   @media (max-width: 480px) {
-    padding: 8px 10px;
+    padding: 10px 12px;
     font-size: 16px;
   }
 `;
@@ -369,7 +407,7 @@ export const FormSelect = styled.select`
   }
 
   @media (max-width: 480px) {
-    padding: 8px 10px;
+    padding: 10px 12px;
     font-size: 16px;
   }
 `;
@@ -380,10 +418,11 @@ export const FormSelect = styled.select`
 export const TypeButtons = styled.div`
   display: flex;
   gap: 8px;
-  margin-top: 8px;
+  margin-top: 10px;
 
   @media (max-width: 480px) {
     flex-direction: column;
+    gap: 10px;
   }
 `;
 
@@ -409,7 +448,8 @@ export const IncomeButton = styled.button`
   }
 
   @media (max-width: 480px) {
-    padding: 10px 14px;
+    padding: 12px 16px;
+    font-size: 14px;
   }
 `;
 
@@ -435,7 +475,8 @@ export const ExpenseButton = styled.button`
   }
 
   @media (max-width: 480px) {
-    padding: 10px 14px;
+    padding: 12px 16px;
+    font-size: 14px;
   }
 `;
 
@@ -448,6 +489,11 @@ export const TipsTitle = styled.span`
   color: ${({ theme }) => theme.colors.textSecondary};
   display: block;
   margin-bottom: 6px;
+
+  @media (max-width: 480px) {
+    font-size: 13px;
+    margin-bottom: 8px;
+  }
 `;
 
 /**
@@ -457,6 +503,10 @@ export const ExamplesList = styled.div`
   display: flex;
   flex-wrap: wrap;
   gap: 6px;
+
+  @media (max-width: 480px) {
+    gap: 8px;
+  }
 `;
 
 /**
@@ -478,7 +528,7 @@ export const ExampleChip = styled.button`
   }
 
   @media (max-width: 480px) {
-    padding: 8px 14px;
+    padding: 10px 16px;
     font-size: 13px;
   }
 `;
@@ -492,7 +542,7 @@ export const PendingCategoryActions = styled.div`
   background-color: ${({ theme }) => `${theme.colors.primary}08`};
 
   @media (max-width: 480px) {
-    padding: 10px 12px;
+    padding: 14px 16px;
   }
 `;
 
@@ -505,6 +555,7 @@ export const PendingCategoryButtons = styled.div`
 
   @media (max-width: 480px) {
     flex-direction: column;
+    gap: 10px;
   }
 `;
 
@@ -530,7 +581,8 @@ export const UseOtherButton = styled.button`
   }
 
   @media (max-width: 480px) {
-    padding: 10px 14px;
+    padding: 12px 16px;
+    font-size: 14px;
   }
 `;
 
@@ -560,6 +612,7 @@ export const CreateCategoryButton = styled.button`
   }
 
   @media (max-width: 480px) {
-    padding: 10px 14px;
+    padding: 12px 16px;
+    font-size: 14px;
   }
 `;

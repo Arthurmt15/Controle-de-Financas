@@ -168,6 +168,81 @@ export const CategoryIcon = styled.div`
 `;
 
 /**
+ * Container da legenda do gráfico de pizza
+ * Exibe itens em coluna com espaçamento consistente
+ */
+export const PieLegendContainer = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 0 15px;
+  max-height: 150px;
+  overflow-y: auto;
+`;
+
+/**
+ * Item da legenda do gráfico de pizza
+ * Alinha horizontalmente dot, nome, valor e percentual
+ */
+export const PieLegendItem = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 10px;
+`;
+
+/**
+ * Dot indicador de cor na legenda do pizza
+ */
+export const PieLegendDot = styled.span<{ $color: string }>`
+  width: 10px;
+  height: 10px;
+  min-width: 10px;
+  border-radius: 50%;
+  background: ${({ $color }) => $color};
+`;
+
+/**
+ * Container de texto da legenda do pizza
+ */
+export const PieLegendText = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+  min-width: 0;
+`;
+
+/**
+ * Nome da categoria na legenda
+ */
+export const PieLegendName = styled.span`
+  font-size: 12px;
+  color: ${({ theme }) => theme.colors.text};
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+`;
+
+/**
+ * Valor da categoria na legenda
+ */
+export const PieLegendValue = styled.span`
+  font-size: 12px;
+  font-weight: 600;
+  color: ${({ theme }) => theme.colors.text};
+  white-space: nowrap;
+`;
+
+/**
+ * Percentual da categoria na legenda
+ */
+export const PieLegendPercent = styled.span`
+  font-size: 11px;
+  color: ${({ theme }) => theme.colors.textSecondary};
+  white-space: nowrap;
+`;
+
+/**
  * Container da lista de transações
  * Bordas e background consistente com o tema
  */
