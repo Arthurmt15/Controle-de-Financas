@@ -51,21 +51,9 @@ const TransactionChat: React.FC = () => {
     date: string;
     categoryId: string;
   } | null>(null);
-  const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
   const examples = getExampleMessages();
-
-  /**
-   * Rola para a última mensagem
-   */
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  };
-
-  useEffect(() => {
-    scrollToBottom();
-  }, [messages]);
 
   const STORAGE_KEY = 'financas_chat_messages';
 
@@ -579,7 +567,6 @@ const TransactionChat: React.FC = () => {
             <C.MessageTime>{formatTime(message.timestamp)}</C.MessageTime>
           </C.Message>
         ))}
-        <div ref={messagesEndRef} />
       </C.MessagesArea>
 
       {/* Botões de comprovante */}
