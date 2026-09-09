@@ -6,7 +6,7 @@
 
 import { Router, Response } from 'express';
 import pool from '../database';
-import { generateToken } from '../middleware/auth';
+import { authenticate, generateToken, AuthRequest } from '../middleware/auth';
 import { DEFAULT_CATEGORIES, generateCategoryId } from '../data/defaultCategories';
 
 const router = Router();
@@ -89,11 +89,18 @@ router.post('/', async (req, res: Response) => {
 
 /**
  * GET /api/users/:id
- * Busca um usuário pelo ID
+ * Busca um usuário autenticado pelo ID
  */
-router.get('/:id', async (req, res: Response) => {
+router.get('/:id', authenticate, async (req: AuthRequest, res: Response) => {
   try {
     const { id } = req.params;
+
+    if (req.userId !== id) {
+      return res.status(403).json({
+        success: false,
+        error: 'Acesso negado',
+      });
+    }
 
     const result = await pool.query('SELECT * FROM users WHERE id = $1', [id]);
 
