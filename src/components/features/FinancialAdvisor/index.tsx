@@ -79,12 +79,14 @@ const FinancialAdvisor: React.FC = () => {
           content: m.content,
         }));
 
-        let fullContent = '';
-        for await (const chunk of streamAdvisor(text, context, history)) {
-          fullContent += chunk;
+        let accumulated = '';
+        const chunks = streamAdvisor(text, context, history);
+        for await (const chunk of chunks) {
+          accumulated += chunk;
+          const content = accumulated;
           setMessages((prev) =>
             prev.map((m) =>
-              m.id === assistantMsg.id ? { ...m, content: fullContent } : m
+              m.id === assistantMsg.id ? { ...m, content } : m
             )
           );
         }
