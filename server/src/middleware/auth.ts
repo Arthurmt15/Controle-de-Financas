@@ -6,10 +6,12 @@
 
 import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
+import crypto from 'crypto';
 
-const JWT_SECRET: string = process.env.JWT_SECRET || '';
-if (!JWT_SECRET) {
-  throw new Error('JWT_SECRET não configurado. Defina a variável de ambiente.');
+const JWT_SECRET: string = process.env.JWT_SECRET || crypto.randomBytes(64).toString('hex');
+
+if (!process.env.JWT_SECRET) {
+  console.warn('⚠️ JWT_SECRET não definido. Usando secret gerado aleatoriamente. Tokens não persistirão entre reinícios.');
 }
 
 export interface AuthRequest extends Request {
