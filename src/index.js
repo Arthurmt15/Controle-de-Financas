@@ -9,27 +9,40 @@ import './index.css';
 import App from './App';
 
 // Suprime erros CORS do Google Identity Services (gsi/log é analytics interno do Google, inofensivo)
-const originalConsoleError = console.error;
-console.error = (...args) => {
-  if (args.some(arg => typeof arg === 'string' && arg.includes('accounts.google.com/gsi/log'))) return;
-  if (args.some(arg => typeof arg === 'string' && arg.includes('Requisição cross-origin bloqueada'))) return;
-  originalConsoleError(...args);
-};
+const GSI_KEYWORDS = ['gsi/log', 'gsi/', 'cross-origin', 'cross origin', 'CORS', 'Requisição cross-origin'];
 
-// Suprime erros de rede do Google GSI (CORS em endpoints de analytics)
+function isGsiError(...args) {
+  return args.some(arg =>
+    typeof arg === 'string' && GSI_KEYWORDS.some(kw => arg.includes(kw))
+  );
+}
+
+// Intercepta todos os métodos do console
+['error', 'warn', 'log', 'info'].forEach(method => {
+  const original = console[method].bind(console);
+  console[method] = (...args) => {
+    if (isGsiError(...args)) return;
+    original(...args);
+  };
+});
+
+// Intercepta erros não capturados no window
 window.addEventListener('error', (event) => {
-  if (event.filename?.includes('accounts.google.com/gsi/')) {
+  if (isGsiError(event.message, event.filename || '')) {
     event.preventDefault();
     return true;
   }
 });
 
-// Suprime promises rejeitadas do Google GSI
+// Intercepta promises rejeitadas
 window.addEventListener('unhandledrejection', (event) => {
-  const reason = event.reason;
+  const r = event.reason;
   if (
-    (typeof reason === 'string' && reason.includes('accounts.google.com/gsi/')) ||
-    (reason?.message && reason.message.includes('Failed to fetch'))
+    isGsiError(
+      typeof r === 'string' ? r : '',
+      r?.message || '',
+      r?.stack || ''
+    )
   ) {
     event.preventDefault();
   }
