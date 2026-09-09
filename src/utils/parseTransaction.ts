@@ -299,6 +299,17 @@ function detectCategory(text: string, tipo: 'despesa' | 'receita'): { category: 
 function extractDescription(remainingText: string): string {
   let desc = remainingText;
 
+  // Remove palavras-chave de tipo (despesa/receita) que podem estar no início
+  const typeKeywords = [
+    'gastei', 'paguei', 'comprei', 'saiu', 'perdi', 'compra', 'despesa',
+    'recebi', 'recebido', 'ganhei', 'ganho', 'pagamento', 'entrada',
+    'salário', 'salario', 'rendimento', 'cashback', 'estorno', 'reembolso',
+  ];
+  for (const keyword of typeKeywords) {
+    const regex = new RegExp(`\\b${keyword}\\b`, 'gi');
+    desc = desc.replace(regex, ' ');
+  }
+
   // Remove preposições e artigos soltos no início
   desc = desc.replace(/^\s*(de|da|do|das|dos|no|na|nas|nos|em|e|a|o|as|os|um|uma|uns|umas)\s+/gi, '');
 
