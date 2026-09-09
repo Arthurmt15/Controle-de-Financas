@@ -180,7 +180,7 @@ const TransactionChat: React.FC<TransactionChatProps> = ({
             `✅ Transação criada!\n` +
             `📝 ${transactionData.description}\n` +
             `💰 R$ ${transactionData.amount.toFixed(2).replace('.', ',')}\n` +
-            `📅 ${transactionData.date}\n` +
+            `📅 ${formatDateBR(transactionData.date)}\n` +
             `🏷️ ${matchCat.name}`,
             false
           );
@@ -290,7 +290,7 @@ const TransactionChat: React.FC<TransactionChatProps> = ({
 
       const typeLabel = parsed.tipo === 'receita' ? '📈 Entrada' : '📉 Saída';
       addMessage(
-        `Transação criada com sucesso! ✅\n${typeLabel}: ${parsed.descricao}\n💰 R$ ${parsed.valor.toFixed(2).replace('.', ',')}\n📅 ${parsed.data}\n🏷️ ${parsed.categoria}`,
+        `Transação criada com sucesso! ✅\n${typeLabel}: ${parsed.descricao}\n💰 R$ ${parsed.valor.toFixed(2).replace('.', ',')}\n📅 ${formatDateBR(parsed.data + 'T12:00:00')}\n🏷️ ${parsed.categoria}`,
         false
       );
 
@@ -443,7 +443,7 @@ const TransactionChat: React.FC<TransactionChatProps> = ({
             await addTransaction(transactionData);
             const typeLabel = parsed.tipo === 'receita' ? '📈 Entrada' : '📉 Saída';
             addMessage(
-              `✅ Transação criada!\n${typeLabel}: ${parsed.descricao}\n💰 R$ ${parsed.valor.toFixed(2).replace('.', ',')}\n📅 ${parsed.data}\n🏷️ ${parsed.categoria}`,
+              `✅ Transação criada!\n${typeLabel}: ${parsed.descricao}\n💰 R$ ${parsed.valor.toFixed(2).replace('.', ',')}\n📅 ${formatDateBR(parsed.data + 'T12:00:00')}\n🏷️ ${parsed.categoria}`,
               false
             );
           } else {
@@ -500,7 +500,7 @@ const TransactionChat: React.FC<TransactionChatProps> = ({
           `✅ Transação criada automaticamente!\n` +
           `📉 Saída: ${transactionData.description}\n` +
           `💰 R$ ${receipt.amount.toFixed(2).replace('.', ',')}\n` +
-          `📅 ${transactionData.date}\n` +
+          `📅 ${formatDateBR(transactionData.date)}\n` +
           `🏷️ ${matchCat.name}`,
           false
         );
@@ -520,6 +520,14 @@ const TransactionChat: React.FC<TransactionChatProps> = ({
 
     setIsProcessing(false);
     e.target.value = '';
+  };
+
+  /**
+   * Formata data no padrão brasileiro (DD/MM/AAAA)
+   */
+  const formatDateBR = (dateString: string): string => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('pt-BR');
   };
 
   /**
