@@ -7,7 +7,6 @@
 import React, { useState, useRef } from 'react';
 import { extractTextFromImage } from '../../../services/ocrService';
 import { useTransactions } from '../../../hooks/useTransactions';
-import { parseTransactionFromMessage } from '../../../utils/parseTransaction';
 
 import * as C from './styles';
 import type { Transaction } from '../../../types';
@@ -59,6 +58,7 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
   const [editableAmount, setEditableAmount] = useState('');
   const [editableDate, setEditableDate] = useState('');
   const [editableCategoryId, setEditableCategoryId] = useState('');
+  const [editableType, setEditableType] = useState<'income' | 'expense'>('expense');
 
   /**
    * Extrai valor do texto OCR de notas fiscais.
@@ -212,12 +212,8 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
       setEditableDate(date || new Date().toISOString().split('T')[0]);
 
       // Inicializa categoria editável
-      const parsed = parseTransactionFromMessage(rawText);
-      const categoria = parsed?.categoria || 'Outros';
-      const matchCat = categories.find(
-        c => c.name.toLowerCase() === categoria.toLowerCase()
-      );
-      setEditableCategoryId(matchCat?.id || categories[0]?.id || '');
+      const defaultCat = categories.find(c => c.name.toLowerCase() === 'outros') || categories[0];
+      setEditableCategoryId(defaultCat?.id || '');
     } catch (err) {
       console.error('Erro no OCR:', err);
       setError('Erro ao analisar a imagem. Tente novamente.');
@@ -279,6 +275,7 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
     setEditableAmount('');
     setEditableDate('');
     setEditableCategoryId('');
+    setEditableType('expense');
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
     }
@@ -303,19 +300,14 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
       return;
     }
 
-    // Usa o parser centralizado para obter tipo
-    const parsed = parseTransactionFromMessage(analysisResult.rawText);
-
     // Valores editáveis pelo usuário
     const descricao = editableDescription.trim() || 'Compra via comprovante';
     const data = editableDate || new Date().toISOString().split('T')[0];
-    const tipo = parsed?.tipo || 'despesa';
-    const transactionType = tipo === 'receita' ? 'income' : 'expense';
 
     const transactionData: Omit<Transaction, 'id'> = {
       description: descricao,
       amount: valor,
-      type: transactionType,
+      type: editableType,
       date: data.includes('T') ? data : new Date(data + 'T12:00:00').toISOString(),
       categoryId: editableCategoryId,
       notes: '',
@@ -434,6 +426,24 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
               onChange={(e) => { setEditableDescription(e.target.value); setError(null); }}
               placeholder="Descrição da transação"
             />
+          </C.AnalysisField>
+
+          <C.AnalysisField>
+            <C.FieldLabel>Tipo:</C.FieldLabel>
+            <C.TypeButtons>
+              <C.IncomeButton
+                $active={editableType === 'income'}
+                onClick={() => { setEditableType('income'); setError(null); }}
+              >
+                📈 Entrada
+              </C.IncomeButton>
+              <C.ExpenseButton
+                $active={editableType === 'expense'}
+                onClick={() => { setEditableType('expense'); setError(null); }}
+              >
+                📉 Saída
+              </C.ExpenseButton>
+            </C.TypeButtons>
           </C.AnalysisField>
         </C.AnalysisResult>
       )}

@@ -303,3 +303,51 @@ export const ErrorMessage = styled.div`
   color: ${({ theme }) => theme.colors.danger};
   font-size: 13px;
 `;
+
+/**
+ * Container dos botões de tipo
+ */
+export const TypeButtons = styled.div`
+  display: flex;
+  gap: 8px;
+`;
+
+/**
+ * Botão de entrada
+ */
+export const IncomeButton = styled.button<{ $active: boolean }>`
+  padding: 6px 12px;
+  font-size: 13px;
+  font-weight: 500;
+  font-family: inherit;
+  color: ${({ $active }) => ($active ? 'white' : '#22c55e')};
+  background-color: ${({ $active }) => ($active ? '#22c55e' : '#22c55e15')};
+  border: 1px solid ${({ $active }) => ($active ? '#22c55e' : '#22c55e30')};
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+
+  &:hover {
+    background-color: ${({ $active }) => ($active ? '#16a34a' : '#22c52525')};
+  }
+`;
+
+/**
+ * Botão de saída
+ */
+export const ExpenseButton = styled.button<{ $active: boolean }>`
+  padding: 6px 12px;
+  font-size: 13px;
+  font-weight: 500;
+  font-family: inherit;
+  color: ${({ $active, theme }) => ($active ? 'white' : theme.colors.primary)};
+  background-color: ${({ $active, theme }) => ($active ? theme.colors.primary : `${theme.colors.primary}15`)};
+  border: 1px solid ${({ $active, theme }) => ($active ? theme.colors.primary : `${theme.colors.primary}30`)};
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+
+  &:hover {
+    background-color: ${({ $active, theme }) => ($active ? theme.colors.primaryDark : `${theme.colors.primary}25`)};
+  }
+`;
