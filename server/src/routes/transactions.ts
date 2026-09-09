@@ -47,8 +47,9 @@ router.get('/:userId', async (req: Request, res: Response) => {
  * @body { userId, description, amount, type, date, categoryId, notes }
  */
 router.post('/', async (req: Request, res: Response) => {
+  const { userId, description, amount, type, date, categoryId, notes } = req.body;
+
   try {
-    const { userId, description, amount, type, date, categoryId, notes } = req.body;
 
     // Validação dos campos obrigatórios
     if (!userId || !description || amount === undefined || !type || !date || !categoryId) {
