@@ -49,7 +49,7 @@ interface TransactionChatProps {
  * Componente de chat rápido com IA
  */
 const TransactionChat: React.FC<TransactionChatProps> = () => {
-  const { transactions, addTransaction, categories, isLoading, error: txError } = useTransactions();
+  const { transactions, addTransaction, addCategory, deleteCategory, categories, isLoading, error: txError } = useTransactions();
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [inputValue, setInputValue] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
