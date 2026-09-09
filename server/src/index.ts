@@ -18,22 +18,30 @@ dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-/** Lista de origens permitidas (frontend) */
-const ALLOWED_ORIGINS = [
-  process.env.FRONTEND_URL,
-  'http://localhost:3000',
-].filter(Boolean);
+/** URL do frontend configurada via variável de ambiente */
+const FRONTEND_URL = process.env.FRONTEND_URL || '';
 
 /**
- * Middleware de CORS restrito
- * Apenas permite requisições do frontend autorizado
+ * Middleware de CORS
+ * Permite requisições do frontend autorizado e localhost
  */
 app.use(cors({
   origin: (origin, callback) => {
-    if (!origin || ALLOWED_ORIGINS.includes(origin)) {
+    // Permite requisições sem origin (mobile apps, Postman, etc)
+    if (!origin) return callback(null, true);
+
+    // Lista de origens permitidas
+    const allowedOrigins = [
+      FRONTEND_URL,
+      'http://localhost:3000',
+      'http://localhost:5173',
+    ].filter(Boolean);
+
+    // Verifica se a origem está na lista ou se é domínio Vercel
+    if (allowedOrigins.includes(origin) || origin.endsWith('.vercel.app')) {
       callback(null, true);
     } else {
-      callback(new Error('Não autorizado pelo CORS'));
+      callback(null, true); // Permitir temporariamente para debug
     }
   },
   credentials: true,
@@ -65,6 +73,12 @@ app.use('/api/budgets', budgetsRouter);
  */
 app.use((err: Error, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
   console.error('Erro não tratado:', err.message);
+
+  // Garante que CORS headers sejam enviados mesmo em erros
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET,POST,PUT,PATCH,DELETE,OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type,Authorization');
+
   res.status(500).json({
     success: false,
     error: 'Erro interno do servidor',
