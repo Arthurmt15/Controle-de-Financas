@@ -181,3 +181,57 @@ export const SendButton = styled.button`
     cursor: not-allowed;
   }
 `;
+
+/** Container de autenticação necessária */
+export const AuthRequired = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 32px 20px;
+  gap: 12px;
+`;
+
+export const AuthIcon = styled.span`
+  font-size: 40px;
+`;
+
+export const AuthTitle = styled.h4`
+  font-size: 16px;
+  font-weight: 600;
+  color: ${({ theme }) => theme.colors.text};
+  margin: 0;
+`;
+
+export const AuthText = styled.p`
+  font-size: 13px;
+  color: ${({ theme }) => theme.colors.textSecondary};
+  margin: 0;
+  max-width: 260px;
+  line-height: 1.4;
+`;
+
+export const AuthButton = styled.button`
+  padding: 10px 24px;
+  font-size: 14px;
+  font-weight: 600;
+  font-family: inherit;
+  color: white;
+  background-color: ${({ theme }) => theme.colors.primary};
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  margin-top: 8px;
+
+  &:hover {
+    background-color: ${({ theme }) => theme.colors.primaryDark};
+    transform: scale(1.02);
+  }
+`;
+
+export const AuthNote = styled.span`
+  font-size: 11px;
+  color: ${({ theme }) => theme.colors.textSecondary};
+  font-style: italic;
+`;
