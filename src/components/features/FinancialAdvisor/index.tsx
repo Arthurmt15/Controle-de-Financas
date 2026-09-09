@@ -9,12 +9,23 @@ import { useTransactions } from '../../../hooks/useTransactions';
 import { buildFinancialContext, streamAdvisor } from '../../../services/financialAdvisorService';
 import * as C from './styles';
 
+declare const puter: any;
+
 /** Mensagem do chat */
 interface Message {
   id: string;
   role: 'user' | 'assistant';
   content: string;
   timestamp: Date;
+}
+
+/** Renderiza markdown básico: **negrito**, listas e quebras de linha */
+function renderMarkdown(text: string): string {
+  return text
+    .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+    .replace(/^(\d+)\.\s+(.+)/gm, '<strong>$1.</strong> $2')
+    .replace(/^-\s+(.+)/gm, '&bull; $1')
+    .replace(/\n/g, '<br/>');
 }
 
 /** Sugestões iniciais clicáveis */
@@ -152,9 +163,18 @@ const FinancialAdvisor: React.FC = () => {
 
         {messages.map((msg) => (
           <C.Message key={msg.id} $isUser={msg.role === 'user'}>
-            <C.MessageBubble $isUser={msg.role === 'user'}>
-              {msg.content ||
-                (isStreaming && msg.role === 'assistant' ? '⏳ Pensando...' : '')}
+            <C.MessageBubble
+              $isUser={msg.role === 'user'}
+              dangerouslySetInnerHTML={
+                msg.role === 'assistant' && msg.content
+                  ? { __html: renderMarkdown(msg.content) }
+                  : undefined
+              }
+            >
+              {msg.role === 'user' || !msg.content
+                ? msg.content ||
+                  (isStreaming && msg.role === 'assistant' ? '⏳ Pensando...' : '')
+                : null}
             </C.MessageBubble>
             <C.MessageTime>
               {msg.timestamp.toLocaleTimeString('pt-BR', {
