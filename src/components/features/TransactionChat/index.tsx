@@ -38,18 +38,10 @@ function renderMarkdown(text: string): string {
 }
 
 /**
- * Props do componente TransactionChat
- */
-interface TransactionChatProps {
-  /** Função chamada quando uma transação é criada */
-  onTransactionCreated?: (transaction: Omit<Transaction, 'id'>) => void;
-}
-
-/**
  * Componente de chat rápido com IA
  */
-const TransactionChat: React.FC<TransactionChatProps> = () => {
-  const { transactions, addTransaction, addCategory, deleteCategory, categories, isLoading, error: txError } = useTransactions();
+const TransactionChat: React.FC = () => {
+  const { transactions, addTransaction, addCategory, deleteCategory, categories } = useTransactions();
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [inputValue, setInputValue] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
