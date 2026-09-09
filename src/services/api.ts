@@ -10,8 +10,11 @@ import type { Budget } from '../types/dashboard';
 /** URL base da API (configurada via variável de ambiente) */
 const API_BASE = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
 
-/** Token JWT para autenticação */
-let authToken: string | null = null;
+/** Chave do localStorage para o token JWT */
+const TOKEN_KEY = 'financas_token';
+
+/** Token JWT para autenticação (restaurado do localStorage) */
+let authToken: string | null = localStorage.getItem(TOKEN_KEY);
 
 /**
  * Define o token de autenticação para requisições
@@ -19,6 +22,11 @@ let authToken: string | null = null;
  */
 export function setAuthToken(token: string | null): void {
   authToken = token;
+  if (token) {
+    localStorage.setItem(TOKEN_KEY, token);
+  } else {
+    localStorage.removeItem(TOKEN_KEY);
+  }
 }
 
 /**

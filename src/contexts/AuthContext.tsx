@@ -7,7 +7,7 @@
 
 import React, { createContext, useContext, useCallback, useEffect, useReducer } from 'react';
 import { useLocalStorage } from '../hooks/useLocalStorage';
-import { userService } from '../services/api';
+import { userService, setAuthToken } from '../services/api';
 import type { User, AuthState, AuthAction } from '../types';
 
 /**
@@ -146,6 +146,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const logout = useCallback(() => {
     dispatch({ type: 'LOGOUT' });
     removeStoredUser();
+    setAuthToken(null);
     if (window.google?.accounts?.id) {
       window.google.accounts.id.disableAutoSelect();
     }
