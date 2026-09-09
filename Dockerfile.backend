@@ -5,7 +5,8 @@ WORKDIR /app
 COPY server/package*.json ./server/
 RUN cd server && npm install
 
-COPY server/ ./server/
+COPY server/tsconfig.json ./server/
+COPY server/src ./server/src/
 RUN cd server && npm run build
 
 EXPOSE 5000
