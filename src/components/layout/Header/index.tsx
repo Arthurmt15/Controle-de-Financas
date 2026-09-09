@@ -7,6 +7,7 @@
 import React, { useState, useCallback } from 'react';
 import { useAuth } from '../../../contexts/AuthContext';
 import { useTheme } from '../../../contexts/ThemeContext';
+import { useInstallPrompt } from '../../../hooks/useInstallPrompt';
 import Icon from '../../common/Icon';
 import ColorPicker from '../../common/ColorPicker';
 import * as C from './styles';
@@ -26,6 +27,7 @@ const NAV_ITEMS = [
 const Header: React.FC = () => {
   const { user, logout } = useAuth();
   const { themeType, toggleTheme } = useTheme();
+  const { isInstallable, install } = useInstallPrompt();
   const [menuOpen, setMenuOpen] = useState(false);
 
   /** Alterna o menu mobile */
@@ -62,6 +64,16 @@ const Header: React.FC = () => {
       </C.LeftSection>
 
       <C.RightSection>
+        {isInstallable && (
+          <C.InstallButton onClick={install} title="Instalar app no celular">
+            <Icon size={16}>
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+              <polyline points="7 10 12 15 17 10" />
+              <line x1="12" y1="15" x2="12" y2="3" />
+            </Icon>
+            Instalar
+          </C.InstallButton>
+        )}
         <ColorPicker />
         <C.ThemeToggle onClick={toggleTheme} title={`Tema ${themeType === 'light' ? 'escuro' : 'claro'}`}>
           {themeType === 'light' ? (
@@ -116,6 +128,11 @@ const Header: React.FC = () => {
             {label}
           </C.MobileNavLink>
         ))}
+        {isInstallable && (
+          <C.InstallButton onClick={() => { closeMenu(); install(); }} style={{ width: '100%', justifyContent: 'center' }}>
+            📲 Instalar App
+          </C.InstallButton>
+        )}
         <C.MobileNavLink to="/login" onClick={() => { closeMenu(); logout(); }}>
           Sair
         </C.MobileNavLink>

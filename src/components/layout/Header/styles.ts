@@ -110,6 +110,23 @@ export const RightSection = styled.div`
   gap: 16px;
 `;
 
+export const InstallButton = styled.button`
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  border: none;
+  border-radius: 8px;
+  background-color: ${({ theme }) => theme.colors.primary};
+  color: white;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity 0.2s;
+
+  &:hover { opacity: 0.85; }
+`;
+
 /** Botão de alternar tema claro/escuro */
 export const ThemeToggle = styled.button`
   display: flex;
