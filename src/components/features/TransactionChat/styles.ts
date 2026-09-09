@@ -275,7 +275,167 @@ export const TipsContainer = styled.div`
   border-top: 1px solid ${({ theme }) => theme.colors.border};
 
   @media (max-width: 480px) {
+    padding: 10px 14px;
+  }
+`;
+
+/**
+ * Container do formulário de comprovante editável
+ */
+export const ReceiptForm = styled.div`
+  padding: 12px 16px;
+  border-top: 1px solid ${({ theme }) => theme.colors.border};
+  background-color: ${({ theme }) => `${theme.colors.primary}08`};
+
+  @media (max-width: 480px) {
+    padding: 10px 12px;
+  }
+`;
+
+/**
+ * Linha do formulário
+ */
+export const FormRow = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+
+  @media (max-width: 480px) {
+    flex-direction: column;
+    align-items: stretch;
+  }
+`;
+
+/**
+ * Label do campo
+ */
+export const FormLabel = styled.span`
+  font-size: 12px;
+  font-weight: 500;
+  color: ${({ theme }) => theme.colors.textSecondary};
+  min-width: 70px;
+
+  @media (max-width: 480px) {
+    min-width: auto;
+  }
+`;
+
+/**
+ * Input do formulário
+ */
+export const FormInput = styled.input`
+  flex: 1;
+  padding: 6px 10px;
+  font-size: 13px;
+  font-family: inherit;
+  color: ${({ theme }) => theme.colors.text};
+  background-color: ${({ theme }) => theme.colors.inputBackground};
+  border: 1px solid ${({ theme }) => theme.colors.border};
+  border-radius: 6px;
+  outline: none;
+  transition: all 0.2s ease;
+
+  &:focus {
+    border-color: ${({ theme }) => theme.colors.primary};
+    box-shadow: 0 0 0 2px ${({ theme }) => `${theme.colors.primary}20`};
+  }
+
+  @media (max-width: 480px) {
     padding: 8px 10px;
+    font-size: 16px;
+  }
+`;
+
+/**
+ * Select do formulário
+ */
+export const FormSelect = styled.select`
+  flex: 1;
+  padding: 6px 10px;
+  font-size: 13px;
+  font-family: inherit;
+  color: ${({ theme }) => theme.colors.text};
+  background-color: ${({ theme }) => theme.colors.inputBackground};
+  border: 1px solid ${({ theme }) => theme.colors.border};
+  border-radius: 6px;
+  outline: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+
+  &:focus {
+    border-color: ${({ theme }) => theme.colors.primary};
+    box-shadow: 0 0 0 2px ${({ theme }) => `${theme.colors.primary}20`};
+  }
+
+  @media (max-width: 480px) {
+    padding: 8px 10px;
+    font-size: 16px;
+  }
+`;
+
+/**
+ * Container dos botões de tipo (entrada/saída)
+ */
+export const TypeButtons = styled.div`
+  display: flex;
+  gap: 8px;
+  margin-top: 8px;
+
+  @media (max-width: 480px) {
+    flex-direction: column;
+  }
+`;
+
+/**
+ * Botão de entrada
+ */
+export const IncomeButton = styled.button`
+  flex: 1;
+  padding: 10px 16px;
+  font-size: 13px;
+  font-weight: 500;
+  font-family: inherit;
+  color: #22c55e;
+  background-color: #22c55e15;
+  border: 1px solid #22c55e30;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+
+  &:hover {
+    background-color: #22c55e25;
+    border-color: #22c55e50;
+  }
+
+  @media (max-width: 480px) {
+    padding: 10px 14px;
+  }
+`;
+
+/**
+ * Botão de saída
+ */
+export const ExpenseButton = styled.button`
+  flex: 1;
+  padding: 10px 16px;
+  font-size: 13px;
+  font-weight: 500;
+  font-family: inherit;
+  color: ${({ theme }) => theme.colors.primary};
+  background-color: ${({ theme }) => `${theme.colors.primary}15`};
+  border: 1px solid ${({ theme }) => `${theme.colors.primary}30`};
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+
+  &:hover {
+    background-color: ${({ theme }) => `${theme.colors.primary}25`};
+    border-color: ${({ theme }) => `${theme.colors.primary}50`};
+  }
+
+  @media (max-width: 480px) {
+    padding: 10px 14px;
   }
 `;
 

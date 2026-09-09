@@ -61,8 +61,8 @@ const TransactionChat: React.FC<TransactionChatProps> = ({
   } | null>(null);
   const [pendingReceiptType, setPendingReceiptType] = useState<{
     description: string;
-    amount: number;
-    date: string | null;
+    amount: string;
+    date: string;
     categoryId: string;
   } | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -370,11 +370,18 @@ const TransactionChat: React.FC<TransactionChatProps> = ({
     if (!pendingReceiptType) return;
 
     const { description, amount, date, categoryId } = pendingReceiptType;
+    const parsedAmount = parseFloat(amount.replace(',', '.'));
+    
+    if (isNaN(parsedAmount) || parsedAmount <= 0) {
+      addMessage('❌ Valor inválido. Verifique o valor digitado.', false);
+      return;
+    }
+
     setPendingReceiptType(null);
 
     const transactionData: Omit<Transaction, 'id'> = {
       description,
-      amount,
+      amount: parsedAmount,
       type: 'income',
       date: date ? new Date(date + 'T12:00:00').toISOString() : new Date().toISOString(),
       categoryId,
@@ -386,7 +393,7 @@ const TransactionChat: React.FC<TransactionChatProps> = ({
       addMessage(
         `✅ Transação criada!\n` +
         `📈 Entrada: ${description}\n` +
-        `💰 R$ ${amount.toFixed(2).replace('.', ',')}\n` +
+        `💰 R$ ${parsedAmount.toFixed(2).replace('.', ',')}\n` +
         `📅 ${formatDateBR(transactionData.date)}\n` +
         `🏷️ ${categories.find(c => c.id === categoryId)?.name || ''}`,
         false
@@ -403,11 +410,18 @@ const TransactionChat: React.FC<TransactionChatProps> = ({
     if (!pendingReceiptType) return;
 
     const { description, amount, date, categoryId } = pendingReceiptType;
+    const parsedAmount = parseFloat(amount.replace(',', '.'));
+    
+    if (isNaN(parsedAmount) || parsedAmount <= 0) {
+      addMessage('❌ Valor inválido. Verifique o valor digitado.', false);
+      return;
+    }
+
     setPendingReceiptType(null);
 
     const transactionData: Omit<Transaction, 'id'> = {
       description,
-      amount,
+      amount: parsedAmount,
       type: 'expense',
       date: date ? new Date(date + 'T12:00:00').toISOString() : new Date().toISOString(),
       categoryId,
@@ -419,7 +433,7 @@ const TransactionChat: React.FC<TransactionChatProps> = ({
       addMessage(
         `✅ Transação criada!\n` +
         `📉 Saída: ${description}\n` +
-        `💰 R$ ${amount.toFixed(2).replace('.', ',')}\n` +
+        `💰 R$ ${parsedAmount.toFixed(2).replace('.', ',')}\n` +
         `📅 ${formatDateBR(transactionData.date)}\n` +
         `🏷️ ${categories.find(c => c.id === categoryId)?.name || ''}`,
         false
@@ -484,11 +498,6 @@ const TransactionChat: React.FC<TransactionChatProps> = ({
         return;
       }
 
-      // Mostra texto bruto para debug (apenas em desenvolvimento)
-      if (process.env.NODE_ENV === 'development') {
-        addMessage(`🔍 **Texto OCR bruto:**\n\`\`\`\n${text.substring(0, 500)}\n\`\`\``, false);
-      }
-
       // Processa o texto do OCR com o parser inteligente de comprovantes
       const receipt = parseReceiptText(text);
 
@@ -521,7 +530,6 @@ const TransactionChat: React.FC<TransactionChatProps> = ({
           } else {
             // Categoria não encontrada - pede para criar
             addMessage(
-              `📝 **Texto OCR:**\n\`\`\`\n${text.substring(0, 300)}\n\`\`\`\n\n` +
               `❌ Não consegui identificar a categoria. Crie uma com:\n` +
               `• "criar categoria [nome]"`,
               false
@@ -529,7 +537,6 @@ const TransactionChat: React.FC<TransactionChatProps> = ({
           }
         } else {
           addMessage(
-            `📝 **Texto OCR:**\n\`\`\`\n${text.substring(0, 300)}\n\`\`\`\n\n` +
             `❌ Não consegui identificar uma transação no comprovante.\n` +
             `Por favor, digite manualmente.\nEx: "Mercado 150,50"`,
             false
@@ -559,21 +566,23 @@ const TransactionChat: React.FC<TransactionChatProps> = ({
 
       if (matchCat) {
         const description = receipt.description || receipt.store || 'Comprovante';
-        const receiptDate = receipt.date || null;
+        const receiptDate = receipt.date || '';
+        const amountStr = receipt.amount.toFixed(2).replace('.', ',');
 
         setPendingReceiptType({
           description,
-          amount: receipt.amount,
+          amount: amountStr,
           date: receiptDate,
           categoryId: matchCat.id,
         });
 
         addMessage(
-          `💡 Valor identificado: R$ ${receipt.amount.toFixed(2).replace('.', ',')}\n` +
-          `📝 ${description}\n` +
-          `📅 ${receiptDate ? formatDateBR(receiptDate + 'T12:00:00') : 'Hoje'}\n` +
-          `🏷️ ${matchCat.name}\n\n` +
-          `É uma entrada ou saída?`,
+          `✅ Dados identificados (edite antes de confirmar):\n\n` +
+          `💰 Valor: R$ ${amountStr}\n` +
+          `📅 Data: ${receiptDate ? formatDateBR(receiptDate + 'T12:00:00') : 'Hoje'}\n` +
+          `🏷️ Categoria: ${matchCat.name}\n` +
+          `📝 Descrição: ${description}\n\n` +
+          `Escolha uma opção:`,
           false
         );
       } else {
@@ -646,18 +655,55 @@ const TransactionChat: React.FC<TransactionChatProps> = ({
         </C.PendingCategoryActions>
       )}
 
-      {/* Botões de decisão entrada/saída para comprovante */}
+      {/* Formulário editável de comprovante */}
       {pendingReceiptType && (
-        <C.PendingCategoryActions>
-          <C.PendingCategoryButtons>
-            <C.UseOtherButton onClick={handleReceiptIncome}>
+        <C.ReceiptForm>
+          <C.FormRow>
+            <C.FormLabel>💰 Valor:</C.FormLabel>
+            <C.FormInput
+              type="text"
+              value={pendingReceiptType.amount}
+              onChange={(e) => setPendingReceiptType({ ...pendingReceiptType, amount: e.target.value })}
+              placeholder="0,00"
+            />
+          </C.FormRow>
+          <C.FormRow>
+            <C.FormLabel>📅 Data:</C.FormLabel>
+            <C.FormInput
+              type="date"
+              value={pendingReceiptType.date}
+              onChange={(e) => setPendingReceiptType({ ...pendingReceiptType, date: e.target.value })}
+            />
+          </C.FormRow>
+          <C.FormRow>
+            <C.FormLabel>🏷️ Categoria:</C.FormLabel>
+            <C.FormSelect
+              value={pendingReceiptType.categoryId}
+              onChange={(e) => setPendingReceiptType({ ...pendingReceiptType, categoryId: e.target.value })}
+            >
+              {categories.map((cat) => (
+                <option key={cat.id} value={cat.id}>{cat.name}</option>
+              ))}
+            </C.FormSelect>
+          </C.FormRow>
+          <C.FormRow>
+            <C.FormLabel>📝 Descrição:</C.FormLabel>
+            <C.FormInput
+              type="text"
+              value={pendingReceiptType.description}
+              onChange={(e) => setPendingReceiptType({ ...pendingReceiptType, description: e.target.value })}
+              placeholder="Descrição"
+            />
+          </C.FormRow>
+          <C.TypeButtons>
+            <C.IncomeButton onClick={handleReceiptIncome}>
               📈 Entrada
-            </C.UseOtherButton>
-            <C.CreateCategoryButton onClick={handleReceiptExpense}>
+            </C.IncomeButton>
+            <C.ExpenseButton onClick={handleReceiptExpense}>
               📉 Saída
-            </C.CreateCategoryButton>
-          </C.PendingCategoryButtons>
-        </C.PendingCategoryActions>
+            </C.ExpenseButton>
+          </C.TypeButtons>
+        </C.ReceiptForm>
       )}
 
       {/* Input */}
