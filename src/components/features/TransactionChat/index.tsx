@@ -52,10 +52,23 @@ const TransactionChat: React.FC = () => {
     categoryId: string;
   } | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const examples = getExampleMessages();
 
   const STORAGE_KEY = 'financas_chat_messages';
+
+  /**
+   * Rola apenas a área de mensagens para baixo (sem rolar a página)
+   */
+  useEffect(() => {
+    if (messagesEndRef.current) {
+      const container = messagesEndRef.current.parentElement;
+      if (container) {
+        container.scrollTop = container.scrollHeight;
+      }
+    }
+  }, [messages]);
 
   /**
    * Carrega mensagens do localStorage ou exibe boas-vindas
@@ -567,6 +580,7 @@ const TransactionChat: React.FC = () => {
             <C.MessageTime>{formatTime(message.timestamp)}</C.MessageTime>
           </C.Message>
         ))}
+        <div ref={messagesEndRef} />
       </C.MessagesArea>
 
       {/* Botões de comprovante */}
