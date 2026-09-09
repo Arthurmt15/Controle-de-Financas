@@ -189,6 +189,34 @@ export const getLastNMonths = (
 };
 
 /**
+ * Obtém todos os meses do ano atual (janeiro a dezembro)
+ * @returns {Array<{ month: number; year: number; name: string }>}
+ *
+ * @example
+ * // Retorna janeiro a dezembro do ano atual
+ * getCurrentYearMonths()
+ */
+export const getCurrentYearMonths = (): Array<{ month: number; year: number; name: string }> => {
+  const months = [
+    'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
+    'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro',
+  ];
+
+  const currentYear = new Date().getFullYear();
+  const result = [];
+
+  for (let i = 0; i < 12; i++) {
+    result.push({
+      month: i,
+      year: currentYear,
+      name: months[i],
+    });
+  }
+
+  return result;
+};
+
+/**
  * Limita um número entre um mínimo e máximo
  * @param {number} value - Valor a ser limitado
  * @param {number} min - Valor mínimo

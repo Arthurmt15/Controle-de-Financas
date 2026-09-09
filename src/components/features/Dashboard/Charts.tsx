@@ -12,7 +12,7 @@ import {
 } from 'recharts';
 import { useTransactions } from '../../../hooks/useTransactions';
 import { formatCurrency, getMonthAbbreviation } from '../../../utils/formatters';
-import { getLastNMonths } from '../../../utils/helpers';
+import { getLastNMonths, getCurrentYearMonths } from '../../../utils/helpers';
 import * as C from './styles';
 
 /** Cores para o gráfico de pizza (paleta indigo) */
@@ -40,10 +40,14 @@ const Charts: React.FC = () => {
   const axisColor = theme.colors.textSecondary;
 
   const monthlyData = useMemo(() => {
-    return getLastNMonths(Number(monthlyPeriod)).map(({ month, name }) => {
+    const monthsToUse = monthlyPeriod === '12' 
+      ? getCurrentYearMonths() 
+      : getLastNMonths(Number(monthlyPeriod));
+    
+    return monthsToUse.map(({ month, year }) => {
       const monthTx = transactions.filter((t) => {
         const d = new Date(t.date);
-        return d.getMonth() === month && d.getFullYear() === new Date().getFullYear();
+        return d.getMonth() === month && d.getFullYear() === year;
       });
       return {
         name: getMonthAbbreviation(month),
