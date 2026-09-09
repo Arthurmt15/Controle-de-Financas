@@ -86,6 +86,42 @@ async function apiRequest<T>(
   return data as T;
 }
 
+/**
+ * Função para requisições com streaming (SSE)
+ * Retorna a Response bruta para leitura do body como stream
+ * @param endpoint - Caminho do endpoint
+ * @param body - Corpo da requisição
+ * @returns Response com body legível como stream
+ */
+export async function apiStream(
+  endpoint: string,
+  body: Record<string, unknown>
+): Promise<Response> {
+  const url = `${API_BASE}${endpoint}`;
+
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json',
+  };
+
+  if (authToken) {
+    headers['Authorization'] = `Bearer ${authToken}`;
+  }
+
+  const response = await fetch(url, {
+    method: 'POST',
+    headers,
+    body: JSON.stringify(body),
+  });
+
+  if (!response.ok) {
+    const data = await response.json().catch(() => ({}));
+    const errorMsg = (data.details as string) || (data.error as string) || 'Erro na requisição';
+    throw new Error(errorMsg);
+  }
+
+  return response;
+}
+
 /** Interface de resposta da API */
 interface ApiResponse<T> {
   success: boolean;

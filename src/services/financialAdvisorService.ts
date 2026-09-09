@@ -5,7 +5,7 @@
  */
 
 import type { Transaction, Category } from '../types';
-import api from './api';
+import { apiStream } from './api';
 
 /** Mensagem no formato do chat */
 interface ChatMessage {
@@ -116,7 +116,7 @@ export async function* streamAdvisor(
   financialContext: string,
   history: ChatMessage[]
 ): AsyncGenerator<string> {
-  const response = await api.post('/ai/chat', {
+  const response = await apiStream('/ai/chat', {
     message: userMessage,
     financialContext,
     history,
