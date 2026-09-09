@@ -6,7 +6,7 @@
  * Suporta upload de comprovantes via OCR com processamento inteligente.
  */
 
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { extractTextFromImage } from '../../../services/ocrService';
 import { useTransactions } from '../../../hooks/useTransactions';
 import { parseTransactionFromMessage, getExampleMessages } from '../../../utils/parseTransaction';
@@ -14,6 +14,7 @@ import { detectCommand, executeCommand } from '../../../utils/chatCommands';
 import { generateSummary, generateAnalysis } from '../../../utils/analysisEngine';
 import { CATEGORY_STYLES } from '../../../utils/categories';
 import { parseReceiptText, getReceiptResponse } from '../../../utils/receiptParser';
+import { buildFinancialContext, streamAdvisor } from '../../../services/financialAdvisorService';
 import * as C from './styles';
 import type { Transaction } from '../../../types';
 import type { ParsedTransaction } from '../../../utils/parseTransaction';
@@ -27,6 +28,15 @@ interface ChatMessage {
   isUser: boolean;
   timestamp: Date;
   transaction?: Transaction;
+}
+
+/** Renderiza markdown básico */
+function renderMarkdown(text: string): string {
+  return text
+    .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+    .replace(/^(\d+)\.\s+(.+)/gm, '<strong>$1.</strong> $2')
+    .replace(/^-\s+(.+)/gm, '&bull; $1')
+    .replace(/\n/g, '<br/>');
 }
 
 /**
@@ -206,18 +216,39 @@ const TransactionChat: React.FC<TransactionChatProps> = ({
     const parsed = parseTransactionFromMessage(text);
 
     if (!parsed) {
-      addMessage(
-        'Não consegui identificar um comando ou transação válida.\n\n' +
-        '📝 Para adicionar transação:\n' +
-        '• "Mercado ontem 150,50"\n' +
-        '• "Entrada 4k salário"\n\n' +
-        '📂 Para criar categoria:\n' +
-        '• "criar categoria [nome]"\n\n' +
-        '📊 Para ver análise:\n' +
-        '• "resumo" ou "análise"\n\n' +
-        '❓ Digite "ajuda" para ver todos os comandos',
-        false
-      );
+      // 4. Fallback para IA — pergunta geral sobre finanças
+      const aiMsg: ChatMessage = {
+        id: generateMessageId(),
+        text: '',
+        isUser: false,
+        timestamp: new Date(),
+      };
+      setMessages((prev) => [...prev, aiMsg]);
+
+      try {
+        const context = buildFinancialContext(transactions, categories);
+        const history = messages.slice(-6).map((m) => ({
+          role: m.isUser ? ('user' as const) : ('assistant' as const),
+          content: m.text,
+        }));
+
+        let accumulated = '';
+        const chunks = streamAdvisor(text, context, history);
+        for await (const chunk of chunks) {
+          accumulated += chunk;
+          setMessages((prev) =>
+            prev.map((m) => (m.id === aiMsg.id ? { ...m, text: accumulated } : m))
+          );
+        }
+      } catch {
+        setMessages((prev) =>
+          prev.map((m) =>
+            m.id === aiMsg.id
+              ? { ...m, text: 'Não consegui entender. Tente:\n• "Mercado 150"\n• "Resumo"\n• "Ajuda"' }
+              : m
+          )
+        );
+      }
       setIsProcessing(false);
       return;
     }
@@ -628,8 +659,15 @@ const TransactionChat: React.FC<TransactionChatProps> = ({
       <C.MessagesArea role="log" aria-live="polite" aria-label="Mensagens do chat">
         {messages.map((message) => (
           <C.Message key={message.id} $isUser={message.isUser}>
-            <C.MessageBubble $isUser={message.isUser}>
-              {message.text}
+            <C.MessageBubble
+              $isUser={message.isUser}
+              dangerouslySetInnerHTML={
+                !message.isUser && message.text
+                  ? { __html: renderMarkdown(message.text) }
+                  : undefined
+              }
+            >
+              {message.isUser || !message.text ? message.text : null}
             </C.MessageBubble>
             <C.MessageTime>{formatTime(message.timestamp)}</C.MessageTime>
           </C.Message>
