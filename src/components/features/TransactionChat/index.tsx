@@ -362,45 +362,34 @@ const TransactionChat: React.FC = () => {
       // Processa o texto do OCR com o parser inteligente de comprovantes
       const receipt = parseReceiptText(text);
 
-      // Se não conseguiu extrair valor, tenta o parser de transação
+      // Se não conseguiu extrair valor, manda para a IA interpretar
       if (!receipt.amount) {
-        const parsed = parseTransactionFromMessage(text);
-        if (parsed) {
-          const matchCat = categories.find(
-            c => c.name.toLowerCase() === parsed.categoria.toLowerCase()
-          );
-          const defaultCategoryId = matchCat?.id || categories[0]?.id || '';
+        const aiMsg: ChatMessage = {
+          id: generateMessageId(),
+          text: '',
+          isUser: false,
+          timestamp: new Date(),
+        };
+        setMessages((prev) => [...prev, aiMsg]);
 
-          if (defaultCategoryId) {
-            const transactionType = parsed.tipo === 'receita' ? 'income' : 'expense';
-            const transactionData: Omit<Transaction, 'id'> = {
-              description: parsed.descricao,
-              amount: parsed.valor,
-              type: transactionType,
-              date: new Date(parsed.data + 'T12:00:00').toISOString(),
-              categoryId: defaultCategoryId,
-              notes: '',
-            };
-
-            await addTransaction(transactionData);
-            const typeLabel = parsed.tipo === 'receita' ? '📈 Entrada' : '📉 Saída';
-            addMessage(
-              `✅ Transação criada!\n${typeLabel}: ${parsed.descricao}\n💰 R$ ${parsed.valor.toFixed(2).replace('.', ',')}\n📅 ${formatDateBR(parsed.data + 'T12:00:00')}\n🏷️ ${parsed.categoria}`,
-              false
-            );
-          } else {
-            // Categoria não encontrada - pede para criar
-            addMessage(
-              `❌ Não consegui identificar a categoria. Crie uma com:\n` +
-              `• "criar categoria [nome]"`,
-              false
+        try {
+          const context = buildFinancialContext(transactions, categories);
+          const prompt = `Texto de comprovante/nota fiscal extraído por OCR:\n\n${text}\n\nInterprete este texto e me diga: valor, data, descrição e categoria sugerida. Se for uma transação, crie ela.`;
+          let accumulated = '';
+          const chunks = streamAdvisor(prompt, context, []);
+          for await (const chunk of chunks) {
+            accumulated += chunk;
+            setMessages((prev) =>
+              prev.map((m) => (m.id === aiMsg.id ? { ...m, text: accumulated } : m))
             );
           }
-        } else {
-          addMessage(
-            `❌ Não consegui identificar uma transação no comprovante.\n` +
-            `Por favor, digite manualmente.\nEx: "Mercado 150,50"`,
-            false
+        } catch {
+          setMessages((prev) =>
+            prev.map((m) =>
+              m.id === aiMsg.id
+                ? { ...m, text: '❌ Não consegui interpretar o comprovante. Por favor, digite manualmente.\nEx: "Mercado 150,50"' }
+                : m
+            )
           );
         }
         setIsProcessing(false);
