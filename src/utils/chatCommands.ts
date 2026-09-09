@@ -196,8 +196,9 @@ export function executeCommand(
         defaultType: 'both',
       }).then(() => {
         return `✅ Categoria "${command.name}" criada com sucesso!`;
-      }).catch((err: any) => {
-        return `❌ Erro ao criar categoria: ${err?.message || 'desconhecido'}`;
+      }).catch((err: unknown) => {
+        const msg = err instanceof Error ? err.message : 'desconhecido';
+        return `❌ Erro ao criar categoria: ${msg}`;
       });
     }
 
@@ -211,8 +212,9 @@ export function executeCommand(
       }
       return deleteCategory(cat.id).then(() => {
         return `🗑️ Categoria "${command.name}" removida.`;
-      }).catch((err: any) => {
-        return `❌ Erro ao remover: ${err?.message || 'desconhecido'}`;
+      }).catch((err: unknown) => {
+        const msg = err instanceof Error ? err.message : 'desconhecido';
+        return `❌ Erro ao remover: ${msg}`;
       });
     }
 
