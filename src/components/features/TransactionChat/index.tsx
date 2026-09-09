@@ -290,9 +290,9 @@ const TransactionChat: React.FC = () => {
   };
 
   /**
-   * Usuário escolheu "Entrada" para o comprovante
+   * Confirma comprovante como entrada ou saída
    */
-  const handleReceiptIncome = async () => {
+  const handleReceiptConfirm = async (type: 'income' | 'expense') => {
     if (!pendingReceiptType) return;
 
     const { description, amount, date, categoryId } = pendingReceiptType;
@@ -308,7 +308,7 @@ const TransactionChat: React.FC = () => {
     const transactionData: Omit<Transaction, 'id'> = {
       description,
       amount: parsedAmount,
-      type: 'income',
+      type,
       date: date ? new Date(date + 'T12:00:00').toISOString() : new Date().toISOString(),
       categoryId,
       notes: '',
@@ -316,56 +316,18 @@ const TransactionChat: React.FC = () => {
 
     try {
       await addTransaction(transactionData);
+      const label = type === 'income' ? '📈 Entrada' : '📉 Saída';
       addMessage(
         `✅ Transação criada!\n` +
-        `📈 Entrada: ${description}\n` +
+        `${label}: ${description}\n` +
         `💰 R$ ${parsedAmount.toFixed(2).replace('.', ',')}\n` +
         `📅 ${formatDateBR(transactionData.date)}\n` +
         `🏷️ ${categories.find(c => c.id === categoryId)?.name || ''}`,
         false
       );
-    } catch (error: any) {
-      addMessage(`Erro ao criar transação: ${error?.message || 'desconhecido'}`, false);
-    }
-  };
-
-  /**
-   * Usuário escolheu "Saída" para o comprovante
-   */
-  const handleReceiptExpense = async () => {
-    if (!pendingReceiptType) return;
-
-    const { description, amount, date, categoryId } = pendingReceiptType;
-    const parsedAmount = parseFloat(amount.replace(',', '.'));
-    
-    if (isNaN(parsedAmount) || parsedAmount <= 0) {
-      addMessage('❌ Valor inválido. Verifique o valor digitado.', false);
-      return;
-    }
-
-    setPendingReceiptType(null);
-
-    const transactionData: Omit<Transaction, 'id'> = {
-      description,
-      amount: parsedAmount,
-      type: 'expense',
-      date: date ? new Date(date + 'T12:00:00').toISOString() : new Date().toISOString(),
-      categoryId,
-      notes: '',
-    };
-
-    try {
-      await addTransaction(transactionData);
-      addMessage(
-        `✅ Transação criada!\n` +
-        `📉 Saída: ${description}\n` +
-        `💰 R$ ${parsedAmount.toFixed(2).replace('.', ',')}\n` +
-        `📅 ${formatDateBR(transactionData.date)}\n` +
-        `🏷️ ${categories.find(c => c.id === categoryId)?.name || ''}`,
-        false
-      );
-    } catch (error: any) {
-      addMessage(`Erro ao criar transação: ${error?.message || 'desconhecido'}`, false);
+    } catch (error: unknown) {
+      const msg = error instanceof Error ? error.message : 'desconhecido';
+      addMessage(`Erro ao criar transação: ${msg}`, false);
     }
   };
 
@@ -627,10 +589,10 @@ const TransactionChat: React.FC = () => {
             />
           </C.FormRow>
           <C.TypeButtons>
-            <C.IncomeButton onClick={handleReceiptIncome}>
+            <C.IncomeButton onClick={() => handleReceiptConfirm('income')}>
               📈 Entrada
             </C.IncomeButton>
-            <C.ExpenseButton onClick={handleReceiptExpense}>
+            <C.ExpenseButton onClick={() => handleReceiptConfirm('expense')}>
               📉 Saída
             </C.ExpenseButton>
           </C.TypeButtons>
