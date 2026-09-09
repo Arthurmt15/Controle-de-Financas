@@ -215,11 +215,7 @@ const TransactionChat: React.FC = () => {
     // 3. Tentar parsear como transação simples (ex: "uber 7", "almoço 25")
     const parsed = parseTransactionFromMessage(text);
     if (parsed) {
-      const searchTerms = parsed.descricao.toLowerCase();
-      let matchCat = categories.find(c => {
-        const catName = c.name.toLowerCase();
-        return catName.includes(searchTerms) || searchTerms.includes(catName);
-      });
+      let matchCat = categories.find(c => c.name.toLowerCase() === parsed.categoria.toLowerCase());
 
       if (!matchCat) {
         matchCat = categories.find(c => c.name.toLowerCase() === 'outros') || categories[0];
