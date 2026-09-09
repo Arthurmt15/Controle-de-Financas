@@ -79,6 +79,12 @@ async function apiRequest<T>(
   }
 
   if (!response.ok) {
+    if (response.status === 401) {
+      setAuthToken(null);
+      localStorage.removeItem('financas_user');
+      window.location.reload();
+      throw new Error('Sessão expirada. Faça login novamente.');
+    }
     const errorMsg = (data.details as string) || (data.error as string) || 'Erro na requisição';
     throw new Error(errorMsg);
   }
@@ -114,6 +120,12 @@ export async function apiStream(
   });
 
   if (!response.ok) {
+    if (response.status === 401) {
+      setAuthToken(null);
+      localStorage.removeItem('financas_user');
+      window.location.reload();
+      throw new Error('Sessão expirada. Faça login novamente.');
+    }
     const data = await response.json().catch(() => ({}));
     const errorMsg = (data.details as string) || (data.error as string) || 'Erro na requisição';
     throw new Error(errorMsg);
