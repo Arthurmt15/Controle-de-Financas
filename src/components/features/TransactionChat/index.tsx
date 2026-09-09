@@ -59,6 +59,12 @@ const TransactionChat: React.FC<TransactionChatProps> = ({
     parsed: ParsedTransaction;
     suggestedCategory: string;
   } | null>(null);
+  const [pendingReceiptType, setPendingReceiptType] = useState<{
+    description: string;
+    amount: number;
+    date: string | null;
+    categoryId: string;
+  } | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -358,6 +364,72 @@ const TransactionChat: React.FC<TransactionChatProps> = ({
   };
 
   /**
+   * Usuário escolheu "Entrada" para o comprovante
+   */
+  const handleReceiptIncome = async () => {
+    if (!pendingReceiptType) return;
+
+    const { description, amount, date, categoryId } = pendingReceiptType;
+    setPendingReceiptType(null);
+
+    const transactionData: Omit<Transaction, 'id'> = {
+      description,
+      amount,
+      type: 'income',
+      date: date ? new Date(date + 'T12:00:00').toISOString() : new Date().toISOString(),
+      categoryId,
+      notes: '',
+    };
+
+    try {
+      await addTransaction(transactionData);
+      addMessage(
+        `✅ Transação criada!\n` +
+        `📈 Entrada: ${description}\n` +
+        `💰 R$ ${amount.toFixed(2).replace('.', ',')}\n` +
+        `📅 ${formatDateBR(transactionData.date)}\n` +
+        `🏷️ ${categories.find(c => c.id === categoryId)?.name || ''}`,
+        false
+      );
+    } catch (error: any) {
+      addMessage(`Erro ao criar transação: ${error?.message || 'desconhecido'}`, false);
+    }
+  };
+
+  /**
+   * Usuário escolheu "Saída" para o comprovante
+   */
+  const handleReceiptExpense = async () => {
+    if (!pendingReceiptType) return;
+
+    const { description, amount, date, categoryId } = pendingReceiptType;
+    setPendingReceiptType(null);
+
+    const transactionData: Omit<Transaction, 'id'> = {
+      description,
+      amount,
+      type: 'expense',
+      date: date ? new Date(date + 'T12:00:00').toISOString() : new Date().toISOString(),
+      categoryId,
+      notes: '',
+    };
+
+    try {
+      await addTransaction(transactionData);
+      addMessage(
+        `✅ Transação criada!\n` +
+        `📉 Saída: ${description}\n` +
+        `💰 R$ ${amount.toFixed(2).replace('.', ',')}\n` +
+        `📅 ${formatDateBR(transactionData.date)}\n` +
+        `🏷️ ${categories.find(c => c.id === categoryId)?.name || ''}`,
+        false
+      );
+    } catch (error: any) {
+      addMessage(`Erro ao criar transação: ${error?.message || 'desconhecido'}`, false);
+    }
+  };
+
+  /**
    * Envia mensagem
    */
   const handleSend = () => {
@@ -486,22 +558,22 @@ const TransactionChat: React.FC<TransactionChatProps> = ({
       }
 
       if (matchCat) {
-        const transactionData: Omit<Transaction, 'id'> = {
-          description: receipt.description || receipt.store || 'Comprovante',
-          amount: receipt.amount,
-          type: 'expense',
-          date: receipt.date ? new Date(receipt.date + 'T12:00:00').toISOString() : new Date().toISOString(),
-          categoryId: matchCat.id,
-          notes: '',
-        };
+        const description = receipt.description || receipt.store || 'Comprovante';
+        const receiptDate = receipt.date || null;
 
-        await addTransaction(transactionData);
+        setPendingReceiptType({
+          description,
+          amount: receipt.amount,
+          date: receiptDate,
+          categoryId: matchCat.id,
+        });
+
         addMessage(
-          `✅ Transação criada automaticamente!\n` +
-          `📉 Saída: ${transactionData.description}\n` +
-          `💰 R$ ${receipt.amount.toFixed(2).replace('.', ',')}\n` +
-          `📅 ${formatDateBR(transactionData.date)}\n` +
-          `🏷️ ${matchCat.name}`,
+          `💡 Valor identificado: R$ ${receipt.amount.toFixed(2).replace('.', ',')}\n` +
+          `📝 ${description}\n` +
+          `📅 ${receiptDate ? formatDateBR(receiptDate + 'T12:00:00') : 'Hoje'}\n` +
+          `🏷️ ${matchCat.name}\n\n` +
+          `É uma entrada ou saída?`,
           false
         );
       } else {
@@ -574,6 +646,20 @@ const TransactionChat: React.FC<TransactionChatProps> = ({
         </C.PendingCategoryActions>
       )}
 
+      {/* Botões de decisão entrada/saída para comprovante */}
+      {pendingReceiptType && (
+        <C.PendingCategoryActions>
+          <C.PendingCategoryButtons>
+            <C.UseOtherButton onClick={handleReceiptIncome}>
+              📈 Entrada
+            </C.UseOtherButton>
+            <C.CreateCategoryButton onClick={handleReceiptExpense}>
+              📉 Saída
+            </C.CreateCategoryButton>
+          </C.PendingCategoryButtons>
+        </C.PendingCategoryActions>
+      )}
+
       {/* Input */}
       <C.InputContainer>
         <C.UploadButton
@@ -597,13 +683,13 @@ const TransactionChat: React.FC<TransactionChatProps> = ({
           value={inputValue}
           onChange={(e) => setInputValue(e.target.value)}
           onKeyPress={handleKeyPress}
-          placeholder={pendingTransaction ? "Escolha uma opção acima" : "Ex: Mercado 150 ou criar categoria"}
-          disabled={isProcessing || !!pendingTransaction}
+          placeholder={pendingTransaction || pendingReceiptType ? "Escolha uma opção acima" : "Ex: Mercado 150 ou criar categoria"}
+          disabled={isProcessing || !!pendingTransaction || !!pendingReceiptType}
         />
 
         <C.SendButton
           onClick={handleSend}
-          disabled={!inputValue.trim() || isProcessing || !!pendingTransaction}
+          disabled={!inputValue.trim() || isProcessing || !!pendingTransaction || !!pendingReceiptType}
         >
           <C.SendIcon>➤</C.SendIcon>
         </C.SendButton>
