@@ -67,10 +67,26 @@ const TransactionChat: React.FC = () => {
     scrollToBottom();
   }, [messages]);
 
+  const STORAGE_KEY = 'financas_chat_messages';
+
   /**
-   * Mensagem de boas-vindas
+   * Carrega mensagens do localStorage ou exibe boas-vindas
    */
   useEffect(() => {
+    try {
+      const saved = localStorage.getItem(STORAGE_KEY);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          setMessages(parsed.map((m: ChatMessage) => ({
+            ...m,
+            timestamp: new Date(m.timestamp),
+          })));
+          return;
+        }
+      }
+    } catch { /* ignora erro de parsing */ }
+
     setMessages([
       {
         id: 'welcome',
@@ -89,6 +105,15 @@ const TransactionChat: React.FC = () => {
       },
     ]);
   }, []);
+
+  /**
+   * Salva mensagens no localStorage quando mudam
+   */
+  useEffect(() => {
+    if (messages.length > 0) {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(messages));
+    }
+  }, [messages]);
 
   /**
    * Gera ID único para mensagem
@@ -235,7 +260,7 @@ const TransactionChat: React.FC = () => {
 
     try {
       const context = buildFinancialContext(transactions, categories);
-      const history = messages.slice(-6).map((m) => ({
+      const history = messages.slice(-20).map((m) => ({
         role: m.isUser ? ('user' as const) : ('assistant' as const),
         content: m.text,
       }));
@@ -507,6 +532,14 @@ const TransactionChat: React.FC = () => {
     return date.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
   };
 
+  /**
+   * Limpa todo o histórico do chat
+   */
+  const handleClearChat = () => {
+    localStorage.removeItem(STORAGE_KEY);
+    setMessages([]);
+  };
+
   return (
     <C.ChatContainer>
       {/* Cabeçalho */}
@@ -515,6 +548,22 @@ const TransactionChat: React.FC = () => {
           <C.TitleIcon>💬</C.TitleIcon>
           Chat Rápido
         </C.ChatTitle>
+        {messages.length > 1 && (
+          <button
+            onClick={handleClearChat}
+            style={{
+              background: 'none',
+              border: 'none',
+              cursor: 'pointer',
+              fontSize: '14px',
+              opacity: 0.6,
+              padding: '4px 8px',
+            }}
+            title="Limpar histórico do chat"
+          >
+            🗑️
+          </button>
+        )}
       </C.ChatHeader>
 
       {/* Área de mensagens com suporte a leitores de tela */}
