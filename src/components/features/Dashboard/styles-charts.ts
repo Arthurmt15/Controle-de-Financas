@@ -175,8 +175,8 @@ export const PieLegendContainer = styled.div`
   display: flex;
   flex-direction: column;
   gap: 8px;
-  padding: 0 15px;
-  max-height: 150px;
+  padding: 10px 15px;
+  max-height: 220px;
   overflow-y: auto;
 `;
 

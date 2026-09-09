@@ -134,7 +134,7 @@ const Charts: React.FC = () => {
         </C.Legend>
       </C.Panel>
 
-      <C.Panel $height="387px">
+      <C.Panel $height="450px">
         <C.PanelHeader>
           <h2>Despesas por Categoria</h2>
           <C.PanelSelect>
