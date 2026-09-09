@@ -62,12 +62,15 @@ const TransactionChat: React.FC = () => {
    * Rola apenas a área de mensagens para baixo (sem rolar a página)
    */
   useEffect(() => {
-    if (messagesEndRef.current) {
-      const container = messagesEndRef.current.parentElement;
-      if (container) {
-        container.scrollTop = container.scrollHeight;
+    const timer = setTimeout(() => {
+      if (messagesEndRef.current) {
+        const container = messagesEndRef.current.parentElement;
+        if (container) {
+          container.scrollTop = container.scrollHeight;
+        }
       }
-    }
+    }, 50);
+    return () => clearTimeout(timer);
   }, [messages]);
 
   /**
