@@ -9,8 +9,6 @@ import { useTransactions } from '../../../hooks/useTransactions';
 import { buildFinancialContext, streamAdvisor } from '../../../services/financialAdvisorService';
 import * as C from './styles';
 
-declare const puter: any;
-
 /** Mensagem do chat */
 interface Message {
   id: string;
