@@ -118,7 +118,9 @@ export function TransactionsProvider({ children }: { children: React.ReactNode }
       } catch (error) {
         console.error('Erro ao carregar dados:', error);
         if (!cancelled) {
-          if (error instanceof Error && error.message === 'Autenticação necessária') {
+          if (error instanceof Error && 
+              (error.message === 'Autenticação necessária' || 
+               error.message === 'Sessão expirada. Faça login novamente.')) {
             logout();
             return;
           }
