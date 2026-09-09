@@ -547,11 +547,7 @@ const TransactionChat: React.FC<TransactionChatProps> = ({
         return;
       }
 
-      // Valor extraído com sucesso - mostra resumo e cria transação
-      const responseMsg = getReceiptResponse(receipt);
-      addMessage(responseMsg, false);
-
-      // Tenta encontrar categoria baseada na descrição/loja
+      // Valor extraído com sucesso - encontra categoria e mostra formulário editável
       const searchTerms = [receipt.description, receipt.store].filter(Boolean).join(' ').toLowerCase();
       let matchCat = categories.find(c => {
         const catName = c.name.toLowerCase();
