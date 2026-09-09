@@ -205,11 +205,14 @@ const TransactionChat: React.FC = () => {
 
       let accumulated = '';
       const chunks = streamAdvisor(text, context, history);
+      const updateAiMessage = (text: string) => {
+        setMessages((prev) =>
+          prev.map((m) => (m.id === aiMsg.id ? { ...m, text } : m))
+        );
+      };
       for await (const chunk of chunks) {
         accumulated += chunk;
-        setMessages((prev) =>
-          prev.map((m) => (m.id === aiMsg.id ? { ...m, text: accumulated } : m))
-        );
+        updateAiMessage(accumulated);
       }
     } catch {
       setMessages((prev) =>
@@ -377,11 +380,14 @@ const TransactionChat: React.FC = () => {
           const prompt = `Texto de comprovante/nota fiscal extraído por OCR:\n\n${text}\n\nInterprete este texto e me diga: valor, data, descrição e categoria sugerida. Se for uma transação, crie ela.`;
           let accumulated = '';
           const chunks = streamAdvisor(prompt, context, []);
+          const updateAiMessage = (text: string) => {
+            setMessages((prev) =>
+              prev.map((m) => (m.id === aiMsg.id ? { ...m, text } : m))
+            );
+          };
           for await (const chunk of chunks) {
             accumulated += chunk;
-            setMessages((prev) =>
-              prev.map((m) => (m.id === aiMsg.id ? { ...m, text: accumulated } : m))
-            );
+            updateAiMessage(accumulated);
           }
         } catch {
           setMessages((prev) =>
