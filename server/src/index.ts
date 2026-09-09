@@ -28,21 +28,18 @@ const FRONTEND_URL = process.env.FRONTEND_URL || '';
  */
 app.use(cors({
   origin: (origin, callback) => {
-    // Permite requisições sem origin (mobile apps, Postman, etc)
     if (!origin) return callback(null, true);
 
-    // Lista de origens permitidas
     const allowedOrigins = [
       FRONTEND_URL,
       'http://localhost:3000',
       'http://localhost:5173',
     ].filter(Boolean);
 
-    // Verifica se a origem está na lista ou se é domínio Vercel
     if (allowedOrigins.includes(origin) || origin.endsWith('.vercel.app')) {
       callback(null, true);
     } else {
-      callback(null, true); // Permitir temporariamente para debug
+      callback(new Error('Origem não permitida pelo CORS'));
     }
   },
   credentials: true,
