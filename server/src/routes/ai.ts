@@ -5,14 +5,9 @@
  */
 
 import { Router, Response } from 'express';
-import Groq from 'groq-sdk';
 import { authenticate, AuthRequest } from '../middleware/auth';
 
 const router = Router();
-
-const groq = new Groq({
-  apiKey: process.env.GROQ_API_KEY,
-});
 
 interface ChatMessage {
   role: 'system' | 'user' | 'assistant';
@@ -41,6 +36,12 @@ router.post('/chat', authenticate, async (req: AuthRequest, res: Response) => {
         error: 'Chave de API da IA não configurada no servidor',
       });
     }
+
+    // Import dinâmico do groq-sdk para não quebrar o startup
+    const { default: Groq } = await import('groq-sdk');
+    const groq = new Groq({
+      apiKey: process.env.GROQ_API_KEY,
+    });
 
     const messages: ChatMessage[] = [
       {
