@@ -116,17 +116,6 @@ interface BudgetRow {
   month: string;
 }
 
-/** Interface de row do banco para usuário */
-interface UserRow {
-  id: string;
-  google_id: string;
-  name: string;
-  email: string;
-  avatar: string | null;
-  created_at: string;
-  updated_at: string;
-}
-
 /** Interface de usuário retornada pela API */
 interface UserData {
   id: string;
