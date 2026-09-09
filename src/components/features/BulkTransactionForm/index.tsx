@@ -104,9 +104,6 @@ const BulkTransactionForm: React.FC = () => {
     setIsSubmitting(true);
 
     try {
-      // Simula delay de rede
-      await new Promise((resolve) => setTimeout(resolve, 500));
-
       validItems.forEach((item) => {
         addTransaction({
           description: item.description.trim(),

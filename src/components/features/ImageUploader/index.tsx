@@ -335,13 +335,22 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
         Foto de Comprovante
       </C.Title>
 
-      {/* Área de upload */}
+      {/* Área de upload com suporte a teclado */}
       <C.DropZone
         $isDragging={isDragging}
         onClick={handleZoneClick}
         onDragOver={handleDragOver}
         onDragLeave={handleDragLeave}
         onDrop={handleDrop}
+        role="button"
+        tabIndex={0}
+        aria-label="Área para enviar comprovante. Clique ou arraste uma imagem."
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            handleZoneClick();
+          }
+        }}
       >
         <C.UploadIcon>📤</C.UploadIcon>
         <C.InstructionText>
@@ -434,12 +443,14 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
               <C.IncomeButton
                 $active={editableType === 'income'}
                 onClick={() => { setEditableType('income'); setError(null); }}
+                aria-pressed={editableType === 'income'}
               >
                 📈 Entrada
               </C.IncomeButton>
               <C.ExpenseButton
                 $active={editableType === 'expense'}
                 onClick={() => { setEditableType('expense'); setError(null); }}
+                aria-pressed={editableType === 'expense'}
               >
                 📉 Saída
               </C.ExpenseButton>

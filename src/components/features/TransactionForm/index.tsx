@@ -119,9 +119,6 @@ const TransactionForm: React.FC<TransactionFormProps> = ({
     setIsSubmitting(true);
 
     try {
-      // Simula delay de rede
-      await new Promise((resolve) => setTimeout(resolve, 500));
-
       const transactionData = {
         description: formData.description.trim(),
         amount: parseFloat(formData.amount),

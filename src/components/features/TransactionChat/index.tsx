@@ -624,8 +624,8 @@ const TransactionChat: React.FC<TransactionChatProps> = ({
         </C.ChatTitle>
       </C.ChatHeader>
 
-      {/* Área de mensagens */}
-      <C.MessagesArea>
+      {/* Área de mensagens com suporte a leitores de tela */}
+      <C.MessagesArea role="log" aria-live="polite" aria-label="Mensagens do chat">
         {messages.map((message) => (
           <C.Message key={message.id} $isUser={message.isUser}>
             <C.MessageBubble $isUser={message.isUser}>
@@ -727,11 +727,13 @@ const TransactionChat: React.FC<TransactionChatProps> = ({
           onKeyPress={handleKeyPress}
           placeholder={pendingTransaction || pendingReceiptType ? "Escolha uma opção acima" : "Ex: Mercado 150 ou criar categoria"}
           disabled={isProcessing || !!pendingTransaction || !!pendingReceiptType}
+          aria-label="Digite sua mensagem"
         />
 
         <C.SendButton
           onClick={handleSend}
           disabled={!inputValue.trim() || isProcessing || !!pendingTransaction || !!pendingReceiptType}
+          aria-label="Enviar mensagem"
         >
           <C.SendIcon>➤</C.SendIcon>
         </C.SendButton>

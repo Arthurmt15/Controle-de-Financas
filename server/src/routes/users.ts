@@ -4,21 +4,22 @@
  * Gerencia usuários autenticados via Google OAuth.
  */
 
-import { Router, Request, Response } from 'express';
+import { Router, Response } from 'express';
 import pool from '../database';
+import { generateToken } from '../middleware/auth';
+import { DEFAULT_CATEGORIES, generateCategoryId } from '../data/defaultCategories';
 
 const router = Router();
 
 /**
  * POST /api/users
- * Cria um novo usuário ou retorna o existente (baseado no Google ID)
- * @body { googleId, name, email, avatar }
+ * Cria ou busca usuário existente (baseado no Google ID)
+ * Retorna JWT para autenticação
  */
-router.post('/', async (req: Request, res: Response) => {
+router.post('/', async (req, res: Response) => {
   try {
     const { googleId, name, email, avatar } = req.body;
 
-    // Validação dos campos obrigatórios
     if (!googleId || !name || !email) {
       return res.status(400).json({
         success: false,
@@ -26,36 +27,20 @@ router.post('/', async (req: Request, res: Response) => {
       });
     }
 
-    // Verifica se o usuário já existe pelo Google ID
     const existingUser = await pool.query(
       'SELECT * FROM users WHERE google_id = $1',
       [googleId]
     );
 
     if (existingUser.rows.length > 0) {
-      // Usuário já existe - verifica se tem categorias
       const userCategories = await pool.query(
         'SELECT COUNT(*) FROM categories WHERE user_id = $1',
         [googleId]
       );
 
-      // Se não tem categorias, cria as padrão
       if (parseInt(userCategories.rows[0].count) === 0) {
-        const defaultCategories = [
-          { name: 'Alimentação', color: '#FF6B6B', icon: 'FaUtensils', defaultType: 'expense' },
-          { name: 'Transporte', color: '#4ECDC4', icon: 'FaCar', defaultType: 'expense' },
-          { name: 'Moradia', color: '#45B7D1', icon: 'FaHome', defaultType: 'expense' },
-          { name: 'Lazer', color: '#96CEB4', icon: 'FaGamepad', defaultType: 'expense' },
-          { name: 'Saúde', color: '#FFEAA7', icon: 'FaHeartbeat', defaultType: 'expense' },
-          { name: 'Educação', color: '#DDA0DD', icon: 'FaGraduationCap', defaultType: 'expense' },
-          { name: 'Salário', color: '#00B894', icon: 'FaMoneyBillWave', defaultType: 'income' },
-          { name: 'Freelance', color: '#6C5CE7', icon: 'FaLaptop', defaultType: 'income' },
-          { name: 'Investimentos', color: '#FDCB6E', icon: 'FaChartLine', defaultType: 'income' },
-          { name: 'Outros', color: '#636E72', icon: 'FaEllipsisH', defaultType: 'both' },
-        ];
-
-        for (const cat of defaultCategories) {
-          const catId = `${googleId}_${cat.name.toLowerCase().replace(/\s/g, '_')}`;
+        for (const cat of DEFAULT_CATEGORIES) {
+          const catId = generateCategoryId(googleId, cat.name);
           await pool.query(
             `INSERT INTO categories (id, user_id, name, color, icon, default_type)
              VALUES ($1, $2, $3, $4, $5, $6)`,
@@ -64,14 +49,15 @@ router.post('/', async (req: Request, res: Response) => {
         }
       }
 
+      const token = generateToken(googleId);
       return res.json({
         success: true,
         data: existingUser.rows[0],
+        token,
         message: 'Usuário já existe',
       });
     }
 
-    // Cria novo usuário no banco de dados
     const result = await pool.query(
       `INSERT INTO users (id, google_id, name, email, avatar)
        VALUES ($1, $2, $3, $4, $5)
@@ -79,23 +65,8 @@ router.post('/', async (req: Request, res: Response) => {
       [googleId, googleId, name, email, avatar || null]
     );
 
-    // Cria categorias padrão para o novo usuário
-    const defaultCategories = [
-      { name: 'Alimentação', color: '#FF6B6B', icon: 'FaUtensils', defaultType: 'expense' },
-      { name: 'Transporte', color: '#4ECDC4', icon: 'FaCar', defaultType: 'expense' },
-      { name: 'Moradia', color: '#45B7D1', icon: 'FaHome', defaultType: 'expense' },
-      { name: 'Lazer', color: '#96CEB4', icon: 'FaGamepad', defaultType: 'expense' },
-      { name: 'Saúde', color: '#FFEAA7', icon: 'FaHeartbeat', defaultType: 'expense' },
-      { name: 'Educação', color: '#DDA0DD', icon: 'FaGraduationCap', defaultType: 'expense' },
-      { name: 'Salário', color: '#00B894', icon: 'FaMoneyBillWave', defaultType: 'income' },
-      { name: 'Freelance', color: '#6C5CE7', icon: 'FaLaptop', defaultType: 'income' },
-      { name: 'Investimentos', color: '#FDCB6E', icon: 'FaChartLine', defaultType: 'income' },
-      { name: 'Outros', color: '#636E72', icon: 'FaEllipsisH', defaultType: 'both' },
-    ];
-
-    // Insere cada categoria padrão associada ao usuário
-    for (const cat of defaultCategories) {
-      const catId = `${googleId}_${cat.name.toLowerCase().replace(/\s/g, '_')}`;
+    for (const cat of DEFAULT_CATEGORIES) {
+      const catId = generateCategoryId(googleId, cat.name);
       await pool.query(
         `INSERT INTO categories (id, user_id, name, color, icon, default_type)
          VALUES ($1, $2, $3, $4, $5, $6)`,
@@ -103,17 +74,16 @@ router.post('/', async (req: Request, res: Response) => {
       );
     }
 
+    const token = generateToken(googleId);
     res.status(201).json({
       success: true,
       data: result.rows[0],
+      token,
       message: 'Usuário criado com categorias padrão',
     });
   } catch (error) {
     console.error('Erro ao criar/buscar usuário:', error);
-    res.status(500).json({
-      success: false,
-      error: 'Erro interno do servidor',
-    });
+    res.status(500).json({ success: false, error: 'Erro interno do servidor' });
   }
 });
 
@@ -121,14 +91,11 @@ router.post('/', async (req: Request, res: Response) => {
  * GET /api/users/:id
  * Busca um usuário pelo ID
  */
-router.get('/:id', async (req: Request, res: Response) => {
+router.get('/:id', async (req, res: Response) => {
   try {
     const { id } = req.params;
 
-    const result = await pool.query(
-      'SELECT * FROM users WHERE id = $1',
-      [id]
-    );
+    const result = await pool.query('SELECT * FROM users WHERE id = $1', [id]);
 
     if (result.rows.length === 0) {
       return res.status(404).json({
@@ -137,16 +104,10 @@ router.get('/:id', async (req: Request, res: Response) => {
       });
     }
 
-    res.json({
-      success: true,
-      data: result.rows[0],
-    });
+    res.json({ success: true, data: result.rows[0] });
   } catch (error) {
     console.error('Erro ao buscar usuário:', error);
-    res.status(500).json({
-      success: false,
-      error: 'Erro interno do servidor',
-    });
+    res.status(500).json({ success: false, error: 'Erro interno do servidor' });
   }
 });
 

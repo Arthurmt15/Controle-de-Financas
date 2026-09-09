@@ -4,33 +4,51 @@
  * Gerencia entradas e saídas associadas a cada usuário.
  */
 
-import { Router, Request, Response } from 'express';
+import { Router, Response } from 'express';
+import { v4 as uuidv4 } from 'uuid';
 import pool from '../database';
+import { authenticate, AuthRequest } from '../middleware/auth';
 
 const router = Router();
 
 /**
- * GET /api/transactions/:userId
- * Lista todas as transações de um usuário
- * @param userId - ID do usuário (Google ID)
+ * GET /api/transactions
+ * Lista transações do usuário autenticado com paginação
  */
-router.get('/:userId', async (req: Request, res: Response) => {
+router.get('/', authenticate, async (req: AuthRequest, res: Response) => {
   try {
-    const { userId } = req.params;
+    const userId = req.userId;
+    const page = parseInt(req.query.page as string) || 1;
+    const limit = parseInt(req.query.limit as string) || 50;
+    const offset = (page - 1) * limit;
 
-    // Busca transações com JOIN na categoria para obter detalhes
-    const result = await pool.query(
-      `SELECT t.*, c.name as category_name, c.color as category_color, c.icon as category_icon
-       FROM transactions t
-       LEFT JOIN categories c ON t.category_id = c.id
-       WHERE t.user_id = $1
-       ORDER BY t.created_at DESC`,
-      [userId]
-    );
+    const [dataResult, countResult] = await Promise.all([
+      pool.query(
+        `SELECT t.*, c.name as category_name, c.color as category_color, c.icon as category_icon
+         FROM transactions t
+         LEFT JOIN categories c ON t.category_id = c.id
+         WHERE t.user_id = $1
+         ORDER BY t.created_at DESC
+         LIMIT $2 OFFSET $3`,
+        [userId, limit, offset]
+      ),
+      pool.query(
+        'SELECT COUNT(*) FROM transactions WHERE user_id = $1',
+        [userId]
+      ),
+    ]);
+
+    const total = parseInt(countResult.rows[0].count);
 
     res.json({
       success: true,
-      data: result.rows,
+      data: dataResult.rows,
+      pagination: {
+        page,
+        limit,
+        total,
+        totalPages: Math.ceil(total / limit),
+      },
     });
   } catch (error) {
     console.error('Erro ao buscar transações:', error);
@@ -44,22 +62,19 @@ router.get('/:userId', async (req: Request, res: Response) => {
 /**
  * POST /api/transactions
  * Cria uma nova transação
- * @body { userId, description, amount, type, date, categoryId, notes }
  */
-router.post('/', async (req: Request, res: Response) => {
-  const { userId, description, amount, type, date, categoryId, notes } = req.body;
-
+router.post('/', authenticate, async (req: AuthRequest, res: Response) => {
   try {
+    const userId = req.userId;
+    const { description, amount, type, date, categoryId, notes } = req.body;
 
-    // Validação dos campos obrigatórios
-    if (!userId || !description || amount === undefined || !type || !date || !categoryId) {
+    if (!description || amount === undefined || !type || !date || !categoryId) {
       return res.status(400).json({
         success: false,
-        error: 'Campos obrigatórios: userId, description, amount, type, date, categoryId',
+        error: 'Campos obrigatórios: description, amount, type, date, categoryId',
       });
     }
 
-    // Valida o tipo da transação
     if (!['income', 'expense'].includes(type)) {
       return res.status(400).json({
         success: false,
@@ -67,7 +82,6 @@ router.post('/', async (req: Request, res: Response) => {
       });
     }
 
-    // Valida o valor (deve ser positivo)
     if (typeof amount !== 'number' || amount <= 0) {
       return res.status(400).json({
         success: false,
@@ -75,10 +89,8 @@ router.post('/', async (req: Request, res: Response) => {
       });
     }
 
-    // Gera ID único baseado no timestamp
-    const transactionId = `${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
+    const transactionId = uuidv4();
 
-    // Insere a transação no banco
     const result = await pool.query(
       `INSERT INTO transactions (id, user_id, description, amount, type, date, category_id, notes)
        VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
@@ -91,14 +103,11 @@ router.post('/', async (req: Request, res: Response) => {
       data: result.rows[0],
       message: 'Transação criada com sucesso',
     });
-  } catch (error: any) {
+  } catch (error) {
     console.error('Erro ao criar transação:', error);
-    console.error('Dados recebidos:', { userId, description, amount, type, date, categoryId, notes });
-    console.error('Detalhes do erro:', error?.message || error?.detail || error?.hint || 'sem detalhes');
     res.status(500).json({
       success: false,
       error: 'Erro ao criar transação',
-      details: error?.message || error?.detail || 'Erro desconhecido',
     });
   }
 });
@@ -106,18 +115,16 @@ router.post('/', async (req: Request, res: Response) => {
 /**
  * PUT /api/transactions/:id
  * Atualiza uma transação existente
- * @param id - ID da transação
- * @body { description, amount, type, date, categoryId, notes }
  */
-router.put('/:id', async (req: Request, res: Response) => {
+router.put('/:id', authenticate, async (req: AuthRequest, res: Response) => {
   try {
     const { id } = req.params;
+    const userId = req.userId;
     const { description, amount, type, date, categoryId, notes } = req.body;
 
-    // Verifica se a transação existe
     const existing = await pool.query(
-      'SELECT * FROM transactions WHERE id = $1',
-      [id]
+      'SELECT * FROM transactions WHERE id = $1 AND user_id = $2',
+      [id, userId]
     );
 
     if (existing.rows.length === 0) {
@@ -127,7 +134,20 @@ router.put('/:id', async (req: Request, res: Response) => {
       });
     }
 
-    // Atualiza a transação com os novos valores
+    if (type && !['income', 'expense'].includes(type)) {
+      return res.status(400).json({
+        success: false,
+        error: 'type deve ser: income ou expense',
+      });
+    }
+
+    if (amount !== undefined && (typeof amount !== 'number' || amount <= 0)) {
+      return res.status(400).json({
+        success: false,
+        error: 'amount deve ser um número positivo',
+      });
+    }
+
     const result = await pool.query(
       `UPDATE transactions
        SET description = COALESCE($1, description),
@@ -137,9 +157,9 @@ router.put('/:id', async (req: Request, res: Response) => {
            category_id = COALESCE($5, category_id),
            notes = $6,
            updated_at = CURRENT_TIMESTAMP
-       WHERE id = $7
+       WHERE id = $7 AND user_id = $8
        RETURNING *`,
-      [description, amount, type, date, categoryId, notes || null, id]
+      [description, amount, type, date, categoryId, notes || null, id, userId]
     );
 
     res.json({
@@ -159,16 +179,15 @@ router.put('/:id', async (req: Request, res: Response) => {
 /**
  * DELETE /api/transactions/:id
  * Remove uma transação pelo ID
- * @param id - ID da transação
  */
-router.delete('/:id', async (req: Request, res: Response) => {
+router.delete('/:id', authenticate, async (req: AuthRequest, res: Response) => {
   try {
     const { id } = req.params;
+    const userId = req.userId;
 
-    // Verifica se a transação existe
     const existing = await pool.query(
-      'SELECT * FROM transactions WHERE id = $1',
-      [id]
+      'SELECT * FROM transactions WHERE id = $1 AND user_id = $2',
+      [id, userId]
     );
 
     if (existing.rows.length === 0) {
@@ -178,8 +197,7 @@ router.delete('/:id', async (req: Request, res: Response) => {
       });
     }
 
-    // Remove a transação
-    await pool.query('DELETE FROM transactions WHERE id = $1', [id]);
+    await pool.query('DELETE FROM transactions WHERE id = $1 AND user_id = $2', [id, userId]);
 
     res.json({
       success: true,

@@ -2,10 +2,9 @@
  * @file contexts/TransactionsContext.tsx
  * @description Contexto compartilhado para transações financeiras.
  * Usa API backend (Railway/PostgreSQL) para persistir dados.
- * Filtros permanecem no localStorage (são estado de UI).
  */
 
-import React, { createContext, useContext, useReducer, useCallback, useMemo, useEffect } from 'react';
+import React, { createContext, useContext, useReducer, useCallback, useMemo, useEffect, useRef } from 'react';
 import { useLocalStorage } from '../hooks/useLocalStorage';
 import { useAuth } from './AuthContext';
 import { transactionService, categoryService } from '../services/api';
@@ -60,7 +59,10 @@ export function TransactionsProvider({ children }: { children: React.ReactNode }
   const { user } = useAuth();
   const userId = user?.id || '';
 
-  // Filtros permanecem no localStorage (estado de UI)
+  /** Contador de operações em andamento para evitar race condition */
+  const loadingCountRef = useRef(0);
+
+  /** Filtros permanecem no localStorage */
   const [storedFilters, setStoredFilters] = useLocalStorage<TransactionFilters>(
     'financas_filters',
     initialState.filters
@@ -72,61 +74,81 @@ export function TransactionsProvider({ children }: { children: React.ReactNode }
   });
 
   /**
+   * Incrementa/decrementa contador de loading
+   * Evita race condition quando múltiplas operações acontecem
+   */
+  const setLoading = useCallback((loading: boolean) => {
+    if (loading) {
+      loadingCountRef.current += 1;
+      dispatch({ type: 'SET_LOADING', payload: true });
+    } else {
+      loadingCountRef.current = Math.max(0, loadingCountRef.current - 1);
+      if (loadingCountRef.current === 0) {
+        dispatch({ type: 'SET_LOADING', payload: false });
+      }
+    }
+  }, []);
+
+  /**
    * Carrega dados do banco quando o usuário está autenticado
-   * Busca transações e categorias da API
    */
   useEffect(() => {
     if (!userId) return;
 
+    let cancelled = false;
+
     const loadData = async () => {
-      dispatch({ type: 'SET_LOADING', payload: true });
+      setLoading(true);
       try {
-        // Busca transações e categorias em paralelo
-        // O backend cria categorias padrão automaticamente se não existirem
         const [transactions, categories] = await Promise.all([
           transactionService.getAll(userId),
           categoryService.getAll(userId),
         ]);
 
-        dispatch({ type: 'SET_TRANSACTIONS', payload: transactions });
-        dispatch({ type: 'SET_CATEGORIES', payload: categories });
+        if (!cancelled) {
+          dispatch({ type: 'SET_TRANSACTIONS', payload: transactions });
+          dispatch({ type: 'SET_CATEGORIES', payload: categories });
 
-        if (categories.length === 0) {
-          dispatch({ type: 'SET_ERROR', payload: 'Nenhuma categoria encontrada. Verifique a conexão com o servidor.' });
-        } else {
-          dispatch({ type: 'SET_ERROR', payload: null });
+          if (categories.length === 0) {
+            dispatch({ type: 'SET_ERROR', payload: 'Nenhuma categoria encontrada' });
+          } else {
+            dispatch({ type: 'SET_ERROR', payload: null });
+          }
         }
       } catch (error) {
         console.error('Erro ao carregar dados:', error);
-        dispatch({ type: 'SET_ERROR', payload: 'Erro ao carregar dados do servidor. Verifique sua conexão.' });
+        if (!cancelled) {
+          dispatch({ type: 'SET_ERROR', payload: 'Erro ao carregar dados do servidor' });
+        }
       } finally {
-        dispatch({ type: 'SET_LOADING', payload: false });
+        if (!cancelled) {
+          setLoading(false);
+        }
       }
     };
 
     loadData();
-  }, [userId]);
+    return () => { cancelled = true; };
+  }, [userId, setLoading]);
 
   /**
    * Adiciona uma nova transação via API
-   * Atualiza estado local after sucesso no servidor
    */
   const addTransaction = useCallback(
     async (transaction: Omit<Transaction, 'id'>) => {
+      setLoading(true);
       try {
-        dispatch({ type: 'SET_LOADING', payload: true });
         const newTransaction = await transactionService.create(transaction, userId);
         dispatch({ type: 'ADD_TRANSACTION', payload: newTransaction });
         return newTransaction;
       } catch (error) {
-        console.error('Erro ao adicionar transação:', error);
         dispatch({ type: 'SET_ERROR', payload: 'Erro ao salvar transação' });
-        throw error; // Relança o erro para o componente tratar
+        throw error;
       } finally {
-        dispatch({ type: 'SET_LOADING', payload: false });
+        setLoading(false);
       }
     },
-    [userId]
+    [userId, setLoading]
   );
 
   /**
@@ -134,20 +156,19 @@ export function TransactionsProvider({ children }: { children: React.ReactNode }
    */
   const updateTransaction = useCallback(
     async (transaction: Transaction) => {
+      setLoading(true);
       try {
-        dispatch({ type: 'SET_LOADING', payload: true });
         const updated = await transactionService.update(transaction);
         dispatch({ type: 'UPDATE_TRANSACTION', payload: updated });
         return updated;
       } catch (error) {
-        console.error('Erro ao atualizar transação:', error);
         dispatch({ type: 'SET_ERROR', payload: 'Erro ao atualizar transação' });
-        throw error; // Relança o erro para o componente tratar
+        throw error;
       } finally {
-        dispatch({ type: 'SET_LOADING', payload: false });
+        setLoading(false);
       }
     },
-    []
+    [setLoading]
   );
 
   /**
@@ -155,18 +176,18 @@ export function TransactionsProvider({ children }: { children: React.ReactNode }
    */
   const deleteTransaction = useCallback(
     async (transactionId: string) => {
+      setLoading(true);
       try {
-        dispatch({ type: 'SET_LOADING', payload: true });
         await transactionService.delete(transactionId);
         dispatch({ type: 'DELETE_TRANSACTION', payload: transactionId });
       } catch (error) {
-        console.error('Erro ao remover transação:', error);
         dispatch({ type: 'SET_ERROR', payload: 'Erro ao remover transação' });
+        throw error;
       } finally {
-        dispatch({ type: 'SET_LOADING', payload: false });
+        setLoading(false);
       }
     },
-    []
+    [setLoading]
   );
 
   /**
@@ -174,20 +195,19 @@ export function TransactionsProvider({ children }: { children: React.ReactNode }
    */
   const addCategory = useCallback(
     async (category: Omit<Category, 'id'>) => {
+      setLoading(true);
       try {
-        dispatch({ type: 'SET_LOADING', payload: true });
         const newCategory = await categoryService.create(category, userId);
         dispatch({ type: 'ADD_CATEGORY', payload: newCategory });
         return newCategory;
       } catch (error) {
-        console.error('Erro ao adicionar categoria:', error);
         dispatch({ type: 'SET_ERROR', payload: 'Erro ao salvar categoria' });
         throw error;
       } finally {
-        dispatch({ type: 'SET_LOADING', payload: false });
+        setLoading(false);
       }
     },
-    [userId]
+    [userId, setLoading]
   );
 
   /**
@@ -195,29 +215,29 @@ export function TransactionsProvider({ children }: { children: React.ReactNode }
    */
   const deleteCategory = useCallback(
     async (categoryId: string) => {
+      setLoading(true);
       try {
-        dispatch({ type: 'SET_LOADING', payload: true });
         await categoryService.delete(categoryId);
         dispatch({ type: 'DELETE_CATEGORY', payload: categoryId });
       } catch (error) {
-        console.error('Erro ao remover categoria:', error);
         dispatch({ type: 'SET_ERROR', payload: 'Erro ao remover categoria' });
+        throw error;
       } finally {
-        dispatch({ type: 'SET_LOADING', payload: false });
+        setLoading(false);
       }
     },
-    []
+    [setLoading]
   );
 
   /**
-   * Atualiza os filtros de transação (salvo no localStorage)
+   * Atualiza os filtros de transação
    */
   const setFilters = useCallback(
     (filters: Partial<TransactionFilters>) => {
       dispatch({ type: 'SET_FILTERS', payload: filters });
-      setStoredFilters({ ...state.filters, ...filters });
+      setStoredFilters((prev: TransactionFilters) => ({ ...prev, ...filters }));
     },
-    [state.filters, setStoredFilters]
+    [setStoredFilters]
   );
 
   /**
