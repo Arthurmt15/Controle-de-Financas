@@ -7,8 +7,9 @@ RUN cd server && npm install --omit=dev
 
 COPY server/tsconfig.json ./server/
 COPY server/src ./server/src/
+COPY server/.env* ./server/
 RUN cd server && npx tsc
 
-EXPOSE 5000
+EXPOSE 3001
 
 CMD ["node", "server/dist/index.js"]
