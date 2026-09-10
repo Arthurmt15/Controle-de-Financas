@@ -4,7 +4,7 @@
  * Exibe logo, navegação, seletor de tema, seletor de cor e informações do usuário.
  */
 
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { useAuth } from '../../../contexts/AuthContext';
 import { useTheme } from '../../../contexts/ThemeContext';
 import { useInstallPrompt } from '../../../hooks/useInstallPrompt';
@@ -36,6 +36,21 @@ const Header: React.FC = () => {
   /** Fecha o menu mobile */
   const closeMenu = useCallback(() => setMenuOpen(false), []);
 
+  /** Fecha menu com tecla Escape e previne scroll do body */
+  useEffect(() => {
+    if (menuOpen) {
+      const handleEscape = (e: KeyboardEvent) => {
+        if (e.key === 'Escape') closeMenu();
+      };
+      document.addEventListener('keydown', handleEscape);
+      document.body.style.overflow = 'hidden';
+      return () => {
+        document.removeEventListener('keydown', handleEscape);
+        document.body.style.overflow = '';
+      };
+    }
+  }, [menuOpen, closeMenu]);
+
   return (
     <C.Container>
       <C.LeftSection>
@@ -49,7 +64,7 @@ const Header: React.FC = () => {
 
         <C.Logo to="/dashboard">
           <C.LogoIcon>
-            <Icon size={24} color="white">
+            <Icon size={20} color="white">
               <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
             </Icon>
           </C.LogoIcon>
@@ -130,7 +145,7 @@ const Header: React.FC = () => {
         ))}
         {isInstallable && (
           <C.InstallButton onClick={() => { closeMenu(); install(); }} style={{ width: '100%', justifyContent: 'center' }}>
-            📲 Instalar App
+            Instalar App
           </C.InstallButton>
         )}
         <C.MobileNavLink to="/login" onClick={() => { closeMenu(); logout(); }}>
