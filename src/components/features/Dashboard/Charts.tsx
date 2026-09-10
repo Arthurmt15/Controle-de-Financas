@@ -46,6 +46,8 @@ const Charts: React.FC = () => {
   const { theme } = useTheme();
   const [monthlyPeriod, setMonthlyPeriod] = useState<'12' | '6'>('12');
 
+  const isMobile = typeof window !== 'undefined' && window.innerWidth <= 600;
+
   /** Estilo do tooltip adaptado ao tema */
   const tooltipStyle = useMemo(() => ({
     backgroundColor: theme.colors.surface,
@@ -97,11 +99,11 @@ const Charts: React.FC = () => {
   const hasBarData = monthlyData.some((d) => d.entradas > 0 || d.saidas > 0);
 
   /** Altura dinâmica do painel de pizza baseada na quantidade de categorias */
-  const piePanelHeight = Math.max(450, 65 + 200 + categoryData.length * 34 + 30);
+  const piePanelHeight = Math.max(450, 65 + 200 + categoryData.length * 36 + 40);
 
   return (
     <C.ChartsGrid>
-      <C.Panel $height="387px">
+      <C.Panel $height={isMobile ? 'auto' : '387px'}>
         <C.PanelHeader>
           <h2>Evolução Mensal</h2>
           <C.PanelSelect
@@ -113,15 +115,15 @@ const Charts: React.FC = () => {
           </C.PanelSelect>
         </C.PanelHeader>
         {hasBarData ? (
-          <ResponsiveContainer width="100%" height={285}>
-            <BarChart data={monthlyData}>
-              <CartesianGrid strokeDasharray="3 3" stroke={gridColor} />
-              <XAxis dataKey="name" stroke={axisColor} fontSize={10} />
-              <YAxis stroke={axisColor} fontSize={10} />
+          <ResponsiveContainer width="100%" height={isMobile ? 250 : 285}>
+            <BarChart data={monthlyData} layout="vertical" margin={{ left: 10, right: 20 }}>
+              <CartesianGrid strokeDasharray="3 3" stroke={gridColor} horizontal={false} />
+              <XAxis type="number" stroke={axisColor} fontSize={isMobile ? 11 : 10} tickFormatter={(v) => v >= 1000 ? `${(v / 1000).toFixed(0)}k` : v} />
+              <YAxis type="category" dataKey="name" stroke={axisColor} fontSize={isMobile ? 12 : 10} width={isMobile ? 40 : 30} />
               <Tooltip formatter={(value) => formatCurrency(Number(value))} contentStyle={tooltipStyle} />
-              <Legend />
-              <Bar dataKey="entradas" fill={theme.colors.success} radius={[4, 4, 0, 0]} />
-              <Bar dataKey="saidas" fill={theme.colors.error} radius={[4, 4, 0, 0]} />
+              <Legend wrapperStyle={{ fontSize: isMobile ? '12px' : '11px' }} />
+              <Bar dataKey="entradas" fill={theme.colors.success} radius={[0, 4, 4, 0]} barSize={isMobile ? 14 : 12} />
+              <Bar dataKey="saidas" fill={theme.colors.error} radius={[0, 4, 4, 0]} barSize={isMobile ? 14 : 12} />
             </BarChart>
           </ResponsiveContainer>
         ) : (
@@ -154,7 +156,7 @@ const Charts: React.FC = () => {
                   cx="50%"
                   cy="50%"
                   labelLine={false}
-                  outerRadius={80}
+                  outerRadius={isMobile ? 70 : 80}
                   dataKey="value"
                 >
                   {categoryData.map((entry, index) => (

@@ -31,10 +31,8 @@ export const Panel = styled.div<{ $height?: string }>`
   background: ${({ theme }) => theme.type === 'dark'
     ? 'linear-gradient(145deg, #111a2a, #0e1624)'
     : theme.colors.surface};
-  overflow: hidden;
+  overflow: visible;
   height: ${({ $height }) => $height || 'auto'};
-  @media (max-width: 850px) { height: 380px; }
-  @media (max-width: 600px) { height: 350px; }
 `;
 
 /**
@@ -106,15 +104,11 @@ export const EmptyIcon = styled.div`
   font-size: 25px;
 `;
 
-/**
- * Container da legenda dos gráficos
- * Centraliza itens de legenda horizontalmente
- */
 export const Legend = styled.div`
   display: flex;
   justify-content: center;
   gap: 25px;
-  margin-top: 13px;
+  padding: 12px 15px;
   color: ${({ theme }) => theme.colors.textSecondary};
   font-size: 12px;
   span { display: flex; align-items: center; gap: 7px; }
@@ -167,30 +161,20 @@ export const CategoryIcon = styled.div`
   font-size: 25px;
 `;
 
-/**
- * Container da legenda do gráfico de pizza
- * Exibe itens em coluna com espaçamento consistente
- */
 export const PieLegendContainer = styled.div`
   display: flex;
   flex-direction: column;
-  gap: 8px;
-  padding: 10px 15px;
+  gap: 6px;
+  padding: 8px 16px;
 `;
 
-/**
- * Item da legenda do gráfico de pizza
- * Alinha horizontalmente dot, nome, valor e percentual
- */
 export const PieLegendItem = styled.div`
   display: flex;
   align-items: center;
   gap: 10px;
+  padding: 4px 0;
 `;
 
-/**
- * Dot indicador de cor na legenda do pizza
- */
 export const PieLegendDot = styled.span<{ $color: string }>`
   width: 10px;
   height: 10px;
@@ -199,43 +183,32 @@ export const PieLegendDot = styled.span<{ $color: string }>`
   background: ${({ $color }) => $color};
 `;
 
-/**
- * Container de texto da legenda do pizza
- */
 export const PieLegendText = styled.div`
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
   flex: 1;
   min-width: 0;
 `;
 
-/**
- * Nome da categoria na legenda
- */
 export const PieLegendName = styled.span`
-  font-size: 12px;
+  font-size: 13px;
   color: ${({ theme }) => theme.colors.text};
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 `;
 
-/**
- * Valor da categoria na legenda
- */
 export const PieLegendValue = styled.span`
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 600;
   color: ${({ theme }) => theme.colors.text};
   white-space: nowrap;
+  margin-left: auto;
 `;
 
-/**
- * Percentual da categoria na legenda
- */
 export const PieLegendPercent = styled.span`
-  font-size: 11px;
+  font-size: 12px;
   color: ${({ theme }) => theme.colors.textSecondary};
   white-space: nowrap;
 `;
