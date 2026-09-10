@@ -9,6 +9,11 @@ export const Container = styled.div`
   height: 100%;
   min-height: 400px;
   max-height: 700px;
+
+  @media (max-width: 1024px) {
+    min-height: 350px;
+    max-height: 450px;
+  }
 `;
 
 export const Header = styled.div`
@@ -44,6 +49,12 @@ export const MessagesArea = styled.div`
   flex-direction: column;
   gap: 12px;
   background-color: ${({ theme }) => theme.colors.background};
+  min-height: 0;
+
+  @media (max-width: 1024px) {
+    padding: 12px;
+    gap: 10px;
+  }
 `;
 
 export const Welcome = styled.div`
@@ -134,6 +145,12 @@ export const InputForm = styled.form`
   padding: 10px 12px;
   border-top: 1px solid ${({ theme }) => theme.colors.border};
   background-color: ${({ theme }) => theme.colors.surface};
+  flex-shrink: 0;
+
+  @media (max-width: 1024px) {
+    padding: 12px;
+    gap: 10px;
+  }
 `;
 
 export const MessageInput = styled.input`
@@ -155,6 +172,11 @@ export const MessageInput = styled.input`
     border-color: ${({ theme }) => theme.colors.primary};
     box-shadow: 0 0 0 2px ${({ theme }) => `${theme.colors.primary}20`};
   }
+
+  @media (max-width: 1024px) {
+    padding: 12px 16px;
+    font-size: 16px;
+  }
 `;
 
 export const SendButton = styled.button`
@@ -171,6 +193,7 @@ export const SendButton = styled.button`
   align-items: center;
   justify-content: center;
   transition: all 0.2s ease;
+  flex-shrink: 0;
 
   &:hover:not(:disabled) {
     transform: scale(1.05);
@@ -179,6 +202,13 @@ export const SendButton = styled.button`
   &:disabled {
     opacity: 0.5;
     cursor: not-allowed;
+  }
+
+  @media (max-width: 1024px) {
+    width: 44px;
+    height: 44px;
+    min-width: 44px;
+    font-size: 20px;
   }
 `;
 

@@ -139,6 +139,6 @@ export const ChatColumn = styled.div`
   @media (max-width: 1024px) {
     position: static;
     height: auto;
-    max-height: 500px;
+    max-height: 550px;
   }
 `;
