@@ -212,6 +212,59 @@ const TransactionList: React.FC = () => {
         </C.Table>
       </C.TableWrapper>
 
+      {/* Cards mobile */}
+      <C.MobileCards>
+        {filteredTransactions.length === 0 ? (
+          <C.MobileEmptyMessage>Nenhuma transação encontrada</C.MobileEmptyMessage>
+        ) : (
+          filteredTransactions.map((transaction) => (
+            <C.MobileCard key={transaction.id}>
+              <C.MobileCardTop>
+                <C.MobileCardDescription>
+                  <C.TypeIndicator $type={transaction.type} />
+                  <span>{transaction.description}</span>
+                </C.MobileCardDescription>
+                <C.MobileCardAmount $type={transaction.type}>
+                  {transaction.type === 'expense' ? '-' : '+'}{' '}
+                  {formatCurrency(transaction.amount)}
+                </C.MobileCardAmount>
+              </C.MobileCardTop>
+              <C.MobileCardBottom>
+                <C.MobileCardInfo>
+                  <C.MobileCategoryBadge $color={getCategoryColor(transaction.categoryId)}>
+                    {getCategoryName(transaction.categoryId)}
+                  </C.MobileCategoryBadge>
+                  <C.MobileCardDate>{formatDate(transaction.date)}</C.MobileCardDate>
+                </C.MobileCardInfo>
+                <C.MobileCardActions>
+                  <C.MobileActionButton
+                    onClick={() => handleEdit(transaction)}
+                    aria-label={`Editar ${transaction.description}`}
+                    title="Editar"
+                  >
+                    <Icon size={14}>
+                      <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                      <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+                    </Icon>
+                  </C.MobileActionButton>
+                  <C.MobileActionButton
+                    $variant="danger"
+                    onClick={() => setDeletingId(transaction.id)}
+                    aria-label={`Excluir ${transaction.description}`}
+                    title="Excluir"
+                  >
+                    <Icon size={14} color="#ef4444">
+                      <polyline points="3 6 5 6 21 6" />
+                      <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+                    </Icon>
+                  </C.MobileActionButton>
+                </C.MobileCardActions>
+              </C.MobileCardBottom>
+            </C.MobileCard>
+          ))
+        )}
+      </C.MobileCards>
+
       {/* Modal de edição */}
       <Modal
         isOpen={!!editingTransaction}
