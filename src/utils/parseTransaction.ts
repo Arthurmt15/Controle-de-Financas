@@ -20,6 +20,7 @@ export interface ParsedTransaction {
   tipo: 'despesa' | 'receita';
   categoria: string;
   data: string; // YYYY-MM-DD
+  parcelas?: number; // Número de parcelas (se parcelado)
 }
 
 export interface ImageParseResult {
@@ -99,13 +100,24 @@ function extractAmount(text: string): { value: number; clean: string } | null {
     }
   }
 
-  // "50 conto", "200 pila", "100 paus", "30 reais"
-  const slangPattern = /(\d+(?:[.,]\d+)?)\s*(?:conto|pila|paus|reais)\b/i;
+  // "50 conto", "200 pila", "100 paus", "30 reais" (com tolerância a typos)
+  const slangPattern = /(\d+(?:[.,]\d+)?)\s*(?:conto|pila|paus|reais?|reias?)\b/i;
   const slangMatch = lower.match(slangPattern);
   if (slangMatch) {
     const num = parseFloat(slangMatch[1].replace(',', '.'));
     if (!isNaN(num) && num > 0) {
       return { value: num, clean: text.replace(slangMatch[0], ' ').trim() };
+    }
+  }
+
+  // "parcelado em 10x de 100" ou "10x de 100" — extrai valor total
+  const installmentPattern = /(\d+)\s*(?:x|vezes)\s+de\s+(\d+(?:[.,]\d+)?)/i;
+  const installmentMatch = lower.match(installmentPattern);
+  if (installmentMatch) {
+    const times = parseInt(installmentMatch[1]);
+    const perTime = parseFloat(installmentMatch[2].replace(',', '.'));
+    if (!isNaN(times) && !isNaN(perTime) && times > 0 && perTime > 0) {
+      return { value: times * perTime, clean: text.replace(installmentMatch[0], ' ').trim() };
     }
   }
 
@@ -151,7 +163,7 @@ function extractAmount(text: string): { value: number; clean: string } | null {
     }
   }
 
-  // Número inteiro: 50, 100, 2000 (pega o ÚLTIMO número que pareça valor)
+  // Número inteiro: pega o MAIOR número encontrado (provavelmente o valor)
   const integerPattern = /\b(\d{2,6})\b/g;
   const integerMatches: RegExpExecArray[] = [];
   let integerMatch: RegExpExecArray | null;
@@ -159,10 +171,19 @@ function extractAmount(text: string): { value: number; clean: string } | null {
     integerMatches.push(integerMatch);
   }
   if (integerMatches.length > 0) {
-    const match = integerMatches[integerMatches.length - 1];
-    const num = parseFloat(match[1]);
+    // Pega o maior número encontrado (mais provável de ser o valor)
+    let bestMatch = integerMatches[0];
+    let bestValue = parseFloat(bestMatch[1]);
+    for (const m of integerMatches) {
+      const val = parseFloat(m[1]);
+      if (val > bestValue) {
+        bestMatch = m;
+        bestValue = val;
+      }
+    }
+    const num = bestValue;
     if (!isNaN(num) && num > 0) {
-      return { value: num, clean: text.slice(0, match.index).trim() + ' ' + text.slice(match.index! + match[0].length).trim() };
+      return { value: num, clean: text.slice(0, bestMatch.index).trim() + ' ' + text.slice(bestMatch.index! + bestMatch[0].length).trim() };
     }
   }
 
@@ -299,9 +320,9 @@ function detectCategory(text: string, tipo: 'despesa' | 'receita'): { category: 
 function extractDescription(remainingText: string): string {
   let desc = remainingText;
 
-  // Remove palavras-chave de tipo (despesa/receita) que podem estar no início
+  // Remove apenas palavras-chave de tipo que são redundantes (não removes "compra", "parcelado")
   const typeKeywords = [
-    'gastei', 'paguei', 'comprei', 'saiu', 'perdi', 'compra', 'despesa',
+    'gastei', 'paguei', 'comprei', 'saiu', 'perdi', 'despesa',
     'recebi', 'recebido', 'ganhei', 'ganho', 'pagamento', 'entrada',
     'salário', 'salario', 'rendimento', 'cashback', 'estorno', 'reembolso',
   ];
@@ -319,6 +340,9 @@ function extractDescription(remainingText: string): string {
   // Remove números soltos que possam ter sobrado
   desc = desc.replace(/\b\d{1,6}(?:\.\d{3})*(?:,\d{1,2})?\b/g, '');
   desc = desc.replace(/\b\d{2,6}\b/g, '');
+
+  // Remove palavras de parcelamento que não agregam à descrição
+  desc = desc.replace(/\b(parcelado?|vezes|prestação|prestacao|=plt|taxa)\b/gi, ' ');
 
   // Limpa espaços extras, vírgulas e pontos soltos
   desc = desc.replace(/[,.\s]+/g, ' ').trim();
@@ -385,11 +409,15 @@ export function parseTransactionFromMessage(message: string): ParsedTransaction 
   const catResult = detectCategory(message, tipo);
   const categoria = catResult.category;
 
-  // 5. Monta descrição do texto que sobrou
+  // 5. Detecta parcelas
+  const parcelasMatch = message.match(/(\d+)\s*(?:x|vezes)\b/i);
+  const parcelas = parcelasMatch ? parseInt(parcelasMatch[1]) : undefined;
+
+  // 6. Monta descrição do texto que sobrou
   const textForDescription = amountResult.clean;
   const descricao = extractDescription(textForDescription) || categoria;
 
-  return { descricao, valor, tipo, categoria, data };
+  return { descricao, valor, tipo, categoria, data, parcelas };
 }
 
 /**
@@ -428,9 +456,8 @@ export function getExampleMessages(): string[] {
   return [
     'Mercado ontem 150,50',
     'Entrada 4k salário',
+    'Compra 1000 reais 10x',
     'conta recorrente cartão 1500 dia 10',
-    'contas recorrentes',
-    'resumo',
     'ajuda',
   ];
 }

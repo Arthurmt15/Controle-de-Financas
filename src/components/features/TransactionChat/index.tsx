@@ -246,19 +246,20 @@ const TransactionChat: React.FC = () => {
       }
 
       if (matchCat) {
+        const installmentNote = parsed.parcelas ? ` (${parsed.parcelas}x)` : '';
         const transactionData: Omit<Transaction, 'id'> = {
           description: parsed.descricao,
           amount: parsed.valor,
           type: parsed.tipo === 'despesa' ? 'expense' : 'income',
           date: new Date(parsed.data + 'T12:00:00').toISOString(),
           categoryId: matchCat.id,
-          notes: '',
+          notes: parsed.parcelas ? `Parcelado em ${parsed.parcelas}x` : '',
         };
 
         await addTransaction(transactionData);
         addMessage(
           `✅ Transação registrada!\n` +
-          `📝 ${transactionData.description}\n` +
+          `📝 ${transactionData.description}${installmentNote}\n` +
           `💰 R$ ${transactionData.amount.toFixed(2).replace('.', ',')}\n` +
           `📅 ${formatDateBR(transactionData.date)}\n` +
           `🏷️ ${matchCat.name}`,
