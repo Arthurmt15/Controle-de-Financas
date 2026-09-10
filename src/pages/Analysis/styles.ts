@@ -14,6 +14,11 @@ export const Header = styled.div`
   align-items: center;
   flex-wrap: wrap;
   gap: 16px;
+
+  @media (max-width: 640px) {
+    justify-content: center;
+    text-align: center;
+  }
 `;
 
 export const Title = styled.h1`

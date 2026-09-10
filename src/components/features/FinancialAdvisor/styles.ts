@@ -7,12 +7,18 @@ export const Container = styled.div`
   display: flex;
   flex-direction: column;
   min-height: 400px;
-  overflow: hidden;
+  max-height: 700px;
+
+  @media (max-width: 1024px) {
+    min-height: 400px;
+    max-height: none;
+  }
 `;
 
 export const Header = styled.div`
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 10px;
   padding: 14px 16px;
   border-bottom: 1px solid ${({ theme }) => theme.colors.border};
