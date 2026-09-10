@@ -116,14 +116,15 @@ export function TransactionsProvider({ children }: { children: React.ReactNode }
           }
         }
       } catch (error) {
-        console.error('Erro ao carregar dados:', error);
         if (!cancelled) {
           if (error instanceof Error && 
-              (error.message === 'Autenticação necessária' || 
-               error.message === 'Sessão expirada. Faça login novamente.')) {
+              (error.message.includes('Sessão expirada') || 
+               error.message.includes('Autenticação necessária') ||
+               error.message.includes('Faça login novamente'))) {
             logout();
             return;
           }
+          console.error('Erro ao carregar dados:', error);
           dispatch({ type: 'SET_ERROR', payload: 'Erro ao carregar dados do servidor' });
         }
       } finally {
@@ -148,13 +149,18 @@ export function TransactionsProvider({ children }: { children: React.ReactNode }
         dispatch({ type: 'ADD_TRANSACTION', payload: newTransaction });
         return newTransaction;
       } catch (error) {
+        if (error instanceof Error && 
+            (error.message.includes('Sessão expirada') || error.message.includes('Faça login'))) {
+          logout();
+          throw error;
+        }
         dispatch({ type: 'SET_ERROR', payload: 'Erro ao salvar transação' });
         throw error;
       } finally {
         setLoading(false);
       }
     },
-    [userId, setLoading]
+    [userId, setLoading, logout]
   );
 
   /**
@@ -168,13 +174,18 @@ export function TransactionsProvider({ children }: { children: React.ReactNode }
         dispatch({ type: 'UPDATE_TRANSACTION', payload: updated });
         return updated;
       } catch (error) {
+        if (error instanceof Error && 
+            (error.message.includes('Sessão expirada') || error.message.includes('Faça login'))) {
+          logout();
+          throw error;
+        }
         dispatch({ type: 'SET_ERROR', payload: 'Erro ao atualizar transação' });
         throw error;
       } finally {
         setLoading(false);
       }
     },
-    [setLoading]
+    [setLoading, logout]
   );
 
   /**
@@ -187,13 +198,18 @@ export function TransactionsProvider({ children }: { children: React.ReactNode }
         await transactionService.delete(transactionId);
         dispatch({ type: 'DELETE_TRANSACTION', payload: transactionId });
       } catch (error) {
+        if (error instanceof Error && 
+            (error.message.includes('Sessão expirada') || error.message.includes('Faça login'))) {
+          logout();
+          throw error;
+        }
         dispatch({ type: 'SET_ERROR', payload: 'Erro ao remover transação' });
         throw error;
       } finally {
         setLoading(false);
       }
     },
-    [setLoading]
+    [setLoading, logout]
   );
 
   /**
@@ -207,13 +223,18 @@ export function TransactionsProvider({ children }: { children: React.ReactNode }
         dispatch({ type: 'ADD_CATEGORY', payload: newCategory });
         return newCategory;
       } catch (error) {
+        if (error instanceof Error && 
+            (error.message.includes('Sessão expirada') || error.message.includes('Faça login'))) {
+          logout();
+          throw error;
+        }
         dispatch({ type: 'SET_ERROR', payload: 'Erro ao salvar categoria' });
         throw error;
       } finally {
         setLoading(false);
       }
     },
-    [userId, setLoading]
+    [userId, setLoading, logout]
   );
 
   /**
@@ -226,13 +247,18 @@ export function TransactionsProvider({ children }: { children: React.ReactNode }
         await categoryService.delete(categoryId);
         dispatch({ type: 'DELETE_CATEGORY', payload: categoryId });
       } catch (error) {
+        if (error instanceof Error && 
+            (error.message.includes('Sessão expirada') || error.message.includes('Faça login'))) {
+          logout();
+          throw error;
+        }
         dispatch({ type: 'SET_ERROR', payload: 'Erro ao remover categoria' });
         throw error;
       } finally {
         setLoading(false);
       }
     },
-    [setLoading]
+    [setLoading, logout]
   );
 
   /**
