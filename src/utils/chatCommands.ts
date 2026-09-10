@@ -4,7 +4,7 @@
  * Interpreta mensagens do usuário e retorna a intenção detectada.
  */
 
-import type { Category } from '../types';
+import type { Category, RecurringBill } from '../types';
 import { CATEGORY_STYLES } from './categories';
 
 export type CommandType =
@@ -14,6 +14,11 @@ export type CommandType =
   | { type: 'summary' }
   | { type: 'analysis'; text: string }
   | { type: 'help' }
+  | { type: 'create_recurring'; name: string; amount: number; day: number; categoryId?: string }
+  | { type: 'list_recurring' }
+  | { type: 'update_recurring'; name: string; amount?: number; day?: number }
+  | { type: 'delete_recurring'; name: string }
+  | { type: 'generate_bills' }
   | { type: null };
 
 const CREATE_CATEGORY_PATTERNS = [
@@ -67,6 +72,33 @@ const LIST_CATEGORIES_PATTERNS = [
   /\blista\s+(?:de\s+)?categorias?\b/i,
 ];
 
+const CREATE_RECURRING_PATTERNS = [
+  /(?:criar?|adicionar?|novo?)\s+(?:conta\s+)?recorrente\s+(.+)/i,
+  /(?:conta\s+)?recorrente\s+(.+)/i,
+  /(?:recorrente|fixo|fixa)\s+(.+)/i,
+];
+
+const LIST_RECURRING_PATTERNS = [
+  /\b(?:contas?\s+)?recorrentes?\b/i,
+  /\bfixos?\b/i,
+  /\bquais?\s+(?:contas?\s+)?fixas?\b/i,
+];
+
+const UPDATE_RECURRING_PATTERNS = [
+  /(?:editar?|atualizar?|alterar?)\s+(?:conta\s+)?recorrente\s+(.+)/i,
+  /(?:mudar?|trocar?)\s+(?:conta\s+)?recorrente\s+(.+)/i,
+];
+
+const DELETE_RECURRING_PATTERNS = [
+  /(?:excluir?|deletar?|remover?|apagar?)\s+(?:conta\s+)?recorrente\s+(.+)/i,
+];
+
+const GENERATE_BILLS_PATTERNS = [
+  /\bgerar?\s+contas?\b/i,
+  /\bcriar?\s+transações?\s+(?:das\s+)?contas?\b/i,
+  /\bprocessar?\s+contas?\b/i,
+];
+
 /**
  * Detecta a intenção/comando em uma mensagem do usuário.
  * Deve ser chamada ANTES de parseTransactionFromMessage.
@@ -90,6 +122,50 @@ export function detectCommand(text: string): CommandType {
     const match = trimmed.match(pattern);
     if (match) {
       return { type: 'delete_category', name: match[1].trim() };
+    }
+  }
+
+  // Gerar transações de contas recorrentes
+  for (const pattern of GENERATE_BILLS_PATTERNS) {
+    if (pattern.test(trimmed)) {
+      return { type: 'generate_bills' };
+    }
+  }
+
+  // Criar conta recorrente
+  for (const pattern of CREATE_RECURRING_PATTERNS) {
+    const match = trimmed.match(pattern);
+    if (match) {
+      const parsed = parseRecurringBillInput(match[1].trim());
+      if (parsed) {
+        return { type: 'create_recurring', ...parsed };
+      }
+    }
+  }
+
+  // Editar conta recorrente
+  for (const pattern of UPDATE_RECURRING_PATTERNS) {
+    const match = trimmed.match(pattern);
+    if (match) {
+      const parsed = parseRecurringBillUpdate(match[1].trim());
+      if (parsed) {
+        return { type: 'update_recurring', ...parsed };
+      }
+    }
+  }
+
+  // Excluir conta recorrente
+  for (const pattern of DELETE_RECURRING_PATTERNS) {
+    const match = trimmed.match(pattern);
+    if (match) {
+      return { type: 'delete_recurring', name: match[1].trim() };
+    }
+  }
+
+  // Listar contas recorrentes
+  for (const pattern of LIST_RECURRING_PATTERNS) {
+    if (pattern.test(trimmed)) {
+      return { type: 'list_recurring' };
     }
   }
 
@@ -122,6 +198,118 @@ export function detectCommand(text: string): CommandType {
   }
 
   return { type: null };
+}
+
+/**
+ * Parseia entrada do usuário para criar conta recorrente
+ * Ex: "cartão nubank 1500 dia 10" -> { name: "cartão nubank", amount: 1500, day: 10 }
+ */
+function parseRecurringBillInput(text: string): { name: string; amount: number; day: number } | null {
+  // Tenta extrair "dia X"
+  const dayMatch = text.match(/dia\s+(\d{1,2})/i);
+  const day = dayMatch ? parseInt(dayMatch[1]) : new Date().getDate();
+
+  // Remove "dia X" do texto para processar o resto
+  const cleanText = dayMatch ? text.replace(dayMatch[0], ' ').trim() : text;
+
+  // Tenta extrair valor (último número encontrado)
+  const amountPatterns = [
+    /R\$\s*(\d{1,6}(?:\.\d{3})*(?:,\d{1,2})?)/i,
+    /(\d+(?:[.,]\d+)?)\s*k\b/i,
+    /(\d+(?:[.,]\d+)?)\s*(?:conto|pila|paus|reais)\b/i,
+    /(\d{1,6}(?:\.\d{3})*,\d{1,2})\b/,
+    /(\d{2,6})\b/,
+  ];
+
+  let amount: number | null = null;
+  let nameText = cleanText;
+
+  for (const pattern of amountPatterns) {
+    const match = cleanText.match(pattern);
+    if (match) {
+      if (pattern.source.includes('k')) {
+        amount = parseFloat(match[1].replace(',', '.')) * 1000;
+      } else if (pattern.source.includes('conto|pila|paus|reais')) {
+        amount = parseFloat(match[1].replace(',', '.'));
+      } else {
+        amount = parseFloat(match[1].replace(/\./g, '').replace(',', '.'));
+      }
+      nameText = cleanText.replace(match[0], ' ').trim();
+      break;
+    }
+  }
+
+  if (!amount || amount <= 0) return null;
+
+  // Limpa o nome (remove preposições soltas)
+  const name = nameText
+    .replace(/^\s*(de|da|do|das|dos|no|na|em|e|a|o|as|os)\s+/gi, '')
+    .replace(/\s+(de|da|do|das|dos|no|na|em|e|a|o|as|os)\s+/gi, ' ')
+    .replace(/[,.\s]+/g, ' ')
+    .trim();
+
+  if (name.length < 2) return null;
+
+  return {
+    name: capitalizeFirst(name),
+    amount,
+    day: Math.min(Math.max(day, 1), 31),
+  };
+}
+
+/**
+ * Parseia entrada do usuário para editar conta recorrente
+ * Ex: "cartão nubank 1800" -> { name: "cartão nubank", amount: 1800 }
+ */
+function parseRecurringBillUpdate(text: string): { name: string; amount?: number; day?: number } | null {
+  // Tenta extrair "dia X"
+  const dayMatch = text.match(/dia\s+(\d{1,2})/i);
+  const day = dayMatch ? parseInt(dayMatch[1]) : undefined;
+
+  // Remove "dia X" do texto
+  const cleanText = dayMatch ? text.replace(dayMatch[0], ' ').trim() : text;
+
+  // Tenta extrair valor
+  const amountPatterns = [
+    /R\$\s*(\d{1,6}(?:\.\d{3})*(?:,\d{1,2})?)/i,
+    /(\d+(?:[.,]\d+)?)\s*k\b/i,
+    /(\d+(?:[.,]\d+)?)\s*(?:conto|pila|paus|reais)\b/i,
+    /(\d{1,6}(?:\.\d{3})*,\d{1,2})\b/,
+    /(\d{2,6})\b/,
+  ];
+
+  let amount: number | undefined = undefined;
+  let nameText = cleanText;
+
+  for (const pattern of amountPatterns) {
+    const match = cleanText.match(pattern);
+    if (match) {
+      if (pattern.source.includes('k')) {
+        amount = parseFloat(match[1].replace(',', '.')) * 1000;
+      } else if (pattern.source.includes('conto|pila|paus|reais')) {
+        amount = parseFloat(match[1].replace(',', '.'));
+      } else {
+        amount = parseFloat(match[1].replace(/\./g, '').replace(',', '.'));
+      }
+      nameText = cleanText.replace(match[0], ' ').trim();
+      break;
+    }
+  }
+
+  // Limpa o nome
+  const name = nameText
+    .replace(/^\s*(de|da|do|das|dos|no|na|em|e|a|o|as|os)\s+/gi, '')
+    .replace(/\s+(de|da|do|das|dos|no|na|em|e|a|o|as|os)\s+/gi, ' ')
+    .replace(/[,.\s]+/g, ' ')
+    .trim();
+
+  if (name.length < 2) return null;
+
+  return {
+    name: capitalizeFirst(name),
+    amount,
+    day,
+  };
 }
 
 /**
@@ -179,6 +367,11 @@ export function executeCommand(
   deleteCategory: (id: string) => Promise<void>,
   generateSummary: () => string,
   generateAnalysis: () => string,
+  addRecurringBill?: (bill: Omit<RecurringBill, 'id'>) => Promise<RecurringBill>,
+  updateRecurringBill?: (bill: RecurringBill) => Promise<RecurringBill>,
+  deleteRecurringBill?: (id: string) => Promise<void>,
+  generateRecurringTransactions?: () => Promise<unknown[]>,
+  recurringBills?: RecurringBill[],
 ): Promise<string> {
   switch (command.type) {
     case 'create_category': {
@@ -234,6 +427,128 @@ export function executeCommand(
       return Promise.resolve(generateAnalysis());
     }
 
+    case 'create_recurring': {
+      if (!addRecurringBill || !categories.length) {
+        return Promise.resolve('❌ Não foi possível criar conta recorrente. Verifique se há categorias disponíveis.');
+      }
+
+      // Encontra a categoria (usa a padrão "Outros" ou a primeira disponível)
+      const categoryId = command.categoryId || 
+        categories.find(c => c.name.toLowerCase() === 'outros')?.id || 
+        categories[0]?.id;
+
+      if (!categoryId) {
+        return Promise.resolve('❌ Nenhuma categoria encontrada. Crie uma com "criar categoria [nome]".');
+      }
+
+      return addRecurringBill({
+        name: command.name,
+        amount: command.amount,
+        type: 'expense',
+        dayOfMonth: command.day,
+        categoryId,
+        active: true,
+      }).then(() => {
+        return `✅ Conta recorrente "${command.name}" criada!\n💰 R$ ${command.amount.toFixed(2).replace('.', ',')}\n📅 Dia ${command.day} de cada mês`;
+      }).catch((err: unknown) => {
+        const msg = err instanceof Error ? err.message : 'desconhecido';
+        return `❌ Erro ao criar conta recorrente: ${msg}`;
+      });
+    }
+
+    case 'list_recurring': {
+      if (!recurringBills || recurringBills.length === 0) {
+        return Promise.resolve('Nenhuma conta recorrente cadastrada.\n\nCrie uma com:\n• "conta recorrente [nome] [valor] dia [dia]"');
+      }
+
+      const sortedBills = [...recurringBills]
+        .filter(b => b.active)
+        .sort((a, b) => a.dayOfMonth - b.dayOfMonth);
+
+      if (sortedBills.length === 0) {
+        return Promise.resolve('Todas as contas recorrentes estão desativadas.');
+      }
+
+      const list = sortedBills.map(b => {
+        const typeLabel = b.type === 'income' ? '📈' : '📉';
+        return `• ${typeLabel} ${b.name}: R$ ${b.amount.toFixed(2).replace('.', ',')} - dia ${b.dayOfMonth}`;
+      }).join('\n');
+
+      return Promise.resolve(`📋 Contas recorrentes ativas:\n\n${list}`);
+    }
+
+    case 'update_recurring': {
+      if (!updateRecurringBill || !recurringBills) {
+        return Promise.resolve('❌ Função de atualização não disponível.');
+      }
+
+      const billToUpdate = recurringBills.find(
+        b => b.name.toLowerCase().includes(command.name.toLowerCase())
+      );
+
+      if (!billToUpdate) {
+        return Promise.resolve(`❌ Conta recorrente "${command.name}" não encontrada.\n\nUse "contas recorrentes" para ver as existentes.`);
+      }
+
+      const updatedBill = {
+        ...billToUpdate,
+        ...(command.amount !== undefined && { amount: command.amount }),
+        ...(command.day !== undefined && { dayOfMonth: command.day }),
+      };
+
+      return updateRecurringBill(updatedBill).then(() => {
+        const changes: string[] = [];
+        if (command.amount !== undefined) changes.push(`💰 Valor: R$ ${command.amount.toFixed(2).replace('.', ',')}`);
+        if (command.day !== undefined) changes.push(`📅 Dia: ${command.day}`);
+        return `✅ Conta "${billToUpdate.name}" atualizada!\n${changes.join('\n')}`;
+      }).catch((err: unknown) => {
+        const msg = err instanceof Error ? err.message : 'desconhecido';
+        return `❌ Erro ao atualizar: ${msg}`;
+      });
+    }
+
+    case 'delete_recurring': {
+      if (!deleteRecurringBill || !recurringBills) {
+        return Promise.resolve('❌ Função de exclusão não disponível.');
+      }
+
+      const billToDelete = recurringBills.find(
+        b => b.name.toLowerCase().includes(command.name.toLowerCase())
+      );
+
+      if (!billToDelete) {
+        return Promise.resolve(`❌ Conta recorrente "${command.name}" não encontrada.`);
+      }
+
+      return deleteRecurringBill(billToDelete.id).then(() => {
+        return `🗑️ Conta recorrente "${billToDelete.name}" removida.`;
+      }).catch((err: unknown) => {
+        const msg = err instanceof Error ? err.message : 'desconhecido';
+        return `❌ Erro ao remover: ${msg}`;
+      });
+    }
+
+    case 'generate_bills': {
+      if (!generateRecurringTransactions) {
+        return Promise.resolve('❌ Função de geração não disponível.');
+      }
+
+      return generateRecurringTransactions().then((newTransactions: unknown[]) => {
+        const txArray = newTransactions as Array<{ description: string; amount: number; type: string }>;
+        if (txArray.length === 0) {
+          return '✅ Nenhuma transação para gerar. Todas as contas já foram processadas este mês.';
+        }
+        const list = txArray.map(t => {
+          const typeLabel = t.type === 'income' ? '📈' : '📉';
+          return `• ${typeLabel} ${t.description}: R$ ${t.amount.toFixed(2).replace('.', ',')}`;
+        }).join('\n');
+        return `✅ ${txArray.length} transação(ões) criada(s):\n\n${list}`;
+      }).catch((err: unknown) => {
+        const msg = err instanceof Error ? err.message : 'desconhecido';
+        return `❌ Erro ao gerar transações: ${msg}`;
+      });
+    }
+
     case 'help': {
       return Promise.resolve(
         `🤖 Comandos disponíveis:\n\n` +
@@ -244,6 +559,12 @@ export function executeCommand(
         `• "criar categoria [nome]" — nova categoria\n` +
         `• "categorias" — listar todas\n` +
         `• "excluir categoria [nome]" — remover\n\n` +
+        `📅 Contas Recorrentes:\n` +
+        `• "conta recorrente [nome] [valor] dia [dia]" — criar\n` +
+        `• "contas recorrentes" — listar todas\n` +
+        `• "editar conta [nome] [novo valor]" — atualizar\n` +
+        `• "excluir conta [nome]" — remover\n` +
+        `• "gerar contas" — criar transações do mês\n\n` +
         `📊 Análise:\n` +
         `• "resumo" — resumo do mês\n` +
         `• "análise" — análise completa\n` +

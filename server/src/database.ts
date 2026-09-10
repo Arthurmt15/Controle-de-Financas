@@ -98,6 +98,23 @@ export async function createTables(): Promise<void> {
       );
     `);
 
+    // Tabela de contas recorrentes (geram transações todo mês)
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS recurring_bills (
+        id VARCHAR(255) PRIMARY KEY,
+        user_id VARCHAR(255) NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        name VARCHAR(255) NOT NULL,
+        amount DECIMAL(12, 2) NOT NULL,
+        type VARCHAR(10) NOT NULL CHECK (type IN ('income', 'expense')),
+        day_of_month INTEGER NOT NULL CHECK (day_of_month BETWEEN 1 AND 31),
+        category_id VARCHAR(255) NOT NULL REFERENCES categories(id) ON DELETE CASCADE,
+        active BOOLEAN DEFAULT true,
+        notes TEXT,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      );
+    `);
+
     // Índices para melhor performance nas consultas
     await client.query(`
       CREATE INDEX IF NOT EXISTS idx_transactions_user_id ON transactions(user_id);
@@ -106,6 +123,8 @@ export async function createTables(): Promise<void> {
       CREATE INDEX IF NOT EXISTS idx_categories_user_id ON categories(user_id);
       CREATE INDEX IF NOT EXISTS idx_budgets_user_id ON budgets(user_id);
       CREATE INDEX IF NOT EXISTS idx_budgets_month ON budgets(month);
+      CREATE INDEX IF NOT EXISTS idx_recurring_bills_user_id ON recurring_bills(user_id);
+      CREATE INDEX IF NOT EXISTS idx_recurring_bills_active ON recurring_bills(active);
     `);
 
     console.log('✅ Tabelas criadas/verificadas com sucesso');

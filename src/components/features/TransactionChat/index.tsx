@@ -41,7 +41,18 @@ function renderMarkdown(text: string): string {
  * Componente de chat rápido com IA
  */
 const TransactionChat: React.FC = () => {
-  const { transactions, addTransaction, addCategory, deleteCategory, categories } = useTransactions();
+  const { 
+    transactions, 
+    addTransaction, 
+    addCategory, 
+    deleteCategory, 
+    categories,
+    recurringBills,
+    addRecurringBill,
+    updateRecurringBill,
+    deleteRecurringBill,
+    generateRecurringTransactions,
+  } = useTransactions();
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [inputValue, setInputValue] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
@@ -98,11 +109,15 @@ const TransactionChat: React.FC = () => {
           '📝 Para adicionar transações:\n' +
           '• "Mercado ontem 150,50"\n' +
           '• "Recebi 4k de salário"\n\n' +
+          '📅 Para contas recorrentes:\n' +
+          '• "conta recorrente cartão nubank 1500 dia 10"\n' +
+          '• "contas recorrentes" — listar todas\n' +
+          '• "gerar contas" — criar transações do mês\n\n' +
+          '📂 Para criar categorias:\n' +
+          '• "criar categoria [nome]"\n\n' +
           '📊 Para ver análises:\n' +
           '• "Como estão meus gastos?"\n' +
           '• "Posso viajar este mês?"\n\n' +
-          '📂 Para criar categorias:\n' +
-          '• "criar categoria [nome]"\n\n' +
           '❓ Pergunte qualquer coisa sobre suas finanças!',
         isUser: false,
         timestamp: new Date(),
@@ -160,6 +175,11 @@ const TransactionChat: React.FC = () => {
         deleteCategory,
         () => generateSummary(transactions, categories),
         () => generateAnalysis(transactions, categories),
+        addRecurringBill,
+        updateRecurringBill,
+        deleteRecurringBill,
+        generateRecurringTransactions,
+        recurringBills,
       );
       addMessage(response, false);
       setIsProcessing(false);

@@ -7,13 +7,14 @@
 import React, { createContext, useContext, useReducer, useCallback, useMemo, useEffect, useRef } from 'react';
 import { useLocalStorage } from '../hooks/useLocalStorage';
 import { useAuth } from './AuthContext';
-import { transactionService, categoryService } from '../services/api';
+import { transactionService, categoryService, recurringBillService } from '../services/api';
 import { transactionReducer } from '../reducers/transactionReducer';
 import { filterTransactions } from '../utils/transactionFilters';
 import { calculateMetrics } from '../utils/transactionMetrics';
 import type {
   Transaction,
   Category,
+  RecurringBill,
   TransactionFilters,
   TransactionState,
 } from '../types';
@@ -22,6 +23,7 @@ import type {
 const initialState: TransactionState = {
   transactions: [],
   categories: [],
+  recurringBills: [],
   filters: {
     startDate: null,
     endDate: null,
@@ -44,6 +46,10 @@ interface TransactionsContextValue extends TransactionState {
   deleteTransaction: (transactionId: string) => Promise<void>;
   addCategory: (category: Omit<Category, 'id'>) => Promise<Category>;
   deleteCategory: (categoryId: string) => Promise<void>;
+  addRecurringBill: (bill: Omit<RecurringBill, 'id'>) => Promise<RecurringBill>;
+  updateRecurringBill: (bill: RecurringBill) => Promise<RecurringBill>;
+  deleteRecurringBill: (billId: string) => Promise<void>;
+  generateRecurringTransactions: () => Promise<Transaction[]>;
   setFilters: (filters: Partial<TransactionFilters>) => void;
   clearFilters: () => void;
 }
@@ -100,14 +106,16 @@ export function TransactionsProvider({ children }: { children: React.ReactNode }
     const loadData = async () => {
       setLoading(true);
       try {
-        const [transactions, categories] = await Promise.all([
+        const [transactions, categories, recurringBills] = await Promise.all([
           transactionService.getAll(userId),
           categoryService.getAll(userId),
+          recurringBillService.getAll(userId),
         ]);
 
         if (!cancelled) {
           dispatch({ type: 'SET_TRANSACTIONS', payload: transactions });
           dispatch({ type: 'SET_CATEGORIES', payload: categories });
+          dispatch({ type: 'SET_RECURRING_BILLS', payload: recurringBills });
 
           if (categories.length === 0) {
             dispatch({ type: 'SET_ERROR', payload: 'Nenhuma categoria encontrada' });
@@ -262,6 +270,107 @@ export function TransactionsProvider({ children }: { children: React.ReactNode }
   );
 
   /**
+   * Adiciona uma nova conta recorrente via API
+   */
+  const addRecurringBill = useCallback(
+    async (bill: Omit<RecurringBill, 'id'>) => {
+      setLoading(true);
+      try {
+        const newBill = await recurringBillService.create(bill, userId);
+        dispatch({ type: 'ADD_RECURRING_BILL', payload: newBill });
+        return newBill;
+      } catch (error) {
+        if (error instanceof Error && 
+            (error.message.includes('Sessão expirada') || error.message.includes('Faça login'))) {
+          logout();
+          throw error;
+        }
+        dispatch({ type: 'SET_ERROR', payload: 'Erro ao salvar conta recorrente' });
+        throw error;
+      } finally {
+        setLoading(false);
+      }
+    },
+    [userId, setLoading, logout]
+  );
+
+  /**
+   * Atualiza uma conta recorrente existente via API
+   */
+  const updateRecurringBill = useCallback(
+    async (bill: RecurringBill) => {
+      setLoading(true);
+      try {
+        const updated = await recurringBillService.update(bill);
+        dispatch({ type: 'UPDATE_RECURRING_BILL', payload: updated });
+        return updated;
+      } catch (error) {
+        if (error instanceof Error && 
+            (error.message.includes('Sessão expirada') || error.message.includes('Faça login'))) {
+          logout();
+          throw error;
+        }
+        dispatch({ type: 'SET_ERROR', payload: 'Erro ao atualizar conta recorrente' });
+        throw error;
+      } finally {
+        setLoading(false);
+      }
+    },
+    [setLoading, logout]
+  );
+
+  /**
+   * Remove uma conta recorrente via API
+   */
+  const deleteRecurringBill = useCallback(
+    async (billId: string) => {
+      setLoading(true);
+      try {
+        await recurringBillService.delete(billId);
+        dispatch({ type: 'DELETE_RECURRING_BILL', payload: billId });
+      } catch (error) {
+        if (error instanceof Error && 
+            (error.message.includes('Sessão expirada') || error.message.includes('Faça login'))) {
+          logout();
+          throw error;
+        }
+        dispatch({ type: 'SET_ERROR', payload: 'Erro ao remover conta recorrente' });
+        throw error;
+      } finally {
+        setLoading(false);
+      }
+    },
+    [setLoading, logout]
+  );
+
+  /**
+   * Gera transações automáticas para contas recorrentes do mês
+   */
+  const generateRecurringTransactions = useCallback(
+    async () => {
+      setLoading(true);
+      try {
+        const newTransactions = await recurringBillService.generate(userId);
+        for (const tx of newTransactions) {
+          dispatch({ type: 'ADD_TRANSACTION', payload: tx });
+        }
+        return newTransactions;
+      } catch (error) {
+        if (error instanceof Error && 
+            (error.message.includes('Sessão expirada') || error.message.includes('Faça login'))) {
+          logout();
+          throw error;
+        }
+        dispatch({ type: 'SET_ERROR', payload: 'Erro ao gerar transações automáticas' });
+        throw error;
+      } finally {
+        setLoading(false);
+      }
+    },
+    [userId, setLoading, logout]
+  );
+
+  /**
    * Atualiza os filtros de transação
    */
   const setFilters = useCallback(
@@ -297,6 +406,7 @@ export function TransactionsProvider({ children }: { children: React.ReactNode }
     () => ({
       transactions: state.transactions,
       categories: state.categories,
+      recurringBills: state.recurringBills,
       filters: state.filters,
       isLoading: state.isLoading,
       error: state.error,
@@ -307,15 +417,22 @@ export function TransactionsProvider({ children }: { children: React.ReactNode }
       deleteTransaction,
       addCategory,
       deleteCategory,
+      addRecurringBill,
+      updateRecurringBill,
+      deleteRecurringBill,
+      generateRecurringTransactions,
       setFilters,
       clearFilters,
     }),
     [
-      state.transactions, state.categories, state.filters,
+      state.transactions, state.categories, state.recurringBills, state.filters,
       state.isLoading, state.error,
       filteredTransactions, metrics,
       addTransaction, updateTransaction, deleteTransaction,
-      addCategory, deleteCategory, setFilters, clearFilters,
+      addCategory, deleteCategory,
+      addRecurringBill, updateRecurringBill, deleteRecurringBill,
+      generateRecurringTransactions,
+      setFilters, clearFilters,
     ]
   );
 

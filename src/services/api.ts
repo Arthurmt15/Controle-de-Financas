@@ -4,7 +4,7 @@
  * Substitui o uso de localStorage por chamadas HTTP à API.
  */
 
-import type { Transaction, Category } from '../types';
+import type { Transaction, Category, RecurringBill } from '../types';
 import type { Budget } from '../types/dashboard';
 
 /** URL base da API (configurada via variável de ambiente) */
@@ -448,5 +448,129 @@ export const budgetService = {
    */
   async delete(id: string) {
     await apiRequest(`/budgets/${id}`, { method: 'DELETE' });
+  },
+};
+
+/**
+ * Interface de row do banco para conta recorrente
+ */
+interface RecurringBillRow {
+  id: string;
+  name: string;
+  amount: number | string;
+  type: 'income' | 'expense';
+  day_of_month: number;
+  category_id: string;
+  active: boolean;
+  notes: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+/**
+ * Mapeia row do PostgreSQL para RecurringBill
+ * @param row - Row do banco de dados
+ * @returns RecurringBill mapeada
+ */
+function mapRecurringBill(row: RecurringBillRow): RecurringBill {
+  return {
+    id: row.id,
+    name: row.name,
+    amount: Number(row.amount),
+    type: row.type,
+    dayOfMonth: row.day_of_month,
+    categoryId: row.category_id,
+    active: row.active,
+    notes: row.notes || undefined,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
+  };
+}
+
+/**
+ * Serviço de contas recorrentes
+ */
+export const recurringBillService = {
+  /**
+   * Lista contas recorrentes do usuário
+   * @param userId - ID do usuário (legado)
+   * @returns Lista de contas recorrentes
+   */
+  async getAll(userId: string) {
+    const response = await apiRequest<ApiResponse<RecurringBillRow[]>>(
+      '/recurring-bills'
+    );
+    return response.data.map(mapRecurringBill);
+  },
+
+  /**
+   * Cria uma nova conta recorrente
+   * @param bill - Dados da conta recorrente (sem ID)
+   * @param userId - ID do usuário (legado)
+   * @returns Conta recorrente criada
+   */
+  async create(bill: Omit<RecurringBill, 'id'>, userId: string) {
+    const response = await apiRequest<ApiResponse<RecurringBillRow>>(
+      '/recurring-bills',
+      {
+        method: 'POST',
+        body: JSON.stringify({
+          name: bill.name,
+          amount: bill.amount,
+          type: bill.type,
+          dayOfMonth: bill.dayOfMonth,
+          categoryId: bill.categoryId,
+          notes: bill.notes,
+        }),
+      }
+    );
+    return mapRecurringBill(response.data);
+  },
+
+  /**
+   * Atualiza uma conta recorrente existente
+   * @param bill - Conta recorrente completa com ID
+   * @returns Conta recorrente atualizada
+   */
+  async update(bill: RecurringBill) {
+    const response = await apiRequest<ApiResponse<RecurringBillRow>>(
+      `/recurring-bills/${bill.id}`,
+      {
+        method: 'PUT',
+        body: JSON.stringify({
+          name: bill.name,
+          amount: bill.amount,
+          type: bill.type,
+          dayOfMonth: bill.dayOfMonth,
+          categoryId: bill.categoryId,
+          active: bill.active,
+          notes: bill.notes,
+        }),
+      }
+    );
+    return mapRecurringBill(response.data);
+  },
+
+  /**
+   * Remove uma conta recorrente pelo ID
+   * @param id - ID da conta recorrente
+   */
+  async delete(id: string) {
+    await apiRequest(`/recurring-bills/${id}`, { method: 'DELETE' });
+  },
+
+  /**
+   * Gera transações automáticas para contas recorrentes do mês
+   * @param userId - ID do usuário (legado)
+   * @returns Lista de transações criadas
+   */
+  async generate(userId: string) {
+    const response = await apiRequest<ApiResponse<TransactionRow[]>>(
+      '/recurring-bills/generate',
+      {
+        method: 'POST',
+      }
+    );
+    return response.data.map(mapTransaction);
   },
 };

@@ -428,8 +428,9 @@ export function getExampleMessages(): string[] {
   return [
     'Mercado ontem 150,50',
     'Entrada 4k salário',
+    'conta recorrente cartão 1500 dia 10',
+    'contas recorrentes',
     'resumo',
-    'análise',
     'ajuda',
   ];
 }

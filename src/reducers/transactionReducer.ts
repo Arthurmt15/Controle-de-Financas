@@ -113,6 +113,50 @@ export function transactionReducer(
       };
 
     // ============================================
+    // AÇÕES DE CONTAS RECORRENTES
+    // ============================================
+
+    /**
+     * Substitui todas as contas recorrentes
+     */
+    case 'SET_RECURRING_BILLS':
+      return {
+        ...state,
+        recurringBills: action.payload,
+      };
+
+    /**
+     * Adiciona uma nova conta recorrente
+     */
+    case 'ADD_RECURRING_BILL':
+      return {
+        ...state,
+        recurringBills: [...state.recurringBills, action.payload],
+      };
+
+    /**
+     * Atualiza uma conta recorrente existente
+     */
+    case 'UPDATE_RECURRING_BILL':
+      return {
+        ...state,
+        recurringBills: state.recurringBills.map((bill) =>
+          bill.id === action.payload.id ? action.payload : bill
+        ),
+      };
+
+    /**
+     * Remove uma conta recorrente pelo ID
+     */
+    case 'DELETE_RECURRING_BILL':
+      return {
+        ...state,
+        recurringBills: state.recurringBills.filter(
+          (bill) => bill.id !== action.payload
+        ),
+      };
+
+    // ============================================
     // AÇÕES DE FILTROS
     // ============================================
 

@@ -86,6 +86,33 @@ export interface AuthState {
 }
 
 /**
+ * Interface que representa uma conta recorrente (conta mensal)
+ * @interface RecurringBill
+ */
+export interface RecurringBill {
+  /** Identificador único da conta recorrente */
+  id: string;
+  /** Nome da conta recorrente (ex: "Cartão Nubank", "Aluguel") */
+  name: string;
+  /** Valor da conta recorrente */
+  amount: number;
+  /** Tipo: 'income' para entrada recorrente, 'expense' para saída recorrente */
+  type: 'income' | 'expense';
+  /** Dia do mês que a conta vence (1-31) */
+  dayOfMonth: number;
+  /** ID da categoria associada */
+  categoryId: string;
+  /** Se a conta está ativa e deve gerar transações */
+  active: boolean;
+  /** Observações adicionais (opcional) */
+  notes?: string;
+  /** Data de criação da conta recorrente */
+  createdAt?: string;
+  /** Data de atualização da conta recorrente */
+  updatedAt?: string;
+}
+
+/**
  * Interface que representa o estado global das transações
  * @interface TransactionState
  */
@@ -94,6 +121,8 @@ export interface TransactionState {
   transactions: Transaction[];
   /** Lista de categorias disponíveis */
   categories: Category[];
+  /** Lista de contas recorrentes */
+  recurringBills: RecurringBill[];
   /** Filtros aplicados */
   filters: TransactionFilters;
   /** Indica se está carregando */
@@ -136,6 +165,10 @@ export type TransactionAction =
   | { type: 'ADD_CATEGORY'; payload: Category }
   | { type: 'UPDATE_CATEGORY'; payload: Category }
   | { type: 'DELETE_CATEGORY'; payload: string }
+  | { type: 'SET_RECURRING_BILLS'; payload: RecurringBill[] }
+  | { type: 'ADD_RECURRING_BILL'; payload: RecurringBill }
+  | { type: 'UPDATE_RECURRING_BILL'; payload: RecurringBill }
+  | { type: 'DELETE_RECURRING_BILL'; payload: string }
   | { type: 'SET_FILTERS'; payload: Partial<TransactionFilters> }
   | { type: 'CLEAR_FILTERS' }
   | { type: 'SET_LOADING'; payload: boolean }
