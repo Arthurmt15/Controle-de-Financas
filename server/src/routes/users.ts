@@ -88,6 +88,39 @@ router.post('/', async (req, res: Response) => {
 });
 
 /**
+ * GET /api/users/me
+ * Retorna os dados do usuário autenticado (via JWT)
+ */
+router.get('/me', authenticate, async (req: AuthRequest, res: Response) => {
+  try {
+    const userId = req.userId;
+
+    const result = await pool.query('SELECT * FROM users WHERE id = $1', [userId]);
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({
+        success: false,
+        error: 'Usuário não encontrado',
+      });
+    }
+
+    const user = result.rows[0];
+    res.json({
+      success: true,
+      data: {
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        avatar: user.avatar,
+      },
+    });
+  } catch (error) {
+    console.error('Erro ao buscar usuário autenticado:', error);
+    res.status(500).json({ success: false, error: 'Erro interno do servidor' });
+  }
+});
+
+/**
  * GET /api/users/:id
  * Busca um usuário autenticado pelo ID
  */

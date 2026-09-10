@@ -4,6 +4,8 @@ export const Container = styled.div`
   display: flex;
   flex-direction: column;
   gap: 24px;
+  min-width: 0;
+  overflow: hidden;
 `;
 
 export const Header = styled.div`
@@ -67,6 +69,11 @@ export const SummaryValue = styled.div`
   font-size: 22px;
   font-weight: 700;
   color: ${({ theme }) => theme.colors.text};
+  word-break: break-word;
+
+  @media (max-width: 640px) {
+    font-size: 18px;
+  }
 `;
 
 export const SummarySubtext = styled.div<{ $positive?: boolean }>`
@@ -80,6 +87,12 @@ export const Section = styled.div`
   border-radius: ${({ theme }) => theme.borderRadius};
   padding: 24px;
   box-shadow: ${({ theme }) => theme.shadows.sm};
+  min-width: 0;
+  overflow: hidden;
+
+  @media (max-width: 640px) {
+    padding: 16px;
+  }
 `;
 
 export const SectionTitle = styled.h2`
@@ -111,6 +124,7 @@ export const ContentLayout = styled.div`
   grid-template-columns: 1fr 380px;
   gap: 24px;
   align-items: start;
+  min-width: 0;
 
   @media (max-width: 1024px) {
     grid-template-columns: 1fr;
@@ -128,6 +142,7 @@ export const ChartsColumn = styled.div`
   flex-direction: column;
   gap: 24px;
   min-width: 0;
+  overflow: hidden;
 `;
 
 /** Coluna do chat (sticky no desktop) */

@@ -13,28 +13,64 @@ const API_BASE = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
 /** Chave do localStorage para o token JWT */
 const TOKEN_KEY = 'financas_token';
 
-/** Token JWT para autenticação (restaurado do localStorage) */
-let authToken: string | null = localStorage.getItem(TOKEN_KEY);
+/** Chave do cookie para o token JWT (backup) */
+const TOKEN_COOKIE_KEY = 'financas_token';
+
+/**
+ * Define um cookie com valor e expiração em dias
+ */
+function setCookie(name: string, value: string, days: number): void {
+  const expires = new Date(Date.now() + days * 864e5).toUTCString();
+  document.cookie = `${name}=${encodeURIComponent(value)}; expires=${expires}; path=/; SameSite=Lax`;
+}
+
+/**
+ * Lê o valor de um cookie pelo nome
+ */
+function getCookie(name: string): string | null {
+  const match = document.cookie.match(new RegExp('(^| )' + name + '=([^;]+)'));
+  return match ? decodeURIComponent(match[2]) : null;
+}
+
+/**
+ * Remove um cookie pelo nome
+ */
+function removeCookie(name: string): void {
+  document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/`;
+}
+
+/** Token JWT para autenticação (restaurado do localStorage ou cookie) */
+let authToken: string | null = localStorage.getItem(TOKEN_KEY) || getCookie(TOKEN_COOKIE_KEY);
 
 /**
  * Define o token de autenticação para requisições
+ * Salva em localStorage E em cookie (backup para quando cache é limpo)
  * @param token - JWT token
  */
 export function setAuthToken(token: string | null): void {
   authToken = token;
   if (token) {
     localStorage.setItem(TOKEN_KEY, token);
+    setCookie(TOKEN_COOKIE_KEY, token, 30);
   } else {
     localStorage.removeItem(TOKEN_KEY);
+    removeCookie(TOKEN_COOKIE_KEY);
   }
 }
 
 /**
- * Verifica se existe um token salvo no localStorage
+ * Verifica se existe um token salvo no localStorage ou cookie
  * @returns true se existe token persistido
  */
 export function hasStoredToken(): boolean {
-  return !!localStorage.getItem(TOKEN_KEY);
+  return !!(localStorage.getItem(TOKEN_KEY) || getCookie(TOKEN_COOKIE_KEY));
+}
+
+/**
+ * Recupera o token do cookie (usado quando localStorage é limpo)
+ */
+export function getTokenFromCookie(): string | null {
+  return getCookie(TOKEN_COOKIE_KEY);
 }
 
 /**
@@ -55,8 +91,10 @@ async function apiRequest<T>(
     ...options.headers as Record<string, string>,
   };
 
-  if (authToken) {
-    headers['Authorization'] = `Bearer ${authToken}`;
+  // Usa token em memória, ou do localStorage, ou do cookie
+  const token = authToken || localStorage.getItem(TOKEN_KEY) || getCookie(TOKEN_COOKIE_KEY);
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
   }
 
   const config: RequestInit = {
@@ -256,6 +294,15 @@ export const userService = {
       }
     );
     setAuthToken(response.token);
+    return response.data;
+  },
+
+  /**
+   * Busca o usuário autenticado atual via JWT
+   * Usado para restaurar sessão quando localStorage é limpo mas cookie existe
+   */
+  async getCurrentUser() {
+    const response = await apiRequest<ApiResponse<UserData>>('/users/me');
     return response.data;
   },
 };

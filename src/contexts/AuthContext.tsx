@@ -7,7 +7,7 @@
 
 import React, { createContext, useContext, useCallback, useEffect, useReducer } from 'react';
 import { useLocalStorage } from '../hooks/useLocalStorage';
-import { userService, setAuthToken, hasStoredToken } from '../services/api';
+import { userService, setAuthToken, hasStoredToken, getTokenFromCookie } from '../services/api';
 import type { User, AuthState, AuthAction } from '../types';
 
 /**
@@ -105,8 +105,32 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         return;
       }
       dispatch({ type: 'LOGIN_SUCCESS', payload: storedUser });
+    } else {
+      // localStorage foi limpo, mas pode haver um token no cookie (backup)
+      const cookieToken = getTokenFromCookie();
+      if (cookieToken) {
+        // Restaura o token e busca o usuário na API
+        setAuthToken(cookieToken);
+        dispatch({ type: 'LOGIN_START' });
+        userService.getCurrentUser()
+          .then((userData) => {
+            const user: User = {
+              id: userData.id,
+              name: userData.name,
+              email: userData.email,
+              avatar: userData.avatar ?? undefined,
+            };
+            dispatch({ type: 'LOGIN_SUCCESS', payload: user });
+            setStoredUser(user);
+          })
+          .catch(() => {
+            // Token inválido ou expirado, limpa tudo
+            setAuthToken(null);
+            dispatch({ type: 'LOGOUT' });
+          });
+      }
     }
-  }, [storedUser, dispatch, removeStoredUser]);
+  }, [storedUser, dispatch, removeStoredUser, setStoredUser]);
 
   /**
    * Realiza o login com Google OAuth

@@ -5,6 +5,12 @@ export const Section = styled.div`
   border-radius: ${({ theme }) => theme.borderRadius};
   padding: 24px;
   box-shadow: ${({ theme }) => theme.shadows.sm};
+  min-width: 0;
+  overflow: hidden;
+
+  @media (max-width: 640px) {
+    padding: 16px;
+  }
 `;
 
 export const SectionTitle = styled.h2`
@@ -88,9 +94,15 @@ export const CategoryBar = styled.div`
   gap: 12px;
   padding: 12px 0;
   border-bottom: 1px solid ${({ theme }) => theme.colors.border};
+  min-width: 0;
 
   &:last-child {
     border-bottom: none;
+  }
+
+  @media (max-width: 640px) {
+    gap: 8px;
+    flex-wrap: wrap;
   }
 `;
 
@@ -98,6 +110,14 @@ export const CategoryName = styled.div`
   font-size: 14px;
   color: ${({ theme }) => theme.colors.text};
   min-width: 120px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+
+  @media (max-width: 640px) {
+    min-width: 0;
+    flex: 1;
+  }
 `;
 
 export const BarContainer = styled.div`
@@ -106,6 +126,13 @@ export const BarContainer = styled.div`
   background-color: ${({ theme }) => theme.colors.border};
   border-radius: 4px;
   overflow: hidden;
+  min-width: 60px;
+
+  @media (max-width: 640px) {
+    min-width: 40px;
+    order: 3;
+    flex-basis: 100%;
+  }
 `;
 
 export const BarFill = styled.div<{ $width: number; $color: string }>`
@@ -122,6 +149,11 @@ export const CategoryValue = styled.div`
   color: ${({ theme }) => theme.colors.text};
   min-width: 100px;
   text-align: right;
+  white-space: nowrap;
+
+  @media (max-width: 640px) {
+    min-width: 0;
+  }
 `;
 
 export const CategoryPercent = styled.div`
@@ -129,6 +161,10 @@ export const CategoryPercent = styled.div`
   color: ${({ theme }) => theme.colors.textSecondary};
   min-width: 50px;
   text-align: right;
+
+  @media (max-width: 640px) {
+    min-width: 40px;
+  }
 `;
 
 export const ComparisonGrid = styled.div`
