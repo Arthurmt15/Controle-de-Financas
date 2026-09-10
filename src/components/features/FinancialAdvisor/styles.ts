@@ -6,14 +6,8 @@ export const Container = styled.div`
   box-shadow: ${({ theme }) => theme.shadows.sm};
   display: flex;
   flex-direction: column;
-  height: 100%;
   min-height: 400px;
-  max-height: 700px;
-
-  @media (max-width: 1024px) {
-    min-height: 350px;
-    max-height: 450px;
-  }
+  overflow: hidden;
 `;
 
 export const Header = styled.div`
@@ -65,7 +59,6 @@ export const Welcome = styled.div`
   text-align: center;
   padding: 24px 16px;
   gap: 12px;
-  flex: 1;
   width: 100%;
 `;
 

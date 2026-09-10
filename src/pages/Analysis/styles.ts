@@ -149,11 +149,8 @@ export const ChartsColumn = styled.div`
 export const ChatColumn = styled.div`
   position: sticky;
   top: 80px;
-  height: calc(100vh - 100px);
 
   @media (max-width: 1024px) {
     position: static;
-    height: auto;
-    max-height: 550px;
   }
 `;
