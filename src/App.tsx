@@ -9,10 +9,21 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { ThemeProvider, useTheme } from './contexts/ThemeContext';
 import { TransactionsProvider } from './contexts/TransactionsContext';
-import { ThemeProvider as StyledThemeProvider } from 'styled-components';
+import { ThemeProvider as StyledThemeProvider, createGlobalStyle } from 'styled-components';
+import styled from 'styled-components';
 import Header from './components/layout/Header';
 import SkipLink from './components/common/SkipLink';
 import GlobalStyle from './Styles/global';
+
+const Main = styled.main`
+  padding: 24px;
+  max-width: 1400px;
+  margin: 0 auto;
+
+  @media (max-width: 640px) {
+    padding: 16px;
+  }
+`;
 
 // Lazy loading das páginas (code splitting)
 const LoginPage = lazy(() => import('./pages/Login'));
@@ -58,9 +69,9 @@ const MainLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => (
   <>
     <SkipLink />
     <Header />
-    <main id="main-content" tabIndex={-1} style={{ padding: '24px', maxWidth: '1400px', margin: '0 auto' }}>
+    <Main id="main-content" tabIndex={-1}>
       {children}
-    </main>
+    </Main>
   </>
 );
 
