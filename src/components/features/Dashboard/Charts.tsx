@@ -96,6 +96,9 @@ const Charts: React.FC = () => {
 
   const hasBarData = monthlyData.some((d) => d.entradas > 0 || d.saidas > 0);
 
+  /** Altura dinâmica do painel de pizza baseada na quantidade de categorias */
+  const piePanelHeight = Math.max(450, 65 + 200 + categoryData.length * 34 + 30);
+
   return (
     <C.ChartsGrid>
       <C.Panel $height="387px">
@@ -134,7 +137,7 @@ const Charts: React.FC = () => {
         </C.Legend>
       </C.Panel>
 
-      <C.Panel $height="450px">
+      <C.Panel $height={`${piePanelHeight}px`}>
         <C.PanelHeader>
           <h2>Despesas por Categoria</h2>
           <C.PanelSelect>
