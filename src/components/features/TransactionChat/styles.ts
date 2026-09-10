@@ -19,7 +19,7 @@ export const ChatContainer = styled.div`
   min-height: 450px;
 
   @media (max-width: 480px) {
-    min-height: 500px;
+    min-height: 70vh;
   }
 `;
 
@@ -35,7 +35,7 @@ export const ChatHeader = styled.div`
   background-color: ${({ theme }) => theme.colors.surface};
 
   @media (max-width: 480px) {
-    padding: 10px 12px;
+    padding: 14px 16px;
   }
 `;
 
@@ -52,7 +52,7 @@ export const ChatTitle = styled.h3`
   gap: 8px;
 
   @media (max-width: 480px) {
-    font-size: 17px;
+    font-size: 18px;
   }
 `;
 
@@ -63,7 +63,7 @@ export const TitleIcon = styled.span`
   font-size: 20px;
 
   @media (max-width: 480px) {
-    font-size: 22px;
+    font-size: 24px;
   }
 `;
 
@@ -82,9 +82,9 @@ export const MessagesArea = styled.div`
   min-height: 200px;
 
   @media (max-width: 480px) {
-    padding: 14px;
+    padding: 16px;
     max-height: none;
-    min-height: 280px;
+    min-height: 350px;
     flex: 1 1 0;
   }
 `;
@@ -118,8 +118,8 @@ export const MessageBubble = styled.div<{ $isUser: boolean }>`
 
   @media (max-width: 480px) {
     max-width: 88%;
-    padding: 10px 14px;
-    font-size: 14px;
+    padding: 12px 16px;
+    font-size: 15px;
   }
 `;
 
@@ -151,8 +151,8 @@ export const TransactionCreated = styled.div`
   border: 1px solid ${({ theme }) => `${theme.colors.success}30`};
 
   @media (max-width: 480px) {
-    padding: 12px 14px;
-    font-size: 14px;
+    padding: 12px 16px;
+    font-size: 15px;
   }
 `;
 
@@ -179,8 +179,8 @@ export const InputContainer = styled.div`
   background-color: ${({ theme }) => theme.colors.surface};
 
   @media (max-width: 480px) {
-    gap: 8px;
-    padding: 12px;
+    gap: 10px;
+    padding: 14px 16px;
   }
 `;
 
@@ -210,7 +210,7 @@ export const MessageInput = styled.input`
   }
 
   @media (max-width: 480px) {
-    padding: 10px 14px;
+    padding: 12px 16px;
     font-size: 16px;
   }
 `;
@@ -231,6 +231,7 @@ export const SendButton = styled.button`
   color: white;
   cursor: pointer;
   transition: all 0.2s ease;
+  flex-shrink: 0;
 
   &:hover:not(:disabled) {
     background-color: ${({ theme }) => theme.colors.primaryDark};
@@ -243,9 +244,9 @@ export const SendButton = styled.button`
   }
 
   @media (max-width: 480px) {
-    width: 42px;
-    height: 42px;
-    min-width: 42px;
+    width: 46px;
+    height: 46px;
+    min-width: 46px;
   }
 `;
 
@@ -276,6 +277,7 @@ export const UploadButton = styled.button`
   color: ${({ theme }) => theme.colors.textSecondary};
   cursor: pointer;
   transition: all 0.2s ease;
+  flex-shrink: 0;
 
   &:hover:not(:disabled) {
     border-color: ${({ theme }) => theme.colors.primary};
@@ -284,9 +286,9 @@ export const UploadButton = styled.button`
   }
 
   @media (max-width: 480px) {
-    width: 42px;
-    height: 42px;
-    min-width: 42px;
+    width: 46px;
+    height: 46px;
+    min-width: 46px;
   }
 `;
 
@@ -310,7 +312,7 @@ export const TipsContainer = styled.div`
   border-top: 1px solid ${({ theme }) => theme.colors.border};
 
   @media (max-width: 480px) {
-    padding: 14px 16px;
+    padding: 16px;
   }
 `;
 
@@ -491,7 +493,7 @@ export const TipsTitle = styled.span`
   margin-bottom: 6px;
 
   @media (max-width: 480px) {
-    font-size: 13px;
+    font-size: 14px;
     margin-bottom: 8px;
   }
 `;
@@ -528,8 +530,8 @@ export const ExampleChip = styled.button`
   }
 
   @media (max-width: 480px) {
-    padding: 10px 16px;
-    font-size: 13px;
+    padding: 12px 18px;
+    font-size: 14px;
   }
 `;
 

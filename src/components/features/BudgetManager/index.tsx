@@ -20,7 +20,7 @@ import type { Budget } from '../../../types';
  */
 const BudgetManager: React.FC = () => {
   const { transactions, categories } = useTransactions();
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
   const userId = user?.id || '';
 
   /** Lista de orçamentos carregados da API */
@@ -39,20 +39,34 @@ const BudgetManager: React.FC = () => {
   useEffect(() => {
     if (!userId) return;
 
+    let cancelled = false;
+
     const loadBudgets = async () => {
       setLoading(true);
       try {
         const data = await budgetService.getAll(userId);
-        setBudgets(data);
+        if (!cancelled) {
+          setBudgets(data);
+        }
       } catch (error) {
-        console.error('Erro ao carregar orçamentos:', error);
+        if (!cancelled) {
+          if (error instanceof Error && 
+              (error.message.includes('Sessão expirada') || error.message.includes('Faça login'))) {
+            logout();
+            return;
+          }
+          console.error('Erro ao carregar orçamentos:', error);
+        }
       } finally {
-        setLoading(false);
+        if (!cancelled) {
+          setLoading(false);
+        }
       }
     };
 
     loadBudgets();
-  }, [userId]);
+    return () => { cancelled = true; };
+  }, [userId, logout]);
 
   /** Orçamentos do mês selecionado */
   const currentBudgets = useMemo(() => {
@@ -91,11 +105,16 @@ const BudgetManager: React.FC = () => {
         const newBudget = await budgetService.create(budget, userId);
         setBudgets((prev) => [...prev, newBudget]);
       } catch (error) {
+        if (error instanceof Error && 
+            (error.message.includes('Sessão expirada') || error.message.includes('Faça login'))) {
+          logout();
+          throw error;
+        }
         console.error('Erro ao criar orçamento:', error);
         throw error;
       }
     },
-    [userId]
+    [userId, logout]
   );
 
   /**
@@ -108,10 +127,15 @@ const BudgetManager: React.FC = () => {
         await budgetService.delete(id);
         setBudgets((prev) => prev.filter((b) => b.id !== id));
       } catch (error) {
+        if (error instanceof Error && 
+            (error.message.includes('Sessão expirada') || error.message.includes('Faça login'))) {
+          logout();
+          throw error;
+        }
         console.error('Erro ao remover orçamento:', error);
       }
     },
-    []
+    [logout]
   );
 
   return (
