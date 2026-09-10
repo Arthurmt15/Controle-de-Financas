@@ -61,9 +61,12 @@ export const Welcome = styled.div`
   display: flex;
   flex-direction: column;
   align-items: center;
+  justify-content: center;
   text-align: center;
   padding: 24px 16px;
   gap: 12px;
+  flex: 1;
+  width: 100%;
 `;
 
 export const WelcomeIcon = styled.span`
