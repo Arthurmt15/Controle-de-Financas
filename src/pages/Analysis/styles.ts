@@ -5,6 +5,8 @@ export const Container = styled.div`
   flex-direction: column;
   gap: 20px;
   width: 100%;
+  max-width: 100%;
+  overflow-x: hidden;
 `;
 
 export const Header = styled.div`
@@ -36,14 +38,10 @@ export const SummaryGrid = styled.div`
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   gap: 16px;
+  width: 100%;
 
   @media (max-width: 1024px) {
     grid-template-columns: repeat(2, 1fr);
-  }
-
-  @media (max-width: 480px) {
-    grid-template-columns: 1fr 1fr;
-    gap: 10px;
   }
 `;
 
@@ -123,25 +121,29 @@ export const SectionDescription = styled.p`
 `;
 
 export const TwoColumns = styled.div`
-  display: grid;
-  grid-template-columns: 1fr 1fr;
+  display: flex;
+  flex-direction: column;
   gap: 20px;
+  width: 100%;
 
-  @media (max-width: 768px) {
-    grid-template-columns: 1fr;
+  @media (min-width: 769px) {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
   }
 `;
 
 export const ContentLayout = styled.div`
-  display: grid;
-  grid-template-columns: 1fr 380px;
-  gap: 24px;
-  align-items: start;
-  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  width: 100%;
 
-  @media (max-width: 1024px) {
-    grid-template-columns: 1fr;
-    gap: 20px;
+  @media (min-width: 1025px) {
+    display: grid;
+    grid-template-columns: 1fr 380px;
+    gap: 24px;
+    align-items: start;
   }
 `;
 
@@ -150,14 +152,14 @@ export const ChartsColumn = styled.div`
   flex-direction: column;
   gap: 20px;
   min-width: 0;
-  overflow: hidden;
+  width: 100%;
 `;
 
 export const ChatColumn = styled.div`
-  position: sticky;
-  top: 80px;
+  width: 100%;
 
-  @media (max-width: 1024px) {
-    position: static;
+  @media (min-width: 1025px) {
+    position: sticky;
+    top: 80px;
   }
 `;

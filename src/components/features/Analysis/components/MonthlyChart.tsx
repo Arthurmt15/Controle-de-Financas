@@ -62,20 +62,22 @@ const MonthlyChart: React.FC<MonthlyChartProps> = ({ transactions }) => {
   }
 
   return (
-    <ResponsiveContainer width="100%" height={300}>
-      <BarChart data={monthlyData}>
-        <CartesianGrid strokeDasharray="3 3" stroke={colors.grid} />
-        <XAxis dataKey="name" stroke={colors.axis} fontSize={12} />
-        <YAxis stroke={colors.axis} fontSize={12} />
-        <Tooltip
-          formatter={(value) => formatCurrency(Number(value))}
-          contentStyle={tooltipStyle}
-        />
-        <Legend />
-        <Bar dataKey="entradas" name="Entradas" fill={colors.success} radius={[4, 4, 0, 0]} />
-        <Bar dataKey="saidas" name="Saídas" fill={colors.error} radius={[4, 4, 0, 0]} />
-      </BarChart>
-    </ResponsiveContainer>
+    <div style={{ width: '100%', minWidth: 0, overflow: 'hidden' }}>
+      <ResponsiveContainer width="100%" height={300}>
+        <BarChart data={monthlyData}>
+          <CartesianGrid strokeDasharray="3 3" stroke={colors.grid} />
+          <XAxis dataKey="name" stroke={colors.axis} fontSize={12} />
+          <YAxis stroke={colors.axis} fontSize={12} />
+          <Tooltip
+            formatter={(value) => formatCurrency(Number(value))}
+            contentStyle={tooltipStyle}
+          />
+          <Legend />
+          <Bar dataKey="entradas" name="Entradas" fill={colors.success} radius={[4, 4, 0, 0]} />
+          <Bar dataKey="saidas" name="Saídas" fill={colors.error} radius={[4, 4, 0, 0]} />
+        </BarChart>
+      </ResponsiveContainer>
+    </div>
   );
 };
 
