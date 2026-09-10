@@ -3,39 +3,41 @@ import styled from 'styled-components';
 export const Section = styled.div`
   background-color: ${({ theme }) => theme.colors.surface};
   border-radius: ${({ theme }) => theme.borderRadius};
-  padding: 24px;
+  padding: 20px;
   box-shadow: ${({ theme }) => theme.shadows.sm};
-  min-width: 0;
-  overflow: hidden;
 
-  @media (max-width: 640px) {
-    padding: 16px;
+  @media (max-width: 480px) {
+    padding: 14px;
   }
 `;
 
 export const SectionTitle = styled.h2`
-  font-size: 18px;
+  font-size: 16px;
   font-weight: 600;
   color: ${({ theme }) => theme.colors.text};
-  margin: 0 0 8px 0;
+  margin: 0 0 6px 0;
+
+  @media (max-width: 480px) {
+    font-size: 15px;
+  }
 `;
 
 export const SectionDescription = styled.p`
   font-size: 13px;
   color: ${({ theme }) => theme.colors.textSecondary};
-  margin: 0 0 20px 0;
+  margin: 0 0 16px 0;
 `;
 
 export const InsightList = styled.div`
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 10px;
 `;
 
 export const InsightCard = styled.div<{ $type: 'warning' | 'tip' | 'info' | 'alert' }>`
   display: flex;
   gap: 12px;
-  padding: 16px;
+  padding: 14px;
   border-radius: ${({ theme }) => theme.borderRadius};
   background-color: ${({ theme, $type }) => {
     switch ($type) {
@@ -55,11 +57,17 @@ export const InsightCard = styled.div<{ $type: 'warning' | 'tip' | 'info' | 'ale
       default: return theme.colors.border;
     }
   }};
+
+  @media (max-width: 480px) {
+    padding: 12px;
+    gap: 10px;
+  }
 `;
 
 export const InsightIcon = styled.div<{ $type: 'warning' | 'tip' | 'info' | 'alert' }>`
   font-size: 20px;
   line-height: 1;
+  flex-shrink: 0;
   color: ${({ theme, $type }) => {
     switch ($type) {
       case 'warning': return theme.colors.warning;
@@ -73,65 +81,61 @@ export const InsightIcon = styled.div<{ $type: 'warning' | 'tip' | 'info' | 'ale
 
 export const InsightContent = styled.div`
   flex: 1;
+  min-width: 0;
 `;
 
 export const InsightTitle = styled.div`
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 600;
   color: ${({ theme }) => theme.colors.text};
-  margin-bottom: 4px;
+  margin-bottom: 2px;
 `;
 
 export const InsightText = styled.div`
-  font-size: 13px;
+  font-size: 12px;
   color: ${({ theme }) => theme.colors.textSecondary};
   line-height: 1.5;
 `;
 
 export const CategoryBar = styled.div`
-  display: flex;
+  display: grid;
+  grid-template-columns: 1fr 2fr auto auto;
   align-items: center;
-  gap: 12px;
-  padding: 12px 0;
+  gap: 10px;
+  padding: 10px 0;
   border-bottom: 1px solid ${({ theme }) => theme.colors.border};
-  min-width: 0;
 
   &:last-child {
     border-bottom: none;
   }
 
-  @media (max-width: 640px) {
-    gap: 8px;
-    flex-wrap: wrap;
+  @media (max-width: 480px) {
+    grid-template-columns: 1fr auto;
+    gap: 6px 8px;
   }
 `;
 
 export const CategoryName = styled.div`
-  font-size: 14px;
+  font-size: 13px;
   color: ${({ theme }) => theme.colors.text};
-  min-width: 120px;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 
-  @media (max-width: 640px) {
-    min-width: 0;
-    flex: 1;
+  @media (max-width: 480px) {
+    grid-column: 1;
   }
 `;
 
 export const BarContainer = styled.div`
-  flex: 1;
-  height: 8px;
+  height: 6px;
   background-color: ${({ theme }) => theme.colors.border};
-  border-radius: 4px;
+  border-radius: 3px;
   overflow: hidden;
-  min-width: 60px;
 
-  @media (max-width: 640px) {
-    min-width: 40px;
-    order: 3;
-    flex-basis: 100%;
+  @media (max-width: 480px) {
+    grid-column: 1;
+    grid-row: 2;
   }
 `;
 
@@ -139,65 +143,70 @@ export const BarFill = styled.div<{ $width: number; $color: string }>`
   width: ${({ $width }) => $width}%;
   height: 100%;
   background-color: ${({ $color }) => $color};
-  border-radius: 4px;
+  border-radius: 3px;
   transition: width 0.3s ease;
 `;
 
 export const CategoryValue = styled.div`
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 600;
   color: ${({ theme }) => theme.colors.text};
-  min-width: 100px;
   text-align: right;
   white-space: nowrap;
 
-  @media (max-width: 640px) {
-    min-width: 0;
+  @media (max-width: 480px) {
+    grid-column: 2;
+    grid-row: 1;
+    font-size: 12px;
   }
 `;
 
 export const CategoryPercent = styled.div`
   font-size: 12px;
   color: ${({ theme }) => theme.colors.textSecondary};
-  min-width: 50px;
   text-align: right;
 
-  @media (max-width: 640px) {
-    min-width: 40px;
+  @media (max-width: 480px) {
+    display: none;
   }
 `;
 
 export const ComparisonGrid = styled.div`
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 24px;
+  gap: 16px;
 
-  @media (max-width: 768px) {
+  @media (max-width: 480px) {
     grid-template-columns: 1fr;
+    gap: 12px;
   }
 `;
 
 export const ComparisonCard = styled.div`
   text-align: center;
-  padding: 16px;
+  padding: 14px;
   border-radius: ${({ theme }) => theme.borderRadius};
   background-color: ${({ theme }) => theme.colors.background};
 `;
 
 export const ComparisonLabel = styled.div`
-  font-size: 13px;
+  font-size: 12px;
   color: ${({ theme }) => theme.colors.textSecondary};
-  margin-bottom: 8px;
+  margin-bottom: 6px;
 `;
 
 export const ComparisonValue = styled.div`
-  font-size: 24px;
+  font-size: 20px;
   font-weight: 700;
   color: ${({ theme }) => theme.colors.text};
+
+  @media (max-width: 480px) {
+    font-size: 18px;
+  }
 `;
 
 export const ComparisonChange = styled.div<{ $positive: boolean }>`
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 600;
   color: ${({ theme, $positive }) => $positive ? theme.colors.success : theme.colors.error};
   margin-top: 4px;
@@ -208,17 +217,17 @@ export const EmptyState = styled.div`
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 48px;
+  padding: 32px 16px;
   color: ${({ theme }) => theme.colors.textSecondary};
   text-align: center;
 
   span {
-    font-size: 40px;
-    margin-bottom: 12px;
+    font-size: 36px;
+    margin-bottom: 10px;
   }
 
   p {
-    font-size: 14px;
+    font-size: 13px;
     margin: 0;
   }
 `;

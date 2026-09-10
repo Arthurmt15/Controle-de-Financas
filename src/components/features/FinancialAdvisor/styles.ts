@@ -6,12 +6,15 @@ export const Container = styled.div`
   box-shadow: ${({ theme }) => theme.shadows.sm};
   display: flex;
   flex-direction: column;
-  min-height: 400px;
-  max-height: 700px;
+  overflow: hidden;
+  height: 700px;
 
   @media (max-width: 1024px) {
-    min-height: 400px;
-    max-height: none;
+    height: 500px;
+  }
+
+  @media (max-width: 480px) {
+    height: 450px;
   }
 `;
 
@@ -22,10 +25,15 @@ export const Header = styled.div`
   gap: 10px;
   padding: 14px 16px;
   border-bottom: 1px solid ${({ theme }) => theme.colors.border};
+  flex-shrink: 0;
+
+  @media (max-width: 480px) {
+    padding: 12px;
+  }
 `;
 
 export const HeaderIcon = styled.span`
-  font-size: 24px;
+  font-size: 22px;
 `;
 
 export const Title = styled.h3`
@@ -33,6 +41,10 @@ export const Title = styled.h3`
   font-weight: 600;
   color: ${({ theme }) => theme.colors.text};
   margin: 0;
+
+  @media (max-width: 480px) {
+    font-size: 14px;
+  }
 `;
 
 export const Subtitle = styled.p`
@@ -51,7 +63,7 @@ export const MessagesArea = styled.div`
   background-color: ${({ theme }) => theme.colors.background};
   min-height: 0;
 
-  @media (max-width: 1024px) {
+  @media (max-width: 480px) {
     padding: 12px;
     gap: 10px;
   }
@@ -63,17 +75,17 @@ export const Welcome = styled.div`
   align-items: center;
   justify-content: center;
   text-align: center;
-  padding: 24px 16px;
-  gap: 12px;
-  width: 100%;
+  padding: 20px 12px;
+  gap: 10px;
+  flex: 1;
 `;
 
 export const WelcomeIcon = styled.span`
-  font-size: 36px;
+  font-size: 32px;
 `;
 
 export const WelcomeTitle = styled.h4`
-  font-size: 16px;
+  font-size: 15px;
   font-weight: 600;
   color: ${({ theme }) => theme.colors.text};
   margin: 0;
@@ -83,7 +95,6 @@ export const WelcomeText = styled.p`
   font-size: 13px;
   color: ${({ theme }) => theme.colors.textSecondary};
   margin: 0;
-  max-width: 280px;
   line-height: 1.4;
 `;
 
@@ -92,7 +103,7 @@ export const Suggestions = styled.div`
   flex-wrap: wrap;
   gap: 6px;
   justify-content: center;
-  margin-top: 8px;
+  margin-top: 6px;
 `;
 
 export const SuggestionChip = styled.button`
@@ -108,6 +119,11 @@ export const SuggestionChip = styled.button`
 
   &:hover {
     background-color: ${({ theme }) => `${theme.colors.primary}20`};
+  }
+
+  @media (max-width: 480px) {
+    padding: 5px 10px;
+    font-size: 11px;
   }
 `;
 
@@ -148,15 +164,11 @@ export const InputForm = styled.form`
   border-top: 1px solid ${({ theme }) => theme.colors.border};
   background-color: ${({ theme }) => theme.colors.surface};
   flex-shrink: 0;
-
-  @media (max-width: 1024px) {
-    padding: 12px;
-    gap: 10px;
-  }
 `;
 
 export const MessageInput = styled.input`
   flex: 1;
+  min-width: 0;
   padding: 10px 14px;
   font-size: 14px;
   font-family: inherit;
@@ -175,8 +187,8 @@ export const MessageInput = styled.input`
     box-shadow: 0 0 0 2px ${({ theme }) => `${theme.colors.primary}20`};
   }
 
-  @media (max-width: 1024px) {
-    padding: 12px 16px;
+  @media (max-width: 480px) {
+    padding: 10px 12px;
     font-size: 16px;
   }
 `;
@@ -204,13 +216,6 @@ export const SendButton = styled.button`
   &:disabled {
     opacity: 0.5;
     cursor: not-allowed;
-  }
-
-  @media (max-width: 1024px) {
-    width: 44px;
-    height: 44px;
-    min-width: 44px;
-    font-size: 20px;
   }
 `;
 
