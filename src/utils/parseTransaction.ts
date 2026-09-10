@@ -334,15 +334,12 @@ function extractDescription(remainingText: string): string {
   // Remove preposições e artigos soltos no início
   desc = desc.replace(/^\s*(de|da|do|das|dos|no|na|nas|nos|em|e|a|o|as|os|um|uma|uns|umas)\s+/gi, '');
 
-  // Remove preposições no meio também
-  desc = desc.replace(/\s+(de|da|do|das|dos|no|na|nas|nos|em)\s+/gi, ' ');
-
   // Remove números soltos que possam ter sobrado
   desc = desc.replace(/\b\d{1,6}(?:\.\d{3})*(?:,\d{1,2})?\b/g, '');
   desc = desc.replace(/\b\d{2,6}\b/g, '');
 
   // Remove palavras de parcelamento que não agregam à descrição
-  desc = desc.replace(/\b(parcelado?|vezes|prestação|prestacao|=plt|taxa)\b/gi, ' ');
+  desc = desc.replace(/\b(parcelado?|vezes|prestação|prestacao|plt|taxa)\b/gi, ' ');
 
   // Limpa espaços extras, vírgulas e pontos soltos
   desc = desc.replace(/[,.\s]+/g, ' ').trim();

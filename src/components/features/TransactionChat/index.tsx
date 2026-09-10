@@ -246,23 +246,30 @@ const TransactionChat: React.FC = () => {
       }
 
       if (matchCat) {
-        const installmentNote = parsed.parcelas ? ` (${parsed.parcelas}x)` : '';
+        const installmentCount = parsed.parcelas || 0;
+        const perInstallment = installmentCount > 0 ? parsed.valor / installmentCount : parsed.valor;
+        const installmentLabel = installmentCount > 0 ? `1/${installmentCount}` : '';
+        const descriptionWithInstallment = installmentLabel
+          ? `${parsed.descricao} ${installmentLabel}`
+          : parsed.descricao;
+
         const transactionData: Omit<Transaction, 'id'> = {
-          description: parsed.descricao,
-          amount: parsed.valor,
+          description: descriptionWithInstallment,
+          amount: perInstallment,
           type: parsed.tipo === 'despesa' ? 'expense' : 'income',
           date: new Date(parsed.data + 'T12:00:00').toISOString(),
           categoryId: matchCat.id,
-          notes: parsed.parcelas ? `Parcelado em ${parsed.parcelas}x` : '',
+          notes: installmentCount > 0 ? `Parcelado em ${installmentCount}x - Total R$ ${parsed.valor.toFixed(2).replace('.', ',')}` : '',
         };
 
         await addTransaction(transactionData);
         addMessage(
           `✅ Transação registrada!\n` +
-          `📝 ${transactionData.description}${installmentNote}\n` +
+          `📝 ${transactionData.description}\n` +
           `💰 R$ ${transactionData.amount.toFixed(2).replace('.', ',')}\n` +
           `📅 ${formatDateBR(transactionData.date)}\n` +
-          `🏷️ ${matchCat.name}`,
+          `🏷️ ${matchCat.name}` +
+          (installmentCount > 0 ? `\n📋 Total: R$ ${parsed.valor.toFixed(2).replace('.', ',')} (${installmentCount}x)` : ''),
           false
         );
         setIsProcessing(false);
