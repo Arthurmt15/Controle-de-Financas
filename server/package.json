@@ -19,7 +19,6 @@
     "uuid": "^14.0.2"
   },
   "devDependencies": {
-    "@types/axios": "^0.14.0",
     "@types/cors": "^2.8.17",
     "@types/express": "^4.17.21",
     "@types/jsonwebtoken": "^9.0.10",
