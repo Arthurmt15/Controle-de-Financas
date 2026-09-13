@@ -9,6 +9,7 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { ThemeProvider, useTheme } from './contexts/ThemeContext';
 import { TransactionsProvider } from './contexts/TransactionsContext';
+import { OpenFinanceProvider } from './contexts/OpenFinanceContext';
 import { ThemeProvider as StyledThemeProvider } from 'styled-components';
 import styled from 'styled-components';
 import Header from './components/layout/Header';
@@ -32,6 +33,7 @@ const DashboardPage = lazy(() => import('./pages/Dashboard'));
 const TransactionsPage = lazy(() => import('./pages/Transactions'));
 const AnalysisPage = lazy(() => import('./pages/Analysis'));
 const SettingsPage = lazy(() => import('./pages/Settings'));
+const OpenFinancePage = lazy(() => import('./pages/OpenFinance'));
 
 /**
  * Componente de carregamento exibido durante lazy load
@@ -81,17 +83,20 @@ const MainLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => (
  */
 const AuthenticatedRoutes: React.FC = () => (
   <TransactionsProvider>
-    <MainLayout>
-      <Suspense fallback={<LoadingFallback />}>
-        <Routes>
-          <Route path="/dashboard" element={<DashboardPage />} />
-          <Route path="/transactions" element={<TransactionsPage />} />
-          <Route path="/analysis" element={<AnalysisPage />} />
-          <Route path="/settings" element={<SettingsPage />} />
-          <Route path="*" element={<Navigate to="/dashboard" replace />} />
-        </Routes>
-      </Suspense>
-    </MainLayout>
+    <OpenFinanceProvider>
+      <MainLayout>
+        <Suspense fallback={<LoadingFallback />}>
+          <Routes>
+            <Route path="/dashboard" element={<DashboardPage />} />
+            <Route path="/transactions" element={<TransactionsPage />} />
+            <Route path="/analysis" element={<AnalysisPage />} />
+            <Route path="/settings" element={<SettingsPage />} />
+            <Route path="/open-finance" element={<OpenFinancePage />} />
+            <Route path="*" element={<Navigate to="/dashboard" replace />} />
+          </Routes>
+        </Suspense>
+      </MainLayout>
+    </OpenFinanceProvider>
   </TransactionsProvider>
 );
 
