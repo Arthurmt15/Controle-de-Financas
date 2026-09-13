@@ -14,13 +14,38 @@ import {
 
 const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
 
+/** Interface de resposta da API para tokens */
+interface TokenResponse {
+  data: ConnectToken;
+}
+
+/** Interface de resposta da API para itens */
+interface ItemResponse {
+  data: OpenFinanceItem;
+}
+
+/** Interface de resposta da API para lista de itens */
+interface ItemsListResponse {
+  data: OpenFinanceItem[];
+}
+
+/** Interface de resposta da API para lista de contas */
+interface AccountsListResponse {
+  data: OpenFinanceAccount[];
+}
+
+/** Interface de resposta da API para lista de transações */
+interface TransactionsListResponse {
+  data: OpenFinanceTransaction[];
+}
+
 /**
  * Obtém um connect token para autenticar o widget Pluggy Connect.
  * O token é válido por curto período e usado apenas para uma sessão.
  * @returns Objeto com o token de conexão
  */
 export async function getConnectToken(): Promise<ConnectToken> {
-  const response = await apiRequest(`${API_URL}/pluggy/token`, {
+  const response = await apiRequest<TokenResponse>(`${API_URL}/pluggy/token`, {
     method: 'POST',
   });
   return response.data;
@@ -39,7 +64,7 @@ export async function saveItem(
   connectorId: number,
   institutionName: string
 ): Promise<OpenFinanceItem> {
-  const response = await apiRequest(`${API_URL}/pluggy/items`, {
+  const response = await apiRequest<ItemResponse>(`${API_URL}/pluggy/items`, {
     method: 'POST',
     body: JSON.stringify({ pluggyItemId, connectorId, institutionName }),
   });
@@ -51,7 +76,7 @@ export async function saveItem(
  * @returns Array de itens conectados
  */
 export async function listItems(): Promise<OpenFinanceItem[]> {
-  const response = await apiRequest(`${API_URL}/pluggy/items`);
+  const response = await apiRequest<ItemsListResponse>(`${API_URL}/pluggy/items`);
   return response.data;
 }
 
@@ -61,7 +86,9 @@ export async function listItems(): Promise<OpenFinanceItem[]> {
  * @returns Array de contas financeiras
  */
 export async function getAccountsByItem(itemId: string): Promise<OpenFinanceAccount[]> {
-  const response = await apiRequest(`${API_URL}/pluggy/items/${itemId}/accounts`);
+  const response = await apiRequest<AccountsListResponse>(
+    `${API_URL}/pluggy/items/${itemId}/accounts`
+  );
   return response.data;
 }
 
@@ -105,7 +132,7 @@ export async function getTransactions(
   if (to) params.append('to', to);
   params.append('limit', limit.toString());
 
-  const response = await apiRequest(
+  const response = await apiRequest<TransactionsListResponse>(
     `${API_URL}/pluggy/accounts/${accountId}/transactions?${params.toString()}`
   );
   return response.data;

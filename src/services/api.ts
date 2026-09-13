@@ -80,7 +80,7 @@ export function getTokenFromCookie(): string | null {
  * @param options - Opções do fetch
  * @returns Dados da resposta ou lança erro
  */
-async function apiRequest<T>(
+export async function apiRequest<T>(
   endpoint: string,
   options: RequestInit = {}
 ): Promise<T> {

@@ -107,14 +107,13 @@ const ConnectBank: React.FC<ConnectBankProps> = ({ onSuccess, onError, onClose }
         <CloseButton onClick={onClose} aria-label="Fechar widget">
           ×
         </CloseButton>
-        {connectToken && (
-          <pluggy-connect
-            connectToken={connectToken}
-            onSuccess={handleSuccess}
-            onError={handleError}
-            language="pt"
-          />
-        )}
+        {connectToken &&
+          React.createElement('pluggy-connect', {
+            connectToken,
+            onSuccess: handleSuccess,
+            onError: handleError,
+            language: 'pt',
+          })}
       </WidgetWrapper>
     </Container>
   );
