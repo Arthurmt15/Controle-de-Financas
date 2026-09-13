@@ -115,6 +115,20 @@ export async function createTables(): Promise<void> {
       );
     `);
 
+    // Tabela de itens Open Finance (conexões com instituições via Pluggy)
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS openfinance_items (
+        id VARCHAR(255) PRIMARY KEY,
+        user_id VARCHAR(255) NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        pluggy_item_id VARCHAR(255) UNIQUE NOT NULL,
+        connector_id INTEGER NOT NULL,
+        institution_name VARCHAR(255) NOT NULL,
+        status VARCHAR(50) DEFAULT 'CREATED',
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      );
+    `);
+
     // Índices para melhor performance nas consultas
     await client.query(`
       CREATE INDEX IF NOT EXISTS idx_transactions_user_id ON transactions(user_id);
@@ -125,6 +139,8 @@ export async function createTables(): Promise<void> {
       CREATE INDEX IF NOT EXISTS idx_budgets_month ON budgets(month);
       CREATE INDEX IF NOT EXISTS idx_recurring_bills_user_id ON recurring_bills(user_id);
       CREATE INDEX IF NOT EXISTS idx_recurring_bills_active ON recurring_bills(active);
+      CREATE INDEX IF NOT EXISTS idx_openfinance_items_user_id ON openfinance_items(user_id);
+      CREATE INDEX IF NOT EXISTS idx_openfinance_items_pluggy_id ON openfinance_items(pluggy_item_id);
     `);
 
     console.log('✅ Tabelas criadas/verificadas com sucesso');

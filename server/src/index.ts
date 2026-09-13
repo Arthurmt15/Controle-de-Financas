@@ -14,6 +14,7 @@ import categoriesRouter from './routes/categories';
 import budgetsRouter from './routes/budgets';
 import recurringBillsRouter from './routes/recurringBills';
 import aiRouter from './routes/ai';
+import pluggyRouter from './routes/pluggy';
 
 dotenv.config();
 
@@ -68,6 +69,7 @@ app.use('/api/categories', categoriesRouter);
 app.use('/api/budgets', budgetsRouter);
 app.use('/api/recurring-bills', recurringBillsRouter);
 app.use('/api/ai', aiRouter);
+app.use('/api/pluggy', pluggyRouter);
 
 /**
  * Middleware de tratamento de erros globais
