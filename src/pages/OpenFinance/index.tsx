@@ -9,7 +9,7 @@ import { useOpenFinance } from '../../contexts/OpenFinanceContext';
 import ConnectBank from '../../components/features/OpenFinance/ConnectBank';
 import AccountList from '../../components/features/OpenFinance/AccountList';
 import TransactionList from '../../components/features/OpenFinance/TransactionList';
-import { Container, Title, Section, EmptyState, ErrorMessage } from './styles';
+import { Container, Title, Section, EmptyState } from './styles';
 
 /**
  * Página do Open Finance Brasil.
