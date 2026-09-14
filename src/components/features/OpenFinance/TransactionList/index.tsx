@@ -5,7 +5,6 @@
  */
 
 import React, { useEffect, useState } from 'react';
-import { OpenFinanceTransaction } from '../../../../types/openFinance';
 import { useOpenFinance } from '../../../../contexts/OpenFinanceContext';
 import {
   Container,

@@ -8,9 +8,6 @@ import React, { createContext, useContext, useReducer, useCallback, ReactNode } 
 import {
   OpenFinanceState,
   OpenFinanceAction,
-  OpenFinanceAccount,
-  OpenFinanceTransaction,
-  OpenFinanceItem,
 } from '../types/openFinance';
 import * as openFinanceService from '../services/openFinanceService';
 
