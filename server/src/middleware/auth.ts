@@ -6,24 +6,46 @@
 
 import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
-import crypto from 'crypto';
 
-const JWT_SECRET: string = process.env.JWT_SECRET || crypto.randomBytes(64).toString('hex');
+/**
+ * Obtém o JWT_SECRET das variáveis de ambiente.
+ * Em produção, falha se não estiver definido.
+ */
+function getJwtSecret(): string {
+  const secret = process.env.JWT_SECRET;
 
-if (!process.env.JWT_SECRET) {
-  console.warn('⚠️ JWT_SECRET não definido. Usando secret gerado aleatoriamente. Tokens não persistirão entre reinícios.');
+  if (!secret) {
+    if (process.env.NODE_ENV === 'production') {
+      console.error('❌ JWT_SECRET é obrigatório em produção');
+      process.exit(1);
+    }
+    console.warn('⚠️ JWT_SECRET não definido. Use variável de ambiente.');
+    return 'dev-secret-not-for-production';
+  }
+
+  return secret;
 }
 
+const JWT_SECRET = getJwtSecret();
+
+/** Interface estendida para requisições autenticadas */
 export interface AuthRequest extends Request {
   userId?: string;
 }
 
+/**
+ * Verifica e decodifica um token JWT.
+ * @param token Token JWT a ser verificado
+ * @returns Payload decodificado com userId
+ * @throws Erro se o token for inválido ou expirado
+ */
 function verifyToken(token: string): { userId: string } {
   return jwt.verify(token, JWT_SECRET) as { userId: string };
 }
 
 /**
- * Middleware de autenticação - requer JWT válido
+ * Middleware de autenticação - requer JWT válido.
+ * Verifica header Authorization e valida o token.
  */
 export function authenticate(
   req: AuthRequest,
@@ -53,6 +75,11 @@ export function authenticate(
   }
 }
 
+/**
+ * Gera um token JWT para o usuário.
+ * @param userId ID do usuário
+ * @returns Token JWT válido por 7 dias
+ */
 export function generateToken(userId: string): string {
   return jwt.sign({ userId }, JWT_SECRET, { expiresIn: '7d' });
 }

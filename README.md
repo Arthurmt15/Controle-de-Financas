@@ -85,39 +85,55 @@ Aplicação web completa para controle financeiro pessoal, desenvolvida com Reac
 ## 📁 Estrutura do Projeto
 
 ```
-src/
-├── components/
-│   ├── common/           # Componentes reutilizáveis
-│   │   ├── Button/       # Botão com variantes
-│   │   ├── Input/        # Input com validação
-│   │   ├── Modal/        # Modal acessível
-│   │   └── Select/       # Select estilizado
-│   ├── features/         # Componentes de funcionalidades
-│   │   ├── Dashboard/    # Dashboard com gráficos
-│   │   ├── TransactionForm/  # Formulário de transações
-│   │   └── TransactionList/  # Lista com filtros
-│   └── layout/           # Componentes de layout
-│       └── Header/       # Cabeçalho principal
-├── contexts/             # Contextos React
-│   ├── AuthContext.tsx   # Autenticação Google
-│   └── ThemeContext.tsx  # Tema claro/escuro
-├── hooks/                # Hooks customizados
-│   ├── useLocalStorage.ts
-│   └── useTransactions.ts
-├── pages/                # Páginas da aplicação
-│   ├── Login/            # Página de login
-│   ├── Dashboard/        # Página do dashboard
-│   └── Transactions/     # Página de transações
-├── reducers/             # Reducers Redux-like
-│   └── transactionReducer.ts
-├── types/                # Definições TypeScript
-│   └── index.ts
-├── utils/                # Funções utilitárias
-│   ├── formatters.ts     # Formatação de dados
-│   ├── helpers.ts        # Funções auxiliares
-│   ├── transactionFilters.ts
-│   └── transactionMetrics.ts
-└── App.tsx               # Componente raiz
+├── src/                          # Frontend React
+│   ├── components/
+│   │   ├── common/               # Componentes reutilizáveis
+│   │   │   ├── Button/
+│   │   │   ├── Input/
+│   │   │   ├── Modal/
+│   │   │   └── Select/
+│   │   ├── features/             # Componentes de funcionalidades
+│   │   │   ├── Dashboard/        # Dashboard com gráficos
+│   │   │   ├── OpenFinance/      # Integração Open Finance Brasil
+│   │   │   ├── TransactionForm/
+│   │   │   ├── TransactionList/
+│   │   │   ├── Analysis/         # Análise financeira
+│   │   │   ├── BudgetManager/    # Gerenciamento de orçamentos
+│   │   │   ├── CategoryManager/
+│   │   │   └── FinancialAdvisor/ # Consultor IA
+│   │   └── layout/
+│   │       └── Header/
+│   ├── contexts/                 # Contextos React
+│   │   ├── AuthContext.tsx
+│   │   ├── ThemeContext.tsx
+│   │   ├── TransactionsContext.tsx
+│   │   └── OpenFinanceContext.tsx
+│   ├── hooks/                    # Hooks customizados
+│   ├── pages/
+│   │   ├── Login/
+│   │   ├── Dashboard/
+│   │   ├── Transactions/
+│   │   ├── Analysis/
+│   │   ├── Settings/
+│   │   └── OpenFinance/
+│   ├── services/                 # Serviços de API
+│   │   ├── api.ts
+│   │   ├── openFinanceService.ts
+│   │   ├── financialAdvisorService.ts
+│   │   └── ocrService.ts
+│   ├── types/                    # Definições TypeScript
+│   └── utils/                    # Funções utilitárias
+│
+├── server/                       # Backend Express
+│   └── src/
+│       ├── routes/               # Rotas da API
+│       ├── middleware/           # Middlewares (auth)
+│       ├── services/             # Serviços (Pluggy API)
+│       ├── types/                # Tipos TypeScript
+│       └── database.ts           # Conexão PostgreSQL
+│
+└── .github/workflows/            # CI/CD
+    └── ci.yml
 ```
 
 ---
@@ -155,9 +171,11 @@ src/
 
 ## 📋 Pré-requisitos
 
-- Node.js >= 16.0.0
-- npm ou yarn
+- Node.js >= 20.0.0
+- npm >= 10.0.0
+- PostgreSQL (Railway ou local)
 - Conta Google Cloud Platform (para OAuth)
+- Conta Pluggy (para Open Finance, opcional)
 
 ---
 
@@ -166,29 +184,41 @@ src/
 ### 1. Instale as dependências
 
 ```bash
+# Frontend
 npm install
+
+# Backend
+cd server && npm install
 ```
 
-### 2. Configure o Google OAuth
+### 2. Configure as variáveis de ambiente
 
-1. Acesse o [Google Cloud Console](https://console.cloud.google.com/)
-2. Crie um novo projeto ou selecione um existente
-3. Ative a API "Google Identity Services"
-4. Crie credenciais "OAuth 2.0 Client ID"
-5. Adicione o domínio autorizado (ex: localhost:3000)
-6. Crie um arquivo `.env` na raiz:
-
+**Frontend (`.env`):**
 ```env
 REACT_APP_GOOGLE_CLIENT_ID=seu-client-id-aqui
+REACT_APP_API_URL=http://localhost:5000/api
+```
+
+**Backend (`server/.env`):**
+```env
+DATABASE_URL=sua_url_do_railway_aqui
+JWT_SECRET=sua_chave_secreta_aqui
+GROQ_API_KEY=sua_chave_groq_aqui
+PLUGGY_CLIENT_ID=seu_client_id_pluggy
+PLUGGY_CLIENT_SECRET=seu_client_secret_pluggy
+FRONTEND_URL=http://localhost:3000
 ```
 
 ### 3. Execute o projeto
 
 ```bash
-npm start
-```
+# Frontend e Backend juntos
+npm run dev
 
-O projeto estará disponível em `http://localhost:3000`
+# Ou separadamente:
+npm start          # Frontend (porta 3000)
+npm run start:server  # Backend (porta 5000)
+```
 
 ---
 
@@ -202,11 +232,28 @@ Os arquivos otimizados estarão na pasta `build/`.
 
 ---
 
-## 🧪 Testes
+## 🧪 Testes e Qualidade
 
 ```bash
-npm test
+npm test              # Executa testes
+npm run test:coverage # Testes com cobertura
+npm run lint          # Verifica lint
+npm run lint:fix      # Corrige problemas de lint
+npm run format        # Formata código com Prettier
+npm run format:check  # Verifica formatação
+npm run typecheck     # Verifica tipos TypeScript
 ```
+
+---
+
+## 🚀 CI/CD
+
+Pipeline automatizada com GitHub Actions:
+- **Lint** - Verificação de código
+- **Test** - Execução de testes unitários
+- **Build** - Compilação para produção
+
+Executa em cada push e pull request para a branch `main`.
 
 ---
 
