@@ -17,6 +17,7 @@ const NAV_ITEMS = [
   { path: '/dashboard', label: 'Dashboard' },
   { path: '/transactions', label: 'Transações' },
   { path: '/analysis', label: 'Análise' },
+  { path: '/open-finance', label: 'Open Finance' },
   { path: '/settings', label: 'Configurações' },
 ];
 
