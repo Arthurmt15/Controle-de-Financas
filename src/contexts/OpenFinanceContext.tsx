@@ -96,7 +96,7 @@ export function OpenFinanceProvider({ children }: { children: ReactNode }) {
       const items = await openFinanceService.listItems();
       dispatch({ type: 'SET_ITEMS', payload: items });
     } catch (error) {
-      dispatch({ type: 'SET_ERROR', payload: 'Erro ao carregar conexões' });
+      dispatch({ type: 'SET_ERROR', payload: 'Nenhuma conexão encontrada. Conecte seu banco para importar contas e transações.' });
     }
   }, []);
 
@@ -110,7 +110,7 @@ export function OpenFinanceProvider({ children }: { children: ReactNode }) {
       const accounts = await openFinanceService.getAccountsByItem(itemId);
       dispatch({ type: 'SET_ACCOUNTS', payload: accounts });
     } catch (error) {
-      dispatch({ type: 'SET_ERROR', payload: 'Erro ao carregar contas' });
+        dispatch({ type: 'SET_ERROR', payload: 'Erro ao carregar contas. Verifique sua conexão e tente novamente.' });
     }
   }, []);
 
@@ -123,7 +123,7 @@ export function OpenFinanceProvider({ children }: { children: ReactNode }) {
       const accounts = await openFinanceService.getAllAccounts();
       dispatch({ type: 'SET_ACCOUNTS', payload: accounts });
     } catch (error) {
-      dispatch({ type: 'SET_ERROR', payload: 'Erro ao carregar contas' });
+        dispatch({ type: 'SET_ERROR', payload: 'Erro ao carregar contas. Verifique sua conexão e tente novamente.' });
     }
   }, []);
 
@@ -140,7 +140,7 @@ export function OpenFinanceProvider({ children }: { children: ReactNode }) {
         const transactions = await openFinanceService.getTransactions(accountId, from, to);
         dispatch({ type: 'SET_TRANSACTIONS', payload: transactions });
       } catch (error) {
-        dispatch({ type: 'SET_ERROR', payload: 'Erro ao carregar transações' });
+        dispatch({ type: 'SET_ERROR', payload: 'Erro ao carregar transações. Verifique sua conexão e tente novamente.' });
       }
     },
     []
@@ -158,7 +158,7 @@ export function OpenFinanceProvider({ children }: { children: ReactNode }) {
         const item = await openFinanceService.saveItem(pluggyItemId, connectorId, institutionName);
         dispatch({ type: 'ADD_ITEM', payload: item });
       } catch (error) {
-        dispatch({ type: 'SET_ERROR', payload: 'Erro ao salvar conexão' });
+        dispatch({ type: 'SET_ERROR', payload: 'Erro ao salvar conexão. Tente novamente.' });
       }
     },
     []
@@ -173,7 +173,7 @@ export function OpenFinanceProvider({ children }: { children: ReactNode }) {
       await openFinanceService.removeItem(itemId);
       dispatch({ type: 'REMOVE_ITEM', payload: itemId });
     } catch (error) {
-      dispatch({ type: 'SET_ERROR', payload: 'Erro ao remover conexão' });
+      dispatch({ type: 'SET_ERROR', payload: 'Erro ao remover conexão. Tente novamente.' });
     }
   }, []);
 

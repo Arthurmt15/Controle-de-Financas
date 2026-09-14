@@ -57,7 +57,16 @@ const OpenFinancePage: React.FC = () => {
     <Container>
       <Title>Open Finance Brasil</Title>
 
-      {error && <ErrorMessage>{error}</ErrorMessage>}
+      {error && (
+        <EmptyState>
+          <p>{error}</p>
+          {!showConnectWidget && (
+            <button onClick={() => setShowConnectWidget(true)} disabled={loading}>
+              Conectar Banco
+            </button>
+          )}
+        </EmptyState>
+      )}
 
       <Section>
         <h2>Conexões Ativas</h2>

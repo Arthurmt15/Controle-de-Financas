@@ -46,6 +46,7 @@ async function callEdgeFunction<T>(
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
     'Authorization': `Bearer ${session?.access_token || ''}`,
+    'apikey': process.env.REACT_APP_SUPABASE_ANON_KEY || '',
     ...(options.headers as Record<string, string>),
   };
 
