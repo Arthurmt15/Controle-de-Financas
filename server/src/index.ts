@@ -110,6 +110,7 @@ app.use(cors({
 
     const allowedOrigins = [
       FRONTEND_URL,
+      'https://controle-de-financas-nine.vercel.app',
       'http://localhost:3000',
       'http://localhost:5173',
     ].filter(Boolean);
