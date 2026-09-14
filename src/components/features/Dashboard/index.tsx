@@ -9,6 +9,7 @@ import React from 'react';
 import SummaryCards from './SummaryCards';
 import Charts from './Charts';
 import TransactionsList from './TransactionsList';
+import OpenFinanceSummary from './OpenFinanceSummary';
 import * as C from './styles';
 
 /**
@@ -26,6 +27,9 @@ const Dashboard: React.FC = () => {
 
       {/* Cards de resumo */}
       <SummaryCards />
+
+      {/* Resumo Open Finance */}
+      <OpenFinanceSummary />
 
       {/* Gráficos */}
       <Charts />
