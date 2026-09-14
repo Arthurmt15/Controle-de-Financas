@@ -1,6 +1,6 @@
 /**
  * @file server/src/database.ts
- * @description Configuração e gerenciamento da conexão com o PostgreSQL (Railway).
+ * @description Configuração e gerenciamento da conexão com o PostgreSQL (Supabase).
  * Fornece pool de conexões e função para criar tabelas.
  */
 
@@ -12,13 +12,17 @@ dotenv.config();
 
 /**
  * Pool de conexões com o PostgreSQL
- * Usa a variável de ambiente DATABASE_URL fornecida pelo Railway
+ * Usa a variável de ambiente DATABASE_URL fornecida pelo Supabase
  */
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
   ssl: process.env.NODE_ENV === 'production'
     ? { rejectUnauthorized: false }
     : false,
+  // Configurações para Supabase (Transaction mode - porta 6543)
+  max: 10,
+  idleTimeoutMillis: 30000,
+  connectionTimeoutMillis: 10000,
 });
 
 /**
@@ -28,7 +32,7 @@ const pool = new Pool({
 export async function testConnection(): Promise<boolean> {
   try {
     const client = await pool.connect();
-    console.log('✅ Conectado ao PostgreSQL (Railway)');
+    console.log('✅ Conectado ao PostgreSQL (Supabase)');
     client.release();
     return true;
   } catch (error) {
