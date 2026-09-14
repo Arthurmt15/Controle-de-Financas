@@ -66,18 +66,26 @@ serve(async (req) => {
       { global: { headers: { Authorization: req.headers.get("Authorization")! } } }
     )
 
-    // Obtém API key da Pluggy
-    const apiKey = await getPluggyApiKey()
-    const pluggyHeaders = { "Content-Type": "application/json", "X-API-KEY": apiKey }
-    const pluggyApi = Deno.env.get("PLUGGY_API_URL") || "https://api.pluggy.ai"
-
     // Analisa a rota e método
     const url = new URL(req.url)
     const path = url.pathname.replace("/functions/v1/pluggy-proxy", "")
     const method = req.method
 
+    // Lazy: obtém API key da Pluggy apenas quando a rota precisa dela
+    let pluggyHeaders: Record<string, string> | null = null
+    let pluggyApi: string | null = null
+
+    async function ensurePluggy() {
+      if (!pluggyHeaders) {
+        const apiKey = await getPluggyApiKey()
+        pluggyHeaders = { "Content-Type": "application/json", "X-API-KEY": apiKey }
+        pluggyApi = Deno.env.get("PLUGGY_API_URL") || "https://api.pluggy.ai"
+      }
+    }
+
     // Rota: POST /token - Gera connect token para o widget
     if (path === "/token" && method === "POST") {
+      await ensurePluggy()
       const res = await fetch(`${pluggyApi}/connect_token`, {
         method: "POST",
         headers: pluggyHeaders,
@@ -138,6 +146,7 @@ serve(async (req) => {
           { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } }
         )
       }
+      await ensurePluggy()
       const res = await fetch(`${pluggyApi}/accounts?item_id=${dbItem.pluggy_item_id}`, {
         headers: pluggyHeaders,
       })
@@ -153,6 +162,7 @@ serve(async (req) => {
     if (txMatch && method === "GET") {
       const accountId = txMatch[1]
       const params = url.searchParams.toString()
+      await ensurePluggy()
       const res = await fetch(`${pluggyApi}/transactions?account_id=${accountId}&${params}`, {
         headers: pluggyHeaders,
       })
@@ -174,6 +184,7 @@ serve(async (req) => {
         .eq("user_id", user.id)
         .single()
       if (dbItem) {
+        await ensurePluggy()
         await fetch(`${pluggyApi}/items/${dbItem.pluggy_item_id}`, {
           method: "DELETE",
           headers: pluggyHeaders,
