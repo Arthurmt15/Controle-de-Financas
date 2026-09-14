@@ -15,6 +15,8 @@ import type {
   Transaction,
   Category,
   RecurringBill,
+  Installment,
+  FutureExpense,
   TransactionFilters,
   TransactionState,
 } from '../types';
@@ -23,6 +25,8 @@ const initialState: TransactionState = {
   transactions: [],
   categories: [],
   recurringBills: [],
+  installments: [],
+  futureExpenses: [],
   filters: {
     startDate: null,
     endDate: null,
@@ -50,6 +54,8 @@ interface TransactionsContextValue extends TransactionState {
   generateRecurringTransactions: () => Promise<Transaction[]>;
   setFilters: (filters: Partial<TransactionFilters>) => void;
   clearFilters: () => void;
+  installments: Installment[];
+  futureExpenses: FutureExpense[];
 }
 
 const TransactionsContext = createContext<TransactionsContextValue | undefined>(undefined);
@@ -356,6 +362,8 @@ export function TransactionsProvider({ children }: { children: React.ReactNode }
       transactions: state.transactions,
       categories: state.categories,
       recurringBills: state.recurringBills,
+      installments: state.installments,
+      futureExpenses: state.futureExpenses,
       filters: state.filters,
       isLoading: state.isLoading,
       error: state.error,
@@ -374,7 +382,8 @@ export function TransactionsProvider({ children }: { children: React.ReactNode }
       clearFilters,
     }),
     [
-      state.transactions, state.categories, state.recurringBills, state.filters,
+      state.transactions, state.categories, state.recurringBills,
+      state.installments, state.futureExpenses, state.filters,
       state.isLoading, state.error,
       filteredTransactions, metrics,
       addTransaction, updateTransaction, deleteTransaction,

@@ -113,6 +113,62 @@ export interface RecurringBill {
 }
 
 /**
+ * Interface que representa uma compra parcelada.
+ * Controla prestações pagas e pendentes de uma compra.
+ */
+export interface Installment {
+  /** Identificador único do parcelado */
+  id: string;
+  /** Descrição da compra (ex: "Notebook Dell") */
+  description: string;
+  /** Valor total da compra */
+  totalAmount: number;
+  /** Valor de cada prestação */
+  installmentAmount: number;
+  /** Número total de parcelas */
+  totalInstallments: number;
+  /** Parcela atual (quantas já foram pagas) */
+  currentInstallment: number;
+  /** Data da primeira parcela (YYYY-MM-DD) */
+  startDate: string;
+  /** ID da categoria associada */
+  categoryId: string;
+  /** Observações adicionais */
+  notes?: string;
+  /** Origem: manual ou openfinance */
+  source: 'manual' | 'openfinance';
+  /** Data de criação */
+  createdAt?: string;
+  /** Data de atualização */
+  updatedAt?: string;
+}
+
+/**
+ * Interface que representa uma despesa futura prevista.
+ * Gastos que ainda vão acontecer mas já podem ser planejados.
+ */
+export interface FutureExpense {
+  /** Identificador único da despesa futura */
+  id: string;
+  /** Descrição da despesa (ex: "IPVA 2027") */
+  description: string;
+  /** Valor previsto da despesa */
+  amount: number;
+  /** Data prevista para pagamento (YYYY-MM-DD) */
+  expectedDate: string;
+  /** ID da categoria associada */
+  categoryId: string;
+  /** Observações adicionais */
+  notes?: string;
+  /** Status: pending=pago, paid=pago, cancelled=cancelado */
+  status: 'pending' | 'paid' | 'cancelled';
+  /** Data de criação */
+  createdAt?: string;
+  /** Data de atualização */
+  updatedAt?: string;
+}
+
+/**
  * Interface que representa o estado global das transações
  * @interface TransactionState
  */
@@ -123,6 +179,10 @@ export interface TransactionState {
   categories: Category[];
   /** Lista de contas recorrentes */
   recurringBills: RecurringBill[];
+  /** Lista de compras parceladas */
+  installments: Installment[];
+  /** Lista de despesas futuras */
+  futureExpenses: FutureExpense[];
   /** Filtros aplicados */
   filters: TransactionFilters;
   /** Indica se está carregando */
@@ -169,6 +229,14 @@ export type TransactionAction =
   | { type: 'ADD_RECURRING_BILL'; payload: RecurringBill }
   | { type: 'UPDATE_RECURRING_BILL'; payload: RecurringBill }
   | { type: 'DELETE_RECURRING_BILL'; payload: string }
+  | { type: 'SET_INSTALLMENTS'; payload: Installment[] }
+  | { type: 'ADD_INSTALLMENT'; payload: Installment }
+  | { type: 'UPDATE_INSTALLMENT'; payload: Installment }
+  | { type: 'DELETE_INSTALLMENT'; payload: string }
+  | { type: 'SET_FUTURE_EXPENSES'; payload: FutureExpense[] }
+  | { type: 'ADD_FUTURE_EXPENSE'; payload: FutureExpense }
+  | { type: 'UPDATE_FUTURE_EXPENSE'; payload: FutureExpense }
+  | { type: 'DELETE_FUTURE_EXPENSE'; payload: string }
   | { type: 'SET_FILTERS'; payload: Partial<TransactionFilters> }
   | { type: 'CLEAR_FILTERS' }
   | { type: 'SET_LOADING'; payload: boolean }

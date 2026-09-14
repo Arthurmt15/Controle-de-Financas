@@ -3,7 +3,7 @@
  * @description Serviço de comunicação com a API backend local (Express).
  */
 
-import type { Transaction, Category, RecurringBill } from '../../types';
+import type { Transaction, Category, RecurringBill, Installment, FutureExpense } from '../../types';
 import type { Budget } from '../../types/dashboard';
 
 const API_BASE = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
@@ -334,5 +334,145 @@ export const userService = {
   async getCurrentUser() {
     const response = await apiRequest<ApiResponse<{ id: string; name: string; email: string; avatar: string | null }>>('/users/me');
     return response.data;
+  },
+};
+
+// ============================================
+// INSTALLMENTS (PARCELADOS)
+// ============================================
+
+/** Interface da linha de parcelado no banco */
+interface InstallmentRow {
+  id: string;
+  description: string;
+  total_amount: number | string;
+  installment_amount: number | string;
+  total_installments: number;
+  current_installment: number;
+  start_date: string;
+  category_id: string;
+  notes: string | null;
+  source: 'manual' | 'openfinance';
+  created_at: string;
+  updated_at: string;
+}
+
+/** Converte linha do banco para tipo Installment */
+function mapInstallment(row: InstallmentRow): Installment {
+  return {
+    id: row.id,
+    description: row.description,
+    totalAmount: Number(row.total_amount),
+    installmentAmount: Number(row.installment_amount),
+    totalInstallments: row.total_installments,
+    currentInstallment: row.current_installment,
+    startDate: row.start_date,
+    categoryId: row.category_id,
+    notes: row.notes || undefined,
+    source: row.source,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
+  };
+}
+
+export const installmentService = {
+  async getAll(_userId: string) {
+    const response = await apiRequest<ApiResponse<InstallmentRow[]>>('/installments');
+    return response.data.map(mapInstallment);
+  },
+
+  async create(installment: Omit<Installment, 'id'>, _userId: string) {
+    const response = await apiRequest<ApiResponse<InstallmentRow>>(
+      '/installments',
+      { method: 'POST', body: JSON.stringify(installment) }
+    );
+    return mapInstallment(response.data);
+  },
+
+  async update(installment: Installment) {
+    const response = await apiRequest<ApiResponse<InstallmentRow>>(
+      `/installments/${installment.id}`,
+      { method: 'PUT', body: JSON.stringify(installment) }
+    );
+    return mapInstallment(response.data);
+  },
+
+  async delete(id: string) {
+    await apiRequest(`/installments/${id}`, { method: 'DELETE' });
+  },
+
+  async advanceInstallment(id: string) {
+    const response = await apiRequest<ApiResponse<InstallmentRow>>(
+      `/installments/${id}/advance`,
+      { method: 'POST' }
+    );
+    return mapInstallment(response.data);
+  },
+};
+
+// ============================================
+// FUTURE EXPENSES (GASTOS FUTUROS)
+// ============================================
+
+/** Interface da linha de despesa futura no banco */
+interface FutureExpenseRow {
+  id: string;
+  description: string;
+  amount: number | string;
+  expected_date: string;
+  category_id: string;
+  notes: string | null;
+  status: 'pending' | 'paid' | 'cancelled';
+  created_at: string;
+  updated_at: string;
+}
+
+/** Converte linha do banco para tipo FutureExpense */
+function mapFutureExpense(row: FutureExpenseRow): FutureExpense {
+  return {
+    id: row.id,
+    description: row.description,
+    amount: Number(row.amount),
+    expectedDate: row.expected_date,
+    categoryId: row.category_id,
+    notes: row.notes || undefined,
+    status: row.status,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
+  };
+}
+
+export const futureExpenseService = {
+  async getAll(_userId: string) {
+    const response = await apiRequest<ApiResponse<FutureExpenseRow[]>>('/future-expenses');
+    return response.data.map(mapFutureExpense);
+  },
+
+  async create(expense: Omit<FutureExpense, 'id'>, _userId: string) {
+    const response = await apiRequest<ApiResponse<FutureExpenseRow>>(
+      '/future-expenses',
+      { method: 'POST', body: JSON.stringify(expense) }
+    );
+    return mapFutureExpense(response.data);
+  },
+
+  async update(expense: FutureExpense) {
+    const response = await apiRequest<ApiResponse<FutureExpenseRow>>(
+      `/future-expenses/${expense.id}`,
+      { method: 'PUT', body: JSON.stringify(expense) }
+    );
+    return mapFutureExpense(response.data);
+  },
+
+  async delete(id: string) {
+    await apiRequest(`/future-expenses/${id}`, { method: 'DELETE' });
+  },
+
+  async markAsPaid(id: string) {
+    const response = await apiRequest<ApiResponse<FutureExpenseRow>>(
+      `/future-expenses/${id}/pay`,
+      { method: 'POST' }
+    );
+    return mapFutureExpense(response.data);
   },
 };

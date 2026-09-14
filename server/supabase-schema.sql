@@ -66,6 +66,8 @@ ALTER TABLE categories ENABLE ROW LEVEL SECURITY;
 ALTER TABLE transactions ENABLE ROW LEVEL SECURITY;
 ALTER TABLE budgets ENABLE ROW LEVEL SECURITY;
 ALTER TABLE recurring_bills ENABLE ROW LEVEL SECURITY;
+ALTER TABLE installments ENABLE ROW LEVEL SECURITY;
+ALTER TABLE future_expenses ENABLE ROW LEVEL SECURITY;
 
 -- ============================================
 -- POLÍTICAS RLS - CATEGORIES
@@ -164,6 +166,93 @@ CREATE POLICY "Users can delete own recurring_bills"
   USING (auth.uid() = user_id);
 
 -- ============================================
+-- POLÍTICAS RLS - INSTALLMENTS
+-- ============================================
+
+-- Usuários podem ver apenas seus próprios parcelados
+CREATE POLICY "Users can view own installments"
+  ON installments FOR SELECT
+  USING (auth.uid() = user_id);
+
+-- Usuários podem criar parcelados para si mesmos
+CREATE POLICY "Users can insert own installments"
+  ON installments FOR INSERT
+  WITH CHECK (auth.uid() = user_id);
+
+-- Usuários podem atualizar seus próprios parcelados
+CREATE POLICY "Users can update own installments"
+  ON installments FOR UPDATE
+  USING (auth.uid() = user_id);
+
+-- Usuários podem deletar seus próprios parcelados
+CREATE POLICY "Users can delete own installments"
+  ON installments FOR DELETE
+  USING (auth.uid() = user_id);
+
+-- ============================================
+-- POLÍTICAS RLS - FUTURE_EXPENSES
+-- ============================================
+
+-- Usuários podem ver apenas suas próprias despesas futuras
+CREATE POLICY "Users can view own future_expenses"
+  ON future_expenses FOR SELECT
+  USING (auth.uid() = user_id);
+
+-- Usuários podem criar despesas futuras para si mesmos
+CREATE POLICY "Users can insert own future_expenses"
+  ON future_expenses FOR INSERT
+  WITH CHECK (auth.uid() = user_id);
+
+-- Usuários podem atualizar suas próprias despesas futuras
+CREATE POLICY "Users can update own future_expenses"
+  ON future_expenses FOR UPDATE
+  USING (auth.uid() = user_id);
+
+-- Usuários podem deletar suas próprias despesas futuras
+CREATE POLICY "Users can delete own future_expenses"
+  ON future_expenses FOR DELETE
+  USING (auth.uid() = user_id);
+
+-- ============================================
+-- TABELA DE PARCELADOS (COMPRAS PARCELADAS)
+-- ============================================
+
+-- Tabela de compras parceladas
+CREATE TABLE IF NOT EXISTS installments (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  description VARCHAR(500) NOT NULL,
+  total_amount DECIMAL(12, 2) NOT NULL,
+  installment_amount DECIMAL(12, 2) NOT NULL,
+  total_installments INTEGER NOT NULL CHECK (total_installments > 0),
+  current_installment INTEGER NOT NULL DEFAULT 0 CHECK (current_installment >= 0),
+  start_date DATE NOT NULL,
+  category_id UUID NOT NULL REFERENCES categories(id) ON DELETE RESTRICT,
+  notes TEXT,
+  source VARCHAR(20) NOT NULL DEFAULT 'manual' CHECK (source IN ('manual', 'openfinance')),
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- ============================================
+-- TABELA DE DESPESAS FUTURAS
+-- ============================================
+
+-- Tabela de despesas futuras previstas
+CREATE TABLE IF NOT EXISTS future_expenses (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  description VARCHAR(500) NOT NULL,
+  amount DECIMAL(12, 2) NOT NULL,
+  expected_date DATE NOT NULL,
+  category_id UUID NOT NULL REFERENCES categories(id) ON DELETE RESTRICT,
+  notes TEXT,
+  status VARCHAR(10) NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'paid', 'cancelled')),
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- ============================================
 -- ÍNDICES PARA PERFORMANCE
 -- ============================================
 
@@ -175,6 +264,11 @@ CREATE INDEX IF NOT EXISTS idx_budgets_user_id ON budgets(user_id);
 CREATE INDEX IF NOT EXISTS idx_budgets_month ON budgets(month);
 CREATE INDEX IF NOT EXISTS idx_recurring_bills_user_id ON recurring_bills(user_id);
 CREATE INDEX IF NOT EXISTS idx_recurring_bills_active ON recurring_bills(active);
+CREATE INDEX IF NOT EXISTS idx_installments_user_id ON installments(user_id);
+CREATE INDEX IF NOT EXISTS idx_installments_start_date ON installments(start_date);
+CREATE INDEX IF NOT EXISTS idx_future_expenses_user_id ON future_expenses(user_id);
+CREATE INDEX IF NOT EXISTS idx_future_expenses_expected_date ON future_expenses(expected_date);
+CREATE INDEX IF NOT EXISTS idx_future_expenses_status ON future_expenses(status);
 
 -- ============================================
 -- TRIGGER PARA CATEGORIAS PADRÃO NO SIGNUP

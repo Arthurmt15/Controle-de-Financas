@@ -8,6 +8,8 @@ import { transactionService as supabaseTransactionService } from './supabase/tra
 import { categoryService as supabaseCategoryService } from './supabase/categories';
 import { recurringBillService as supabaseRecurringBillService } from './supabase/recurringBills';
 import { budgetService as supabaseBudgetService } from './supabase/budgets';
+import { installmentService as supabaseInstallmentService } from './supabase/installments';
+import { futureExpenseService as supabaseFutureExpenseService } from './supabase/futureExpenses';
 import { authService as supabaseAuthService } from './supabase/auth';
 
 import {
@@ -15,10 +17,12 @@ import {
   categoryService as apiCategoryService,
   recurringBillService as apiRecurringBillService,
   budgetService as apiBudgetService,
+  installmentService as apiInstallmentService,
+  futureExpenseService as apiFutureExpenseService,
   userService as apiUserService,
 } from './api/index';
 
-import type { Transaction, Category, RecurringBill } from '../types';
+import type { Transaction, Category, RecurringBill, Installment, FutureExpense } from '../types';
 import type { Budget } from '../types/dashboard';
 
 const USE_SUPABASE = process.env.REACT_APP_USE_SUPABASE === 'true';
@@ -93,6 +97,52 @@ export const budgetService = {
     USE_SUPABASE
       ? supabaseBudgetService.delete(id)
       : apiBudgetService.delete(id),
+};
+
+export const installmentService = {
+  getAll: (userId: string) =>
+    USE_SUPABASE
+      ? supabaseInstallmentService.getAll()
+      : apiInstallmentService.getAll(userId),
+  create: (installment: Omit<Installment, 'id'>, userId: string) =>
+    USE_SUPABASE
+      ? supabaseInstallmentService.create(installment)
+      : apiInstallmentService.create(installment, userId),
+  update: (installment: Installment) =>
+    USE_SUPABASE
+      ? supabaseInstallmentService.update(installment)
+      : apiInstallmentService.update(installment),
+  delete: (id: string) =>
+    USE_SUPABASE
+      ? supabaseInstallmentService.delete(id)
+      : apiInstallmentService.delete(id),
+  advance: (id: string) =>
+    USE_SUPABASE
+      ? supabaseInstallmentService.advanceInstallment(id)
+      : apiInstallmentService.advanceInstallment(id),
+};
+
+export const futureExpenseService = {
+  getAll: (userId: string) =>
+    USE_SUPABASE
+      ? supabaseFutureExpenseService.getAll()
+      : apiFutureExpenseService.getAll(userId),
+  create: (expense: Omit<FutureExpense, 'id'>, userId: string) =>
+    USE_SUPABASE
+      ? supabaseFutureExpenseService.create(expense)
+      : apiFutureExpenseService.create(expense, userId),
+  update: (expense: FutureExpense) =>
+    USE_SUPABASE
+      ? supabaseFutureExpenseService.update(expense)
+      : apiFutureExpenseService.update(expense),
+  delete: (id: string) =>
+    USE_SUPABASE
+      ? supabaseFutureExpenseService.delete(id)
+      : apiFutureExpenseService.delete(id),
+  markAsPaid: (id: string) =>
+    USE_SUPABASE
+      ? supabaseFutureExpenseService.markAsPaid(id)
+      : apiFutureExpenseService.markAsPaid(id),
 };
 
 export const authService = {

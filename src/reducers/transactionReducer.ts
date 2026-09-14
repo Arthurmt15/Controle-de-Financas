@@ -157,6 +157,54 @@ export function transactionReducer(
       };
 
     // ============================================
+    // AÇÕES DE PARCELADOS
+    // ============================================
+
+    case 'SET_INSTALLMENTS':
+      return { ...state, installments: action.payload };
+
+    case 'ADD_INSTALLMENT':
+      return { ...state, installments: [...state.installments, action.payload] };
+
+    case 'UPDATE_INSTALLMENT':
+      return {
+        ...state,
+        installments: state.installments.map((i) =>
+          i.id === action.payload.id ? action.payload : i
+        ),
+      };
+
+    case 'DELETE_INSTALLMENT':
+      return {
+        ...state,
+        installments: state.installments.filter((i) => i.id !== action.payload),
+      };
+
+    // ============================================
+    // AÇÕES DE DESPESAS FUTURAS
+    // ============================================
+
+    case 'SET_FUTURE_EXPENSES':
+      return { ...state, futureExpenses: action.payload };
+
+    case 'ADD_FUTURE_EXPENSE':
+      return { ...state, futureExpenses: [...state.futureExpenses, action.payload] };
+
+    case 'UPDATE_FUTURE_EXPENSE':
+      return {
+        ...state,
+        futureExpenses: state.futureExpenses.map((e) =>
+          e.id === action.payload.id ? action.payload : e
+        ),
+      };
+
+    case 'DELETE_FUTURE_EXPENSE':
+      return {
+        ...state,
+        futureExpenses: state.futureExpenses.filter((e) => e.id !== action.payload),
+      };
+
+    // ============================================
     // AÇÕES DE FILTROS
     // ============================================
 
