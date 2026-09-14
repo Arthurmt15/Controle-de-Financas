@@ -133,6 +133,41 @@ export async function createTables(): Promise<void> {
       );
     `);
 
+    // Tabela de compras parceladas
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS installments (
+        id VARCHAR(255) PRIMARY KEY,
+        user_id VARCHAR(255) NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        description VARCHAR(500) NOT NULL,
+        total_amount DECIMAL(12, 2) NOT NULL,
+        installment_amount DECIMAL(12, 2) NOT NULL,
+        total_installments INTEGER NOT NULL CHECK (total_installments > 0),
+        current_installment INTEGER NOT NULL DEFAULT 0 CHECK (current_installment >= 0),
+        start_date DATE NOT NULL,
+        category_id VARCHAR(255) NOT NULL REFERENCES categories(id) ON DELETE RESTRICT,
+        notes TEXT,
+        source VARCHAR(20) NOT NULL DEFAULT 'manual' CHECK (source IN ('manual', 'openfinance')),
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      );
+    `);
+
+    // Tabela de despesas futuras
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS future_expenses (
+        id VARCHAR(255) PRIMARY KEY,
+        user_id VARCHAR(255) NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        description VARCHAR(500) NOT NULL,
+        amount DECIMAL(12, 2) NOT NULL,
+        expected_date DATE NOT NULL,
+        category_id VARCHAR(255) NOT NULL REFERENCES categories(id) ON DELETE RESTRICT,
+        notes TEXT,
+        status VARCHAR(10) NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'paid', 'cancelled')),
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      );
+    `);
+
     // Índices para melhor performance nas consultas
     await client.query(`
       CREATE INDEX IF NOT EXISTS idx_transactions_user_id ON transactions(user_id);
@@ -145,6 +180,11 @@ export async function createTables(): Promise<void> {
       CREATE INDEX IF NOT EXISTS idx_recurring_bills_active ON recurring_bills(active);
       CREATE INDEX IF NOT EXISTS idx_openfinance_items_user_id ON openfinance_items(user_id);
       CREATE INDEX IF NOT EXISTS idx_openfinance_items_pluggy_id ON openfinance_items(pluggy_item_id);
+      CREATE INDEX IF NOT EXISTS idx_installments_user_id ON installments(user_id);
+      CREATE INDEX IF NOT EXISTS idx_installments_start_date ON installments(start_date);
+      CREATE INDEX IF NOT EXISTS idx_future_expenses_user_id ON future_expenses(user_id);
+      CREATE INDEX IF NOT EXISTS idx_future_expenses_expected_date ON future_expenses(expected_date);
+      CREATE INDEX IF NOT EXISTS idx_future_expenses_status ON future_expenses(status);
     `);
 
     console.log('✅ Tabelas criadas/verificadas com sucesso');
