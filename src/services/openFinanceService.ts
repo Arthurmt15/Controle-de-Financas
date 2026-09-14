@@ -1,10 +1,10 @@
 /**
  * @file src/services/openFinanceService.ts
- * @description Serviço para comunicação com a API do Open Finance (backend).
- * Fornece funções para autenticação, consulta de contas e transações.
+ * @description Serviço para comunicação com a API do Open Finance.
+ * Em produção, usa Edge Functions do Supabase. Em desenvolvimento, usa backend Express.
  */
 
-import { apiRequest } from './api';
+import { supabase } from '../lib/supabase';
 import {
   OpenFinanceAccount,
   OpenFinanceTransaction,
@@ -12,49 +12,82 @@ import {
   ConnectToken,
 } from '../types/openFinance';
 
+const USE_SUPABASE = process.env.REACT_APP_USE_SUPABASE === 'true';
+
 /** Interface de resposta da API para tokens */
-interface TokenResponse {
-  data: ConnectToken;
-}
+interface TokenResponse { data: ConnectToken; }
 
 /** Interface de resposta da API para itens */
-interface ItemResponse {
-  data: OpenFinanceItem;
-}
+interface ItemResponse { data: OpenFinanceItem; }
 
 /** Interface de resposta da API para lista de itens */
-interface ItemsListResponse {
-  data: OpenFinanceItem[];
-}
+interface ItemsListResponse { data: OpenFinanceItem[]; }
 
 /** Interface de resposta da API para lista de contas */
-interface AccountsListResponse {
-  data: OpenFinanceAccount[];
-}
+interface AccountsListResponse { data: OpenFinanceAccount[]; }
 
 /** Interface de resposta da API para lista de transações */
-interface TransactionsListResponse {
-  data: OpenFinanceTransaction[];
+interface TransactionsListResponse { data: OpenFinanceTransaction[]; }
+
+/**
+ * Chama Edge Function do Supabase com autenticação.
+ */
+async function callEdgeFunction<T>(
+  functionName: string,
+  options: RequestInit = {}
+): Promise<T> {
+  const { data: { session } } = await supabase.auth.getSession();
+  const url = `${process.env.REACT_APP_SUPABASE_URL}/functions/v1/${functionName}`;
+  
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json',
+    'Authorization': `Bearer ${session?.access_token || ''}`,
+    ...(options.headers as Record<string, string>),
+  };
+
+  const response = await fetch(url, { ...options, headers });
+  
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({}));
+    throw new Error(error.error || `Erro na Edge Function: ${response.status}`);
+  }
+  
+  return response.json();
 }
 
 /**
  * Obtém um connect token para autenticar o widget Pluggy Connect.
  */
 export async function getConnectToken(): Promise<ConnectToken> {
-  const response = await apiRequest<TokenResponse>('/pluggy/token', {
-    method: 'POST',
-  });
+  if (USE_SUPABASE) {
+    const response = await callEdgeFunction<TokenResponse>('pluggy-proxy', {
+      method: 'POST',
+      body: JSON.stringify({ path: '/token' }),
+    });
+    return response.data;
+  }
+  // Modo desenvolvimento: backend Express
+  const { apiRequest } = await import('./api');
+  const response = await apiRequest<TokenResponse>('/pluggy/token', { method: 'POST' });
   return response.data;
 }
 
 /**
- * Salva um item (conexão) criado pelo widget no banco local.
+ * Salva um item (conexão) criado pelo widget no banco.
  */
 export async function saveItem(
   pluggyItemId: string,
   connectorId: number,
   institutionName: string
 ): Promise<OpenFinanceItem> {
+  if (USE_SUPABASE) {
+    const response = await callEdgeFunction<ItemResponse>('pluggy-proxy', {
+      method: 'POST',
+      body: JSON.stringify({ path: '/items', pluggyItemId, connectorId, institutionName }),
+    });
+    return response.data;
+  }
+  const { apiRequest } = await import('./api');
   const response = await apiRequest<ItemResponse>('/pluggy/items', {
     method: 'POST',
     body: JSON.stringify({ pluggyItemId, connectorId, institutionName }),
@@ -66,6 +99,13 @@ export async function saveItem(
  * Lista todos os itens conectados do usuário.
  */
 export async function listItems(): Promise<OpenFinanceItem[]> {
+  if (USE_SUPABASE) {
+    const response = await callEdgeFunction<ItemsListResponse>('pluggy-proxy', {
+      method: 'GET',
+    });
+    return response.data;
+  }
+  const { apiRequest } = await import('./api');
   const response = await apiRequest<ItemsListResponse>('/pluggy/items');
   return response.data;
 }
@@ -74,9 +114,14 @@ export async function listItems(): Promise<OpenFinanceItem[]> {
  * Lista as contas de um item específico.
  */
 export async function getAccountsByItem(itemId: string): Promise<OpenFinanceAccount[]> {
-  const response = await apiRequest<AccountsListResponse>(
-    `/pluggy/items/${itemId}/accounts`
-  );
+  if (USE_SUPABASE) {
+    const response = await callEdgeFunction<AccountsListResponse>('pluggy-proxy', {
+      method: 'GET',
+    });
+    return response.data;
+  }
+  const { apiRequest } = await import('./api');
+  const response = await apiRequest<AccountsListResponse>(`/pluggy/items/${itemId}/accounts`);
   return response.data;
 }
 
@@ -113,6 +158,13 @@ export async function getTransactions(
   if (to) params.append('to', to);
   params.append('limit', limit.toString());
 
+  if (USE_SUPABASE) {
+    const response = await callEdgeFunction<TransactionsListResponse>('pluggy-proxy', {
+      method: 'GET',
+    });
+    return response.data;
+  }
+  const { apiRequest } = await import('./api');
   const response = await apiRequest<TransactionsListResponse>(
     `/pluggy/accounts/${accountId}/transactions?${params.toString()}`
   );
@@ -123,7 +175,13 @@ export async function getTransactions(
  * Remove um item (desconecta uma instituição).
  */
 export async function removeItem(itemId: string): Promise<void> {
-  await apiRequest(`/pluggy/items/${itemId}`, {
-    method: 'DELETE',
-  });
+  if (USE_SUPABASE) {
+    await callEdgeFunction('pluggy-proxy', {
+      method: 'DELETE',
+      body: JSON.stringify({ path: `/items/${itemId}` }),
+    });
+    return;
+  }
+  const { apiRequest } = await import('./api');
+  await apiRequest(`/pluggy/items/${itemId}`, { method: 'DELETE' });
 }

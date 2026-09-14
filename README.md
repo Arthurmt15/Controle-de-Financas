@@ -173,7 +173,7 @@ Aplicação web completa para controle financeiro pessoal, desenvolvida com Reac
 
 - Node.js >= 20.0.0
 - npm >= 10.0.0
-- PostgreSQL (Railway ou local)
+- Supabase (conta gratuita)
 - Conta Google Cloud Platform (para OAuth)
 - Conta Pluggy (para Open Finance, opcional)
 
@@ -196,12 +196,15 @@ cd server && npm install
 **Frontend (`.env`):**
 ```env
 REACT_APP_GOOGLE_CLIENT_ID=seu-client-id-aqui
+REACT_APP_USE_SUPABASE=false
+REACT_APP_SUPABASE_URL=sua_url_do_supabase
+REACT_APP_SUPABASE_ANON_KEY=sua_chave_anon
 REACT_APP_API_URL=http://localhost:5000/api
 ```
 
 **Backend (`server/.env`):**
 ```env
-DATABASE_URL=sua_url_do_railway_aqui
+DATABASE_URL=sua_url_do_banco
 JWT_SECRET=sua_chave_secreta_aqui
 GROQ_API_KEY=sua_chave_groq_aqui
 PLUGGY_CLIENT_ID=seu_client_id_pluggy

@@ -1,11 +1,13 @@
 /**
  * @file services/financialAdvisorService.ts
- * @description Serviço de consultor financeiro com IA (via backend proxy).
- * Constrói contexto financeiro real do usuário e consulta IA para conselhos.
+ * @description Serviço de consultor financeiro com IA.
+ * Em produção, usa Edge Functions do Supabase. Em desenvolvimento, usa backend Express.
  */
 
 import type { Transaction, Category } from '../types';
-import { apiStream } from './api';
+import { supabase } from '../lib/supabase';
+
+const USE_SUPABASE = process.env.REACT_APP_USE_SUPABASE === 'true';
 
 /** Mensagem no formato do chat */
 interface ChatMessage {
@@ -108,7 +110,8 @@ ${recent || '  Nenhuma transação recente'}
 }
 
 /**
- * Envia pergunta ao consultor financeiro IA via backend proxy com streaming.
+ * Envia pergunta ao consultor financeiro IA.
+ * Em produção, usa Edge Function do Supabase. Em desenvolvimento, usa backend Express.
  * Retorna um AsyncGenerator que yield cada chunk de texto.
  */
 export async function* streamAdvisor(
@@ -116,6 +119,36 @@ export async function* streamAdvisor(
   financialContext: string,
   history: ChatMessage[]
 ): AsyncGenerator<string> {
+  if (USE_SUPABASE) {
+    // Chama Edge Function do Supabase
+    const { data: { session } } = await supabase.auth.getSession();
+    const url = `${process.env.REACT_APP_SUPABASE_URL}/functions/v1/ai-chat`;
+    
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${session?.access_token || ''}`,
+      },
+      body: JSON.stringify({ messages: [
+        { role: 'system', content: financialContext },
+        ...history,
+        { role: 'user', content: userMessage },
+      ]}),
+    });
+
+    if (!response.ok) {
+      const error = await response.json().catch(() => ({}));
+      throw new Error(error.error || `Erro na IA: ${response.status}`);
+    }
+
+    const data = await response.json();
+    yield data.data.content;
+    return;
+  }
+
+  // Modo desenvolvimento: backend Express com streaming
+  const { apiStream } = await import('./api');
   const response = await apiStream('/ai/chat', {
     message: userMessage,
     financialContext,
