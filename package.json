@@ -4,6 +4,7 @@
   "private": true,
   "dependencies": {
     "@react-oauth/google": "^0.13.5",
+    "@supabase/supabase-js": "^2.116.0",
     "framer-motion": "^13.2.0",
     "jspdf": "^4.2.1",
     "jspdf-autotable": "^5.0.8",

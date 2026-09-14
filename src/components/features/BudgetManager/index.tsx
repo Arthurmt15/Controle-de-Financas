@@ -1,41 +1,25 @@
-/**
- * @file components/features/BudgetManager/index.tsx
- * @description Gerenciador de orçamento mensal por categoria.
- * Usa API backend (Railway/PostgreSQL) para persistir orçamentos.
- */
-
 import React, { useState, useMemo, useEffect, useCallback } from 'react';
 import { useTransactions } from '../../../hooks/useTransactions';
 import { useAuth } from '../../../contexts/AuthContext';
-import { budgetService } from '../../../services/api';
+import { budgetService } from '../../../services/data';
 import BudgetSummary from './components/BudgetSummary';
 import BudgetCards from './components/BudgetCards';
 import BudgetForm from './components/BudgetForm';
 import * as C from './styles';
 import type { Budget } from '../../../types';
 
-/**
- * Componente principal de gerenciamento de orçamento
- * Carrega orçamentos da API e permite adicionar/remover
- */
 const BudgetManager: React.FC = () => {
   const { transactions, categories } = useTransactions();
   const { user, logout } = useAuth();
   const userId = user?.id || '';
 
-  /** Lista de orçamentos carregados da API */
   const [budgets, setBudgets] = useState<Budget[]>([]);
-  /** Estado de carregamento (usado internamente) */
   const [, setLoading] = useState(false);
 
-  /** Mês selecionado (formato YYYY-MM) */
   const currentDate = new Date();
   const currentMonth = `${currentDate.getFullYear()}-${String(currentDate.getMonth() + 1).padStart(2, '0')}`;
   const [selectedMonth, setSelectedMonth] = useState(currentMonth);
 
-  /**
-   * Carrega orçamentos do banco quando o usuário está autenticado
-   */
   useEffect(() => {
     if (!userId) return;
 
@@ -50,8 +34,8 @@ const BudgetManager: React.FC = () => {
         }
       } catch (error) {
         if (!cancelled) {
-          if (error instanceof Error && 
-              (error.message.includes('Sessão expirada') || error.message.includes('Faça login'))) {
+          if (error instanceof Error &&
+              (error.message.includes('Sessão expirada') || error.message.includes('Faça login') || error.message.includes('Não autenticado'))) {
             logout();
             return;
           }
@@ -68,14 +52,10 @@ const BudgetManager: React.FC = () => {
     return () => { cancelled = true; };
   }, [userId, logout]);
 
-  /** Orçamentos do mês selecionado */
   const currentBudgets = useMemo(() => {
     return budgets.filter((b) => b.month === selectedMonth);
   }, [budgets, selectedMonth]);
 
-  /**
-   * Calcula gastos por categoria no mês selecionado
-   */
   const categorySpending = useMemo(() => {
     const [year, month] = selectedMonth.split('-').map(Number);
     const expenses = transactions.filter((t) => {
@@ -90,23 +70,17 @@ const BudgetManager: React.FC = () => {
     return spending;
   }, [transactions, selectedMonth]);
 
-  /** Total do orçamento do mês */
   const totalBudget = currentBudgets.reduce((sum, b) => sum + b.limit, 0);
-  /** Total gasto no mês */
   const totalSpent = Object.values(categorySpending).reduce((sum, v) => sum + v, 0);
 
-  /**
-   * Adiciona um novo orçamento via API
-   * @param budget - Dados do orçamento (sem ID)
-   */
   const handleAddBudget = useCallback(
     async (budget: Omit<Budget, 'id'>) => {
       try {
         const newBudget = await budgetService.create(budget, userId);
         setBudgets((prev) => [...prev, newBudget]);
       } catch (error) {
-        if (error instanceof Error && 
-            (error.message.includes('Sessão expirada') || error.message.includes('Faça login'))) {
+        if (error instanceof Error &&
+            (error.message.includes('Sessão expirada') || error.message.includes('Faça login') || error.message.includes('Não autenticado'))) {
           logout();
           throw error;
         }
@@ -117,18 +91,14 @@ const BudgetManager: React.FC = () => {
     [userId, logout]
   );
 
-  /**
-   * Remove um orçamento via API
-   * @param id - ID do orçamento a ser removido
-   */
   const handleDeleteBudget = useCallback(
     async (id: string) => {
       try {
         await budgetService.delete(id);
         setBudgets((prev) => prev.filter((b) => b.id !== id));
       } catch (error) {
-        if (error instanceof Error && 
-            (error.message.includes('Sessão expirada') || error.message.includes('Faça login'))) {
+        if (error instanceof Error &&
+            (error.message.includes('Sessão expirada') || error.message.includes('Faça login') || error.message.includes('Não autenticado'))) {
           logout();
           throw error;
         }
@@ -140,7 +110,6 @@ const BudgetManager: React.FC = () => {
 
   return (
     <C.Container>
-      {/* Cabeçalho com título e seletor de mês */}
       <C.Header>
         <C.Title>Orçamento Mensal</C.Title>
         <C.MonthSelector>
@@ -152,10 +121,8 @@ const BudgetManager: React.FC = () => {
         </C.MonthSelector>
       </C.Header>
 
-      {/* Resumo geral do orçamento */}
       <BudgetSummary totalBudget={totalBudget} totalSpent={totalSpent} />
 
-      {/* Formulário para novo orçamento */}
       <BudgetForm
         selectedMonth={selectedMonth}
         categories={categories}
@@ -163,7 +130,6 @@ const BudgetManager: React.FC = () => {
         onAddBudget={handleAddBudget}
       />
 
-      {/* Cards de orçamento por categoria */}
       <BudgetCards
         budgets={currentBudgets}
         categorySpending={categorySpending}

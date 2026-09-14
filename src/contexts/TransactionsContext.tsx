@@ -1,13 +1,13 @@
 /**
  * @file contexts/TransactionsContext.tsx
  * @description Contexto compartilhado para transações financeiras.
- * Usa API backend (Railway/PostgreSQL) para persistir dados.
+ * Suporta backend Express (local) e Supabase (produção).
  */
 
 import React, { createContext, useContext, useReducer, useCallback, useMemo, useEffect, useRef } from 'react';
 import { useLocalStorage } from '../hooks/useLocalStorage';
 import { useAuth } from './AuthContext';
-import { transactionService, categoryService, recurringBillService } from '../services/api';
+import { transactionService, categoryService, recurringBillService } from '../services/data';
 import { transactionReducer } from '../reducers/transactionReducer';
 import { filterTransactions } from '../utils/transactionFilters';
 import { calculateMetrics } from '../utils/transactionMetrics';
@@ -19,7 +19,6 @@ import type {
   TransactionState,
 } from '../types';
 
-/** Estado inicial do reducer de transações */
 const initialState: TransactionState = {
   transactions: [],
   categories: [],
@@ -37,7 +36,6 @@ const initialState: TransactionState = {
   error: null,
 };
 
-/** Interface do valor do contexto de transações */
 interface TransactionsContextValue extends TransactionState {
   filteredTransactions: Transaction[];
   metrics: ReturnType<typeof calculateMetrics>;
@@ -54,21 +52,14 @@ interface TransactionsContextValue extends TransactionState {
   clearFilters: () => void;
 }
 
-/** Contexto de transações */
 const TransactionsContext = createContext<TransactionsContextValue | undefined>(undefined);
 
-/**
- * Provider de transações
- * Carrega dados da API ao montar e sincroniza mudanças
- */
 export function TransactionsProvider({ children }: { children: React.ReactNode }) {
   const { user, logout } = useAuth();
   const userId = user?.id || '';
 
-  /** Contador de operações em andamento para evitar race condition */
   const loadingCountRef = useRef(0);
 
-  /** Filtros permanecem no localStorage */
   const [storedFilters, setStoredFilters] = useLocalStorage<TransactionFilters>(
     'financas_filters',
     initialState.filters
@@ -79,10 +70,6 @@ export function TransactionsProvider({ children }: { children: React.ReactNode }
     filters: storedFilters,
   });
 
-  /**
-   * Incrementa/decrementa contador de loading
-   * Evita race condition quando múltiplas operações acontecem
-   */
   const setLoading = useCallback((loading: boolean) => {
     if (loading) {
       loadingCountRef.current += 1;
@@ -95,9 +82,6 @@ export function TransactionsProvider({ children }: { children: React.ReactNode }
     }
   }, []);
 
-  /**
-   * Carrega dados do banco quando o usuário está autenticado
-   */
   useEffect(() => {
     if (!userId) return;
 
@@ -125,10 +109,11 @@ export function TransactionsProvider({ children }: { children: React.ReactNode }
         }
       } catch (error) {
         if (!cancelled) {
-          if (error instanceof Error && 
-              (error.message.includes('Sessão expirada') || 
+          if (error instanceof Error &&
+              (error.message.includes('Sessão expirada') ||
                error.message.includes('Autenticação necessária') ||
-               error.message.includes('Faça login novamente'))) {
+               error.message.includes('Faça login novamente') ||
+               error.message.includes('Não autenticado'))) {
             logout();
             return;
           }
@@ -146,9 +131,6 @@ export function TransactionsProvider({ children }: { children: React.ReactNode }
     return () => { cancelled = true; };
   }, [userId, setLoading, logout]);
 
-  /**
-   * Adiciona uma nova transação via API
-   */
   const addTransaction = useCallback(
     async (transaction: Omit<Transaction, 'id'>) => {
       setLoading(true);
@@ -157,8 +139,8 @@ export function TransactionsProvider({ children }: { children: React.ReactNode }
         dispatch({ type: 'ADD_TRANSACTION', payload: newTransaction });
         return newTransaction;
       } catch (error) {
-        if (error instanceof Error && 
-            (error.message.includes('Sessão expirada') || error.message.includes('Faça login'))) {
+        if (error instanceof Error &&
+            (error.message.includes('Sessão expirada') || error.message.includes('Faça login') || error.message.includes('Não autenticado'))) {
           logout();
           throw error;
         }
@@ -171,9 +153,6 @@ export function TransactionsProvider({ children }: { children: React.ReactNode }
     [userId, setLoading, logout]
   );
 
-  /**
-   * Atualiza uma transação existente via API
-   */
   const updateTransaction = useCallback(
     async (transaction: Transaction) => {
       setLoading(true);
@@ -182,8 +161,8 @@ export function TransactionsProvider({ children }: { children: React.ReactNode }
         dispatch({ type: 'UPDATE_TRANSACTION', payload: updated });
         return updated;
       } catch (error) {
-        if (error instanceof Error && 
-            (error.message.includes('Sessão expirada') || error.message.includes('Faça login'))) {
+        if (error instanceof Error &&
+            (error.message.includes('Sessão expirada') || error.message.includes('Faça login') || error.message.includes('Não autenticado'))) {
           logout();
           throw error;
         }
@@ -196,9 +175,6 @@ export function TransactionsProvider({ children }: { children: React.ReactNode }
     [setLoading, logout]
   );
 
-  /**
-   * Remove uma transação via API
-   */
   const deleteTransaction = useCallback(
     async (transactionId: string) => {
       setLoading(true);
@@ -206,8 +182,8 @@ export function TransactionsProvider({ children }: { children: React.ReactNode }
         await transactionService.delete(transactionId);
         dispatch({ type: 'DELETE_TRANSACTION', payload: transactionId });
       } catch (error) {
-        if (error instanceof Error && 
-            (error.message.includes('Sessão expirada') || error.message.includes('Faça login'))) {
+        if (error instanceof Error &&
+            (error.message.includes('Sessão expirada') || error.message.includes('Faça login') || error.message.includes('Não autenticado'))) {
           logout();
           throw error;
         }
@@ -220,9 +196,6 @@ export function TransactionsProvider({ children }: { children: React.ReactNode }
     [setLoading, logout]
   );
 
-  /**
-   * Adiciona uma nova categoria via API
-   */
   const addCategory = useCallback(
     async (category: Omit<Category, 'id'>) => {
       setLoading(true);
@@ -231,8 +204,8 @@ export function TransactionsProvider({ children }: { children: React.ReactNode }
         dispatch({ type: 'ADD_CATEGORY', payload: newCategory });
         return newCategory;
       } catch (error) {
-        if (error instanceof Error && 
-            (error.message.includes('Sessão expirada') || error.message.includes('Faça login'))) {
+        if (error instanceof Error &&
+            (error.message.includes('Sessão expirada') || error.message.includes('Faça login') || error.message.includes('Não autenticado'))) {
           logout();
           throw error;
         }
@@ -245,9 +218,6 @@ export function TransactionsProvider({ children }: { children: React.ReactNode }
     [userId, setLoading, logout]
   );
 
-  /**
-   * Remove uma categoria via API
-   */
   const deleteCategory = useCallback(
     async (categoryId: string) => {
       setLoading(true);
@@ -255,8 +225,8 @@ export function TransactionsProvider({ children }: { children: React.ReactNode }
         await categoryService.delete(categoryId);
         dispatch({ type: 'DELETE_CATEGORY', payload: categoryId });
       } catch (error) {
-        if (error instanceof Error && 
-            (error.message.includes('Sessão expirada') || error.message.includes('Faça login'))) {
+        if (error instanceof Error &&
+            (error.message.includes('Sessão expirada') || error.message.includes('Faça login') || error.message.includes('Não autenticado'))) {
           logout();
           throw error;
         }
@@ -269,9 +239,6 @@ export function TransactionsProvider({ children }: { children: React.ReactNode }
     [setLoading, logout]
   );
 
-  /**
-   * Adiciona uma nova conta recorrente via API
-   */
   const addRecurringBill = useCallback(
     async (bill: Omit<RecurringBill, 'id'>) => {
       setLoading(true);
@@ -280,8 +247,8 @@ export function TransactionsProvider({ children }: { children: React.ReactNode }
         dispatch({ type: 'ADD_RECURRING_BILL', payload: newBill });
         return newBill;
       } catch (error) {
-        if (error instanceof Error && 
-            (error.message.includes('Sessão expirada') || error.message.includes('Faça login'))) {
+        if (error instanceof Error &&
+            (error.message.includes('Sessão expirada') || error.message.includes('Faça login') || error.message.includes('Não autenticado'))) {
           logout();
           throw error;
         }
@@ -294,9 +261,6 @@ export function TransactionsProvider({ children }: { children: React.ReactNode }
     [userId, setLoading, logout]
   );
 
-  /**
-   * Atualiza uma conta recorrente existente via API
-   */
   const updateRecurringBill = useCallback(
     async (bill: RecurringBill) => {
       setLoading(true);
@@ -305,8 +269,8 @@ export function TransactionsProvider({ children }: { children: React.ReactNode }
         dispatch({ type: 'UPDATE_RECURRING_BILL', payload: updated });
         return updated;
       } catch (error) {
-        if (error instanceof Error && 
-            (error.message.includes('Sessão expirada') || error.message.includes('Faça login'))) {
+        if (error instanceof Error &&
+            (error.message.includes('Sessão expirada') || error.message.includes('Faça login') || error.message.includes('Não autenticado'))) {
           logout();
           throw error;
         }
@@ -319,9 +283,6 @@ export function TransactionsProvider({ children }: { children: React.ReactNode }
     [setLoading, logout]
   );
 
-  /**
-   * Remove uma conta recorrente via API
-   */
   const deleteRecurringBill = useCallback(
     async (billId: string) => {
       setLoading(true);
@@ -329,8 +290,8 @@ export function TransactionsProvider({ children }: { children: React.ReactNode }
         await recurringBillService.delete(billId);
         dispatch({ type: 'DELETE_RECURRING_BILL', payload: billId });
       } catch (error) {
-        if (error instanceof Error && 
-            (error.message.includes('Sessão expirada') || error.message.includes('Faça login'))) {
+        if (error instanceof Error &&
+            (error.message.includes('Sessão expirada') || error.message.includes('Faça login') || error.message.includes('Não autenticado'))) {
           logout();
           throw error;
         }
@@ -343,9 +304,6 @@ export function TransactionsProvider({ children }: { children: React.ReactNode }
     [setLoading, logout]
   );
 
-  /**
-   * Gera transações automáticas para contas recorrentes do mês
-   */
   const generateRecurringTransactions = useCallback(
     async () => {
       setLoading(true);
@@ -356,8 +314,8 @@ export function TransactionsProvider({ children }: { children: React.ReactNode }
         }
         return newTransactions;
       } catch (error) {
-        if (error instanceof Error && 
-            (error.message.includes('Sessão expirada') || error.message.includes('Faça login'))) {
+        if (error instanceof Error &&
+            (error.message.includes('Sessão expirada') || error.message.includes('Faça login') || error.message.includes('Não autenticado'))) {
           logout();
           throw error;
         }
@@ -370,9 +328,6 @@ export function TransactionsProvider({ children }: { children: React.ReactNode }
     [userId, setLoading, logout]
   );
 
-  /**
-   * Atualiza os filtros de transação
-   */
   const setFilters = useCallback(
     (filters: Partial<TransactionFilters>) => {
       dispatch({ type: 'SET_FILTERS', payload: filters });
@@ -381,27 +336,21 @@ export function TransactionsProvider({ children }: { children: React.ReactNode }
     [setStoredFilters]
   );
 
-  /**
-   * Limpa todos os filtros aplicados
-   */
   const clearFilters = useCallback(() => {
     dispatch({ type: 'CLEAR_FILTERS' });
     setStoredFilters(initialState.filters);
   }, [setStoredFilters]);
 
-  /** Transações filtradas (memoizado) */
   const filteredTransactions = useMemo(
     () => filterTransactions(state.transactions, state.filters),
     [state.transactions, state.filters]
   );
 
-  /** Métricas calculadas (memoizado) */
   const metrics = useMemo(
     () => calculateMetrics(state.transactions),
     [state.transactions]
   );
 
-  /** Valor do contexto (memoizado) */
   const value = useMemo<TransactionsContextValue>(
     () => ({
       transactions: state.transactions,
@@ -443,9 +392,6 @@ export function TransactionsProvider({ children }: { children: React.ReactNode }
   );
 }
 
-/**
- * Hook para acessar o contexto de transações
- */
 export function useTransactions(): TransactionsContextValue {
   const context = useContext(TransactionsContext);
   if (!context) {

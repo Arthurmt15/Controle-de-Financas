@@ -1,18 +1,14 @@
 /**
  * @file contexts/AuthContext.tsx
- * @description Contexto de autenticação com Google OAuth.
- * Utiliza API backend (Railway/PostgreSQL) para persistir dados do usuário.
- * Mantém localStorage como cache para sessão offline.
+ * @description Contexto de autenticação unificado.
+ * Suporta Google OAuth + JWT (local) e Supabase Auth (produção).
  */
 
 import React, { createContext, useContext, useCallback, useEffect, useReducer } from 'react';
 import { useLocalStorage } from '../hooks/useLocalStorage';
-import { userService, setAuthToken, hasStoredToken, getTokenFromCookie } from '../services/api';
+import { authService, isSupabase } from '../services/data';
 import type { User, AuthState, AuthAction } from '../types';
 
-/**
- * Interface para payload do Google JWT decodificado
- */
 interface GooglePayload {
   email: string;
   name: string;
@@ -20,11 +16,6 @@ interface GooglePayload {
   sub: string;
 }
 
-/**
- * Decodifica um token JWT do Google
- * @param {string} token - Token JWT do Google
- * @returns {GooglePayload} Payload decodificado com dados do usuário
- */
 function decodeGoogleToken(token: string): GooglePayload {
   try {
     const base64Url = token.split('.')[1];
@@ -42,7 +33,6 @@ function decodeGoogleToken(token: string): GooglePayload {
   }
 }
 
-/** Estado inicial da autenticação */
 const initialState: AuthState = {
   isAuthenticated: false,
   user: null,
@@ -50,9 +40,6 @@ const initialState: AuthState = {
   error: null,
 };
 
-/**
- * Reducer para gerenciar ações de autenticação
- */
 function authReducer(state: AuthState, action: AuthAction): AuthState {
   switch (action.type) {
     case 'LOGIN_START':
@@ -70,20 +57,14 @@ function authReducer(state: AuthState, action: AuthAction): AuthState {
   }
 }
 
-/** Interface do contexto de autenticação */
 interface AuthContextType extends AuthState {
-  loginWithGoogle: (credentialResponse: { credential: string }) => void;
+  loginWithGoogle: (credentialResponse?: { credential: string }) => void;
   logout: () => void;
   clearError: () => void;
 }
 
-/** Contexto de autenticação */
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-/**
- * Provider de autenticação
- * Salva usuário no localStorage (cache) e cria registro no banco via API
- */
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [storedUser, setStoredUser, removeStoredUser] = useLocalStorage<User | null>(
     'financas_user',
@@ -96,73 +77,99 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     isAuthenticated: !!storedUser,
   });
 
-  // Sincroniza com localStorage ao inicializar
   useEffect(() => {
-    if (storedUser) {
-      // Sessão antiga sem token JWT (antes da correção) → força re-login
-      if (!hasStoredToken()) {
-        removeStoredUser();
-        return;
-      }
-      dispatch({ type: 'LOGIN_SUCCESS', payload: storedUser });
+    if (isSupabase) {
+      authService.getSession().then((session) => {
+        if (session?.user) {
+          const user: User = {
+            id: session.user.id,
+            name: session.user.user_metadata?.full_name || session.user.email?.split('@')[0] || '',
+            email: session.user.email || '',
+            avatar: session.user.user_metadata?.avatar_url,
+          };
+          dispatch({ type: 'LOGIN_SUCCESS', payload: user });
+          setStoredUser(user);
+        }
+      }).catch(() => {});
+
+      const { data: { subscription } } = authService.onAuthStateChange((user) => {
+        if (user) {
+          dispatch({ type: 'LOGIN_SUCCESS', payload: user });
+          setStoredUser(user);
+        } else {
+          dispatch({ type: 'LOGOUT' });
+          removeStoredUser();
+        }
+      });
+
+      return () => subscription.unsubscribe();
     } else {
-      // localStorage foi limpo, mas pode haver um token no cookie (backup)
-      const cookieToken = getTokenFromCookie();
-      if (cookieToken) {
-        // Restaura o token e busca o usuário na API
-        setAuthToken(cookieToken);
-        dispatch({ type: 'LOGIN_START' });
-        userService.getCurrentUser()
-          .then((userData) => {
-            const user: User = {
-              id: userData.id,
-              name: userData.name,
-              email: userData.email,
-              avatar: userData.avatar ?? undefined,
-            };
-            dispatch({ type: 'LOGIN_SUCCESS', payload: user });
-            setStoredUser(user);
-          })
-          .catch(() => {
-            // Token inválido ou expirado, limpa tudo
-            setAuthToken(null);
-            dispatch({ type: 'LOGOUT' });
-          });
+      if (storedUser) {
+        if (!authService.hasStoredToken()) {
+          removeStoredUser();
+          return;
+        }
+        dispatch({ type: 'LOGIN_SUCCESS', payload: storedUser });
+      } else {
+        const cookieToken = authService.getTokenFromCookie();
+        if (cookieToken) {
+          authService.setAuthToken(cookieToken);
+          dispatch({ type: 'LOGIN_START' });
+          authService.getCurrentUser()
+            .then((userData) => {
+              if (userData) {
+                const user: User = {
+                  id: userData.id,
+                  name: userData.name,
+                  email: userData.email,
+                  avatar: userData.avatar ?? undefined,
+                };
+                dispatch({ type: 'LOGIN_SUCCESS', payload: user });
+                setStoredUser(user);
+              }
+            })
+            .catch(() => {
+              authService.setAuthToken(null);
+              dispatch({ type: 'LOGOUT' });
+            });
+        }
       }
     }
-  }, [storedUser, dispatch, removeStoredUser, setStoredUser]);
+  }, []);
 
-  /**
-   * Realiza o login com Google OAuth
-   * Decodifica o token, cria/busca usuário no banco e salva no localStorage
-   */
   const loginWithGoogle = useCallback(
-    async (credentialResponse: { credential: string }) => {
+    async (credentialResponse?: { credential: string }) => {
       try {
         dispatch({ type: 'LOGIN_START' });
 
-        // Decodifica o token JWT do Google
-        const payload = decodeGoogleToken(credentialResponse.credential);
+        if (isSupabase) {
+          await authService.signInWithGoogle();
+        } else {
+          if (!credentialResponse) {
+            throw new Error('Credential required for local login');
+          }
+          const payload = decodeGoogleToken(credentialResponse.credential);
+          const dbUser = await authService.createOrFind({
+            googleId: payload.sub,
+            name: payload.name,
+            email: payload.email,
+            avatar: payload.picture,
+          });
 
-        // Cria ou busca o usuário no banco de dados (Railway)
-        const dbUser = await userService.createOrFind({
-          googleId: payload.sub,
-          name: payload.name,
-          email: payload.email,
-          avatar: payload.picture,
-        });
+          const user: User = {
+            id: dbUser?.id || payload.sub,
+            name: dbUser?.name || payload.name,
+            email: dbUser?.email || payload.email,
+            avatar: dbUser?.avatar || payload.picture,
+          };
 
-        // Monta o objeto User para o estado
-        const user: User = {
-          id: dbUser.id || payload.sub,
-          name: dbUser.name || payload.name,
-          email: dbUser.email || payload.email,
-          avatar: dbUser.avatar || payload.picture,
-        };
+          if ((dbUser as any).token) {
+            authService.setAuthToken((dbUser as any).token);
+          }
 
-        // Salva no estado e no localStorage (cache)
-        dispatch({ type: 'LOGIN_SUCCESS', payload: user });
-        setStoredUser(user);
+          dispatch({ type: 'LOGIN_SUCCESS', payload: user });
+          setStoredUser(user);
+        }
       } catch (error) {
         console.error('Erro ao processar login Google:', error);
         dispatch({ type: 'LOGIN_FAILURE', payload: 'Erro ao autenticar com Google.' });
@@ -171,17 +178,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     [setStoredUser]
   );
 
-  /** Realiza o logout e limpa dados da sessão */
-  const logout = useCallback(() => {
+  const logout = useCallback(async () => {
     dispatch({ type: 'LOGOUT' });
     removeStoredUser();
-    setAuthToken(null);
+    authService.setAuthToken(null);
+    await authService.signOut();
     if (window.google?.accounts?.id) {
       window.google.accounts.id.disableAutoSelect();
     }
   }, [removeStoredUser]);
 
-  /** Limpa mensagem de erro */
   const clearError = useCallback(() => {
     dispatch({ type: 'CLEAR_ERROR' });
   }, []);
@@ -193,9 +199,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   );
 }
 
-/**
- * Hook para acessar contexto de autenticação
- */
 export function useAuth(): AuthContextType {
   const context = useContext(AuthContext);
   if (!context) {
