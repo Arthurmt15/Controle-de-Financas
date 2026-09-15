@@ -69,7 +69,7 @@ const ConnectBank: React.FC<ConnectBankProps> = ({ onSuccess, onError, onClose }
         if (!cancelled) setConnectToken(token.accessToken);
       } catch (e: any) {
         if (!cancelled) {
-          const msg = e?.message === 'timeout' ? 'Tempo esgotado ao gerar conexão. Verifique sua internet.' : 'Erro ao gerar token de conexão';
+          const msg = e?.message === 'timeout' ? 'Tempo esgotado ao gerar conexão. Verifique sua internet.' : (e?.message || 'Erro ao gerar token de conexão');
           setError(msg);
           onError(msg);
         }
@@ -122,8 +122,7 @@ const ConnectBank: React.FC<ConnectBankProps> = ({ onSuccess, onError, onClose }
     setError(null);
     setLoading(true);
     setConnectToken(null);
-    // retrigger effect via key: força reload
-    getConnectToken().then(t => { setConnectToken(t.accessToken); setLoading(false); }).catch(() => { setError('Erro ao gerar token de conexão'); setLoading(false); });
+    getConnectToken().then(t => { setConnectToken(t.accessToken); setLoading(false); }).catch((e: any) => { const m = e?.message || 'Erro ao gerar token de conexão'; setError(m); onError(m); setLoading(false); });
   };
 
   if (loading) {
@@ -152,7 +151,15 @@ const ConnectBank: React.FC<ConnectBankProps> = ({ onSuccess, onError, onClose }
             <span className="p-1.5 rounded-lg bg-red-100 text-red-600 dark:bg-red-900/30 shrink-0">
               <AlertCircle className="h-4 w-4" />
             </span>
-            <p className="text-sm font-medium text-red-700 dark:text-red-300">{error}</p>
+            <div className="min-w-0 flex-1">
+              <p className="text-sm font-medium text-red-700 dark:text-red-300 break-words">{error}</p>
+              {error?.includes('PLUGGY') && (
+                <p className="text-xs text-red-600/80 dark:text-red-400 mt-1.5 leading-relaxed">Configure em: Supabase Dashboard → Edge Functions → Secrets → PLUGGY_CLIENT_ID / PLUGGY_CLIENT_SECRET, depois redeploy.</p>
+              )}
+              {error?.includes('Supabase não configurado') && (
+                <p className="text-xs text-red-600/80 dark:text-red-400 mt-1.5 leading-relaxed">Configure REACT_APP_SUPABASE_URL e REACT_APP_SUPABASE_ANON_KEY na Vercel → Project Settings → Environment Variables.</p>
+              )}
+            </div>
           </CardContent>
         </Card>
         <div className="flex gap-2">

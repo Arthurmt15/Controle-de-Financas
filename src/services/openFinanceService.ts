@@ -1,6 +1,6 @@
 /**
  * @file src/services/openFinanceService.ts
- * @description Serviço para comunicação com a API do Open Finance via Supabase Edge Functions (pluggy-proxy).
+ * @description Serviço para Open Finance via Supabase Edge Functions (pluggy-proxy) com fallback.
  */
 
 import { supabase } from '../lib/supabase';
@@ -11,55 +11,72 @@ import {
   ConnectToken,
 } from '../types/openFinance';
 
-/** Interface de resposta da API para tokens */
 interface TokenResponse { data: ConnectToken; }
-
-/** Interface de resposta da API para itens */
 interface ItemResponse { data: OpenFinanceItem; }
-
-/** Interface de resposta da API para lista de itens */
 interface ItemsListResponse { data: OpenFinanceItem[]; }
-
-/** Interface de resposta da API para lista de contas */
 interface AccountsListResponse { data: OpenFinanceAccount[]; }
-
-/** Interface de resposta da API para lista de transações */
 interface TransactionsListResponse { data: OpenFinanceTransaction[]; }
 
-/**
- * Chama Edge Function do Supabase com autenticação.
- */
 async function callEdgeFunction<T>(
   functionName: string,
   subPath: string = '',
   options: RequestInit = {}
 ): Promise<T> {
+  const baseUrl = process.env.REACT_APP_SUPABASE_URL;
+  const anonKey = process.env.REACT_APP_SUPABASE_ANON_KEY;
+
+  if (!baseUrl || !anonKey) {
+    throw new Error('Supabase não configurado (REACT_APP_SUPABASE_URL ausente). Configure as envs na Vercel.');
+  }
+
   const { data: { session } } = await supabase.auth.getSession();
-  const url = `${process.env.REACT_APP_SUPABASE_URL}/functions/v1/${functionName}${subPath}`;
-  
+  const url = `${baseUrl}/functions/v1/${functionName}${subPath}`;
+
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
     'Authorization': `Bearer ${session?.access_token || ''}`,
-    'apikey': process.env.REACT_APP_SUPABASE_ANON_KEY || '',
+    'apikey': anonKey,
     ...(options.headers as Record<string, string>),
   };
 
-  const response = await fetch(url, { ...options, headers });
-  
-  if (!response.ok) {
-    const error = await response.json().catch(() => ({}));
-    throw new Error(error.error || `Erro na Edge Function: ${response.status}`);
+  let response: Response;
+  try {
+    response = await fetch(url, { ...options, headers });
+  } catch (e: any) {
+    throw new Error(`Falha de rede ao chamar ${functionName}: ${e?.message || e}`);
   }
-  
-  return response.json();
+
+  const bodyText = await response.text();
+  let body: any = {};
+  try { body = bodyText ? JSON.parse(bodyText) : {}; } catch { body = { raw: bodyText }; }
+
+  if (!response.ok) {
+    const msg = body?.error || body?.message || body?.raw || `HTTP ${response.status}`;
+    // mensagens amigáveis para casos comuns
+    if (response.status === 401) throw new Error(`Não autenticado: ${msg} — faça login novamente.`);
+    if (msg?.includes('PLUGGY_CLIENT_ID') || msg?.includes('apiKey')) throw new Error(`Pluggy não configurado: ${msg}. Configure PLUGGY_CLIENT_ID/SECRET nos secrets do Supabase.`);
+    throw new Error(msg || `Erro na Edge Function: ${response.status}`);
+  }
+
+  return body as T;
 }
 
 /** Obtém um connect token para autenticar o widget Pluggy Connect. */
 export async function getConnectToken(): Promise<ConnectToken> {
-  const response = await callEdgeFunction<TokenResponse>('pluggy-proxy', '/token', {
-    method: 'POST',
-  });
-  return response.data;
+  // tenta Supabase primeiro
+  try {
+    const response = await callEdgeFunction<TokenResponse>('pluggy-proxy', '/token', { method: 'POST' });
+    if (!response?.data?.accessToken) throw new Error('Token vazio retornado pelo servidor');
+    return response.data;
+  } catch (e: any) {
+    // fallback: se tiver REACT_APP_PLUGGY_CONNECT_TOKEN (demo) permite testar UI sem backend
+    const demo = (process.env as any).REACT_APP_PLUGGY_DEMO_TOKEN || (process.env as any).REACT_APP_DEMO_PLUGGY_TOKEN;
+    if (demo) {
+      console.warn('Usando token demo para Open Finance', e?.message);
+      return { accessToken: demo } as ConnectToken;
+    }
+    throw e;
+  }
 }
 
 /** Salva um item (conexão) criado pelo widget no banco. */
@@ -77,17 +94,13 @@ export async function saveItem(
 
 /** Lista todos os itens conectados do usuário. */
 export async function listItems(): Promise<OpenFinanceItem[]> {
-  const response = await callEdgeFunction<ItemsListResponse>('pluggy-proxy', '/items', {
-    method: 'GET',
-  });
+  const response = await callEdgeFunction<ItemsListResponse>('pluggy-proxy', '/items', { method: 'GET' });
   return response.data;
 }
 
 /** Lista as contas de um item específico. */
 export async function getAccountsByItem(itemId: string): Promise<OpenFinanceAccount[]> {
-  const response = await callEdgeFunction<AccountsListResponse>('pluggy-proxy', `/items/${itemId}/accounts`, {
-    method: 'GET',
-  });
+  const response = await callEdgeFunction<AccountsListResponse>('pluggy-proxy', `/items/${itemId}/accounts`, { method: 'GET' });
   return response.data;
 }
 
@@ -95,7 +108,6 @@ export async function getAccountsByItem(itemId: string): Promise<OpenFinanceAcco
 export async function getAllAccounts(): Promise<OpenFinanceAccount[]> {
   const items = await listItems();
   const allAccounts: OpenFinanceAccount[] = [];
-
   for (const item of items) {
     try {
       const accounts = await getAccountsByItem(item.id);
@@ -104,7 +116,6 @@ export async function getAllAccounts(): Promise<OpenFinanceAccount[]> {
       console.error(`Erro ao listar contas do item ${item.id}:`, error);
     }
   }
-
   return allAccounts;
 }
 
@@ -119,16 +130,11 @@ export async function getTransactions(
   if (from) params.append('from', from);
   if (to) params.append('to', to);
   params.append('limit', limit.toString());
-
-  const response = await callEdgeFunction<TransactionsListResponse>('pluggy-proxy', `/accounts/${accountId}/transactions?${params.toString()}`, {
-    method: 'GET',
-  });
+  const response = await callEdgeFunction<TransactionsListResponse>('pluggy-proxy', `/accounts/${accountId}/transactions?${params.toString()}`, { method: 'GET' });
   return response.data;
 }
 
 /** Remove um item (desconecta uma instituição). */
 export async function removeItem(itemId: string): Promise<void> {
-  await callEdgeFunction('pluggy-proxy', `/items/${itemId}`, {
-    method: 'DELETE',
-  });
+  await callEdgeFunction('pluggy-proxy', `/items/${itemId}`, { method: 'DELETE' });
 }

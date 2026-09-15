@@ -31,15 +31,24 @@ function getCorsHeaders(req: Request): Record<string, string> {
 
 /** Obtém API key da Pluggy usando Client ID e Secret */
 async function getPluggyApiKey(): Promise<string> {
+  const clientId = Deno.env.get("PLUGGY_CLIENT_ID")
+  const clientSecret = Deno.env.get("PLUGGY_CLIENT_SECRET")
+  if (!clientId || !clientSecret) {
+    throw new Error("PLUGGY_CLIENT_ID/PLUGGY_CLIENT_SECRET não configurados nos secrets do Supabase (supabase secrets set).")
+  }
   const res = await fetch(`${Deno.env.get("PLUGGY_API_URL") || "https://api.pluggy.ai"}/auth`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      clientId: Deno.env.get("PLUGGY_CLIENT_ID"),
-      clientSecret: Deno.env.get("PLUGGY_CLIENT_SECRET"),
-    }),
+    body: JSON.stringify({ clientId, clientSecret }),
   })
-  const { apiKey } = await res.json()
+  const text = await res.text()
+  let body: any = {}
+  try { body = text ? JSON.parse(text) : {} } catch { body = { raw: text } }
+  if (!res.ok) {
+    throw new Error(`Pluggy auth falhou (${res.status}): ${body?.error || body?.message || text}`)
+  }
+  const { apiKey } = body
+  if (!apiKey) throw new Error(`Pluggy não retornou apiKey: ${text}`)
   return apiKey
 }
 
@@ -111,7 +120,15 @@ serve(async (req) => {
         headers: pluggyHeaders,
         body: JSON.stringify({}),
       })
-      const data = await res.json()
+      const text = await res.text()
+      let data: any = {}
+      try { data = text ? JSON.parse(text) : {} } catch { data = { raw: text } }
+      if (!res.ok) {
+        return new Response(
+          JSON.stringify({ error: data?.error || data?.message || text || `Pluggy connect_token falhou (${res.status})` }),
+          { status: res.status, headers: { ...headers, "Content-Type": "application/json" } }
+        )
+      }
       return new Response(
         JSON.stringify({ success: true, data }),
         { headers: { ...headers, "Content-Type": "application/json" } }
