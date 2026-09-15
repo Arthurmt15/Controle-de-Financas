@@ -49,6 +49,29 @@ const InstallmentList: React.FC<InstallmentListProps> = ({ installments: propIns
     return (installment.totalInstallments - installment.currentInstallment) * installment.installmentAmount;
   };
 
+  /** Adiciona meses preservando dia */
+  const addMonths = (dateStr: string, months: number): Date => {
+    const d = new Date(dateStr + 'T12:00:00');
+    const day = d.getDate();
+    d.setMonth(d.getMonth() + months);
+    if (d.getDate() < day) d.setDate(0);
+    return d;
+  };
+
+  /** Próximo vencimento como Date ou null se concluído */
+  const getNextDueDate = (installment: Installment): Date | null => {
+    if (installment.currentInstallment >= installment.totalInstallments) return null;
+    return addMonths(installment.startDate, installment.currentInstallment);
+  };
+
+  const getDaysUntil = (date: Date): number => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const target = new Date(date);
+    target.setHours(0, 0, 0, 0);
+    return Math.round((target.getTime() - today.getTime()) / 86400000);
+  };
+
   /** Confirma exclusão */
   const handleConfirmDelete = () => {
     if (deletingId) {
@@ -99,6 +122,8 @@ const InstallmentList: React.FC<InstallmentListProps> = ({ installments: propIns
           const progress = getProgress(installment);
           const remaining = getRemainingAmount(installment);
           const isCompleted = installment.currentInstallment >= installment.totalInstallments;
+          const nextDue = getNextDueDate(installment);
+          const daysUntil = nextDue ? getDaysUntil(nextDue) : null;
 
           return (
             <C.Card key={installment.id} $isCompleted={isCompleted}>
@@ -170,6 +195,25 @@ const InstallmentList: React.FC<InstallmentListProps> = ({ installments: propIns
                   <strong>{formatCurrency(installment.installmentAmount)}</strong>
                 </C.AmountRow>
               </C.CardAmounts>
+
+              {nextDue ? (
+                <C.NextDue $days={daysUntil ?? 0}>
+                  <C.NextDueLabel>Próximo pagamento</C.NextDueLabel>
+                  <C.NextDueDate>{formatDate(nextDue.toISOString().split('T')[0])} • {installment.currentInstallment + 1}/{installment.totalInstallments}</C.NextDueDate>
+                  <C.NextDueDays>
+                    {daysUntil === 0
+                      ? 'Vence hoje'
+                      : daysUntil! > 0
+                        ? `Em ${daysUntil} dia${daysUntil! > 1 ? 's' : ''}`
+                        : `Vencido há ${Math.abs(daysUntil!)} dia${Math.abs(daysUntil!) > 1 ? 's' : ''}`}
+                  </C.NextDueDays>
+                </C.NextDue>
+              ) : (
+                <C.NextDue $days={999}>
+                  <C.NextDueLabel>Concluído</C.NextDueLabel>
+                  <C.NextDueDate>Todas as parcelas pagas</C.NextDueDate>
+                </C.NextDue>
+              )}
 
               {installment.source === 'openfinance' && (
                 <C.OpenFinanceBadge>Importado do Open Finance</C.OpenFinanceBadge>

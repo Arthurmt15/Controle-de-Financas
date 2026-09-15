@@ -5,10 +5,11 @@
  */
 
 import React, { useState, useMemo } from 'react';
+import { FaLayerGroup, FaCreditCard, FaHourglassHalf, FaCalendarCheck } from 'react-icons/fa';
 import InstallmentForm from '../../components/features/Installments/Form';
 import InstallmentList from '../../components/features/Installments/List';
 import { useInstallments } from '../../contexts/InstallmentsContext';
-import { formatCurrency } from '../../utils/formatters';
+import { formatCurrency, formatDate } from '../../utils/formatters';
 import * as C from './styles';
 
 /** Página de Parcelados */
@@ -62,15 +63,45 @@ const InstallmentsPage: React.FC = () => {
     });
   }, [installments, searchTerm, statusFilter]);
 
+  /** Calcula próximo vencimento: startDate + currentInstallment meses */
+  function addMonths(dateStr: string, months: number): Date {
+    const d = new Date(dateStr + 'T12:00:00');
+    const day = d.getDate();
+    d.setMonth(d.getMonth() + months);
+    if (d.getDate() < day) d.setDate(0);
+    return d;
+  }
+
+  function getNextDueDateStr(inst: { startDate: string; currentInstallment: number }): string {
+    const d = addMonths(inst.startDate, inst.currentInstallment);
+    return formatDate(d.toISOString().split('T')[0]);
+  }
+
+  function getDaysUntil(date: Date): number {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const target = new Date(date);
+    target.setHours(0, 0, 0, 0);
+    return Math.round((target.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+  }
+
   /** Próximo vencimento aproximado (baseado em startDate + currentInstallment) */
   const nextDueInfo = useMemo(() => {
     const active = installments.filter((i) => i.currentInstallment < i.totalInstallments);
     if (active.length === 0) return null;
-    // Ordena pelo startDate mais recente
-    const sorted = [...active].sort(
-      (a, b) => new Date(a.startDate).getTime() - new Date(b.startDate).getTime()
-    );
-    return sorted[0];
+    const withDue = active.map((inst) => ({
+      inst,
+      dueDate: addMonths(inst.startDate, inst.currentInstallment),
+    }));
+    withDue.sort((a, b) => a.dueDate.getTime() - b.dueDate.getTime());
+    const nearest = withDue[0];
+    const days = getDaysUntil(nearest.dueDate);
+    return {
+      installment: nearest.inst,
+      dueDate: nearest.dueDate,
+      dueDateStr: formatDate(nearest.dueDate.toISOString().split('T')[0]),
+      daysUntil: days,
+    };
   }, [installments]);
 
   return (
@@ -90,10 +121,10 @@ const InstallmentsPage: React.FC = () => {
         </C.HeaderHint>
       </C.Header>
 
-      {/* Cards de resumo */}
+      {/* Cards de resumo - estilo moderno sem emoji */}
       <C.SummaryGrid>
         <C.SummaryCard $variant="neutral">
-          <C.SummaryIcon>🛒</C.SummaryIcon>
+          <C.SummaryIcon $variant="neutral"><FaLayerGroup /></C.SummaryIcon>
           <C.SummaryContent>
             <C.SummaryLabel>Total de parcelados</C.SummaryLabel>
             <C.SummaryValue>{metrics.total}</C.SummaryValue>
@@ -102,7 +133,7 @@ const InstallmentsPage: React.FC = () => {
         </C.SummaryCard>
 
         <C.SummaryCard $variant="primary">
-          <C.SummaryIcon>💳</C.SummaryIcon>
+          <C.SummaryIcon $variant="primary"><FaCreditCard /></C.SummaryIcon>
           <C.SummaryContent>
             <C.SummaryLabel>Valor total parcelado</C.SummaryLabel>
             <C.SummaryValue>{formatCurrency(metrics.totalAmount)}</C.SummaryValue>
@@ -111,7 +142,7 @@ const InstallmentsPage: React.FC = () => {
         </C.SummaryCard>
 
         <C.SummaryCard $variant="warning">
-          <C.SummaryIcon>⏳</C.SummaryIcon>
+          <C.SummaryIcon $variant="warning"><FaHourglassHalf /></C.SummaryIcon>
           <C.SummaryContent>
             <C.SummaryLabel>Valor restante</C.SummaryLabel>
             <C.SummaryValue>{formatCurrency(metrics.totalRemaining)}</C.SummaryValue>
@@ -120,13 +151,17 @@ const InstallmentsPage: React.FC = () => {
         </C.SummaryCard>
 
         <C.SummaryCard $variant="success">
-          <C.SummaryIcon>📅</C.SummaryIcon>
+          <C.SummaryIcon $variant="success"><FaCalendarCheck /></C.SummaryIcon>
           <C.SummaryContent>
-            <C.SummaryLabel>Próximo acompanhamento</C.SummaryLabel>
-            <C.SummaryValue style={{ fontSize: 14 }}>
-              {nextDueInfo ? `${nextDueInfo.description} • ${nextDueInfo.currentInstallment + 1}/${nextDueInfo.totalInstallments}` : 'Nenhum pendente'}
+            <C.SummaryLabel>Próximo pagamento</C.SummaryLabel>
+            <C.SummaryValue style={{ fontSize: nextDueInfo ? 13 : 16 }}>
+              {nextDueInfo ? `${nextDueInfo.dueDateStr} • ${nextDueInfo.installment.description.slice(0, 18)}${nextDueInfo.installment.description.length > 18 ? '…' : ''}` : 'Nenhum pendente'}
             </C.SummaryValue>
-            <C.SummarySub>{nextDueInfo ? `Parcela ${formatCurrency(Number(nextDueInfo.installmentAmount))}` : 'Tudo em dia'}</C.SummarySub>
+            <C.SummarySub>
+              {nextDueInfo
+                ? `${nextDueInfo.installment.currentInstallment + 1}/${nextDueInfo.installment.totalInstallments} • ${formatCurrency(Number(nextDueInfo.installment.installmentAmount))} • ${nextDueInfo.daysUntil === 0 ? 'vence hoje' : nextDueInfo.daysUntil > 0 ? `em ${nextDueInfo.daysUntil}d` : `vencido há ${Math.abs(nextDueInfo.daysUntil)}d`}`
+                : 'Tudo em dia'}
+            </C.SummarySub>
           </C.SummaryContent>
         </C.SummaryCard>
       </C.SummaryGrid>

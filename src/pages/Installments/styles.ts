@@ -86,32 +86,48 @@ export const SummaryGrid = styled.div`
 
 export const SummaryCard = styled.div<{ $variant?: string }>`
   display: flex;
-  gap: 12px;
+  gap: 14px;
   align-items: center;
-  padding: 16px;
-  border-radius: 12px;
+  padding: 18px 16px;
+  border-radius: 14px;
   border: 1px solid ${({ theme }) => theme.colors?.border || '#e5e7eb'};
-  background: ${({ $variant, theme }) =>
-    $variant === 'primary'
-      ? theme.colors?.primaryLight || '#eef2ff'
-      : $variant === 'warning'
-        ? '#fffbeb'
-        : $variant === 'success'
-          ? '#f0fdf4'
-          : theme.colors?.background || '#ffffff'};
+  background: ${({ theme }) => theme.colors?.background || '#ffffff'};
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04), 0 4px 12px rgba(0, 0, 0, 0.03);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+
+  &:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.07);
+  }
 `;
 
-export const SummaryIcon = styled.div`
-  width: 40px;
-  height: 40px;
-  border-radius: 10px;
+export const SummaryIcon = styled.div<{ $variant?: string }>`
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 20px;
-  background: white;
-  border: 1px solid ${({ theme }) => theme.colors?.border || '#e5e7eb'};
+  font-size: 18px;
+  color: white;
   flex-shrink: 0;
+  background: ${({ $variant, theme }) =>
+    $variant === 'primary'
+      ? `linear-gradient(135deg, ${theme.colors?.primary || '#6366f1'} 0%, #8b5cf6 100%)`
+      : $variant === 'warning'
+        ? `linear-gradient(135deg, #f59e0b 0%, #f97316 100%)`
+        : $variant === 'success'
+          ? `linear-gradient(135deg, #10b981 0%, #06b6d4 100%)`
+          : `linear-gradient(135deg, #64748b 0%, #475569 100%)`};
+  box-shadow: 0 4px 10px
+    ${({ $variant }) =>
+      $variant === 'primary'
+        ? 'rgba(99, 102, 241, 0.3)'
+        : $variant === 'warning'
+          ? 'rgba(245, 158, 11, 0.3)'
+          : $variant === 'success'
+            ? 'rgba(16, 185, 129, 0.3)'
+            : 'rgba(100, 116, 139, 0.2)'};
 `;
 
 export const SummaryContent = styled.div`

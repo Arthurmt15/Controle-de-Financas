@@ -185,6 +185,53 @@ export const AmountRow = styled.div`
   }
 `;
 
+/** Próximo pagamento - destaque moderno */
+export const NextDue = styled.div<{ $days: number }>`
+  margin-top: 12px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid
+    ${({ $days }) =>
+      $days < 0
+        ? '#fecaca'
+        : $days === 0
+          ? '#fde68a'
+          : $days <= 7
+            ? '#bfdbfe'
+            : '#e5e7eb'};
+  background: ${({ $days }) =>
+    $days < 0
+      ? '#fef2f2'
+      : $days === 0
+        ? '#fffbeb'
+        : $days <= 7
+          ? '#eff6ff'
+          : '#f9fafb'};
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+`;
+
+export const NextDueLabel = styled.span`
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: ${({ theme }) => theme.colors?.textSecondary || '#6b7280'};
+`;
+
+export const NextDueDate = styled.span`
+  font-size: 13px;
+  font-weight: 600;
+  color: ${({ theme }) => theme.colors?.text || '#1f2937'};
+`;
+
+export const NextDueDays = styled.span<{ $overdue?: boolean }>`
+  font-size: 11px;
+  font-weight: 500;
+  color: ${({ theme }) => theme.colors?.textSecondary || '#6b7280'};
+`;
+
 /** Badge do Open Finance */
 export const OpenFinanceBadge = styled.div`
   display: inline-block;
