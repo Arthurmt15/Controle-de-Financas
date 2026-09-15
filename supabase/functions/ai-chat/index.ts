@@ -1,20 +1,20 @@
 /**
  * Edge Function: ai-chat
- * Proxy para a API Groq (IA).
- * Gerencia chat com IA para insights financeiros.
+ * Proxy streaming para a API Groq (IA financeira).
+ * Suporta Server-Sent Events (SSE) para resposta em tempo real.
  */
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2"
 
-// Headers CORS
+const ALLOWED_ORIGIN = Deno.env.get("SUPABASE_CORS_ORIGIN") || "*"
+
 const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Origin": ALLOWED_ORIGIN,
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-  "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
+  "Access-Control-Allow-Methods": "POST, OPTIONS",
 }
 
-/** Verifica autenticação do usuário */
 async function authenticateUser(req: Request) {
   const authHeader = req.headers.get("Authorization")
   if (!authHeader) return null
@@ -30,13 +30,18 @@ async function authenticateUser(req: Request) {
 }
 
 serve(async (req) => {
-  // Responde pré-requisição CORS
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders })
   }
 
+  if (req.method !== "POST") {
+    return new Response(
+      JSON.stringify({ error: "Método não permitido" }),
+      { status: 405, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+    )
+  }
+
   try {
-    // Verifica autenticação
     const user = await authenticateUser(req)
     if (!user) {
       return new Response(
@@ -45,7 +50,6 @@ serve(async (req) => {
       )
     }
 
-    // Obtém API key do Groq
     const groqApiKey = Deno.env.get("GROQ_API_KEY")
     if (!groqApiKey) {
       return new Response(
@@ -54,18 +58,15 @@ serve(async (req) => {
       )
     }
 
-    // Analisa o corpo da requisição
-    const { messages, model = "llama3-8b-8192" } = await req.json()
+    const { messages, model = "qwen/qwen3.8-27b" } = await req.json()
 
-    // Valida mensagem
-    if (!messages || !Array.isArray(messages)) {
+    if (!messages || !Array.isArray(messages) || messages.length === 0) {
       return new Response(
         JSON.stringify({ error: "Mensagens inválidas" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       )
     }
 
-    // Chama a API do Groq
     const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
       method: "POST",
       headers: {
@@ -74,19 +75,13 @@ serve(async (req) => {
       },
       body: JSON.stringify({
         model,
-        messages: [
-          {
-            role: "system",
-            content: "Você é um assistente financeiro especializado em controle de finanças pessoais. Responda sempre em português brasileiro, de forma clara e objetiva. Foque em dicas práticas e insights sobre gastos, orçamento e economia."
-          },
-          ...messages,
-        ],
+        messages,
+        stream: true,
         temperature: 0.7,
-        max_tokens: 1024,
+        max_tokens: 500,
       }),
     })
 
-    // Verifica erro da API
     if (!response.ok) {
       const error = await response.json()
       return new Response(
@@ -95,12 +90,68 @@ serve(async (req) => {
       )
     }
 
-    // Retorna resposta da IA
-    const data = await response.json()
-    return new Response(
-      JSON.stringify({ success: true, data: data.choices[0].message }),
-      { headers: { ...corsHeaders, "Content-Type": "application/json" } }
-    )
+    // Streaming SSE para o cliente
+    const encoder = new TextEncoder()
+    const stream = new ReadableStream({
+      async start(controller) {
+        const reader = response.body?.getReader()
+        if (!reader) {
+          controller.close()
+          return
+        }
+
+        const decoder = new TextDecoder()
+        let buffer = ""
+
+        try {
+          while (true) {
+            const { done, value } = await reader.read()
+            if (done) break
+
+            buffer += decoder.decode(value, { stream: true })
+            const lines = buffer.split("\n")
+            buffer = lines.pop() || ""
+
+            for (const line of lines) {
+              const trimmed = line.trim()
+              if (!trimmed || !trimmed.startsWith("data: ")) continue
+
+              const data = trimmed.slice(6)
+              if (data === "[DONE]") {
+                controller.enqueue(encoder.encode("data: [DONE]\n\n"))
+                continue
+              }
+
+              try {
+                const parsed = JSON.parse(data)
+                const content = parsed.choices?.[0]?.delta?.content
+                if (content) {
+                  controller.enqueue(
+                    encoder.encode(`data: ${JSON.stringify({ content })}\n\n`)
+                  )
+                }
+              } catch {
+                // Linha JSON inválida, ignora
+              }
+            }
+          }
+        } catch (err) {
+          console.error("Erro no streaming:", err)
+        } finally {
+          controller.close()
+        }
+      },
+    })
+
+    return new Response(stream, {
+      headers: {
+        ...corsHeaders,
+        "Content-Type": "text/event-stream",
+        "Cache-Control": "no-cache",
+        "Connection": "keep-alive",
+        "X-Accel-Buffering": "no",
+      },
+    })
   } catch (error) {
     return new Response(
       JSON.stringify({ error: error.message }),

@@ -120,7 +120,6 @@ export async function* streamAdvisor(
   history: ChatMessage[]
 ): AsyncGenerator<string> {
   if (USE_SUPABASE) {
-    // Chama Edge Function do Supabase
     const { data: { session } } = await supabase.auth.getSession();
     const url = `${process.env.REACT_APP_SUPABASE_URL}/functions/v1/ai-chat`;
     
@@ -129,9 +128,26 @@ export async function* streamAdvisor(
       headers: {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${session?.access_token || ''}`,
+        'apikey': process.env.REACT_APP_SUPABASE_ANON_KEY || '',
       },
       body: JSON.stringify({ messages: [
-        { role: 'system', content: financialContext },
+        {
+          role: 'system',
+          content: `Você é um consultor financeiro pessoal experiente e direto. Analise os dados reais do usuário abaixo para dar conselhos personalizados.
+
+DADOS FINANCEIROS DO USUÁRIO:
+${financialContext || 'Nenhum dado financeiro disponível'}
+
+REGRAS:
+- Responda SEMPRE em português brasileiro
+- Seja direto, prático e objetivo
+- Fundamente suas respostas nos dados REAIS do usuário (não invente dados)
+- Use valores específicos do usuário quando possível
+- Considere: reserva de emergência (6 meses de despesas), regra 50-30-20 (necessidades/desejos/futuro)
+- Se não tiver dados suficientes, peça mais informações
+- Formatando: use **negrito** para valores e listas para recomendações
+- Máximo de 200 palavras por resposta`,
+        },
         ...history,
         { role: 'user', content: userMessage },
       ]}),
@@ -142,8 +158,34 @@ export async function* streamAdvisor(
       throw new Error(error.error || `Erro na IA: ${response.status}`);
     }
 
-    const data = await response.json();
-    yield data.data.content;
+    // Edge function retorna SSE streaming
+    const reader = response.body?.getReader();
+    if (!reader) throw new Error('Não foi possível ler a resposta');
+
+    const decoder = new TextDecoder();
+    let buffer = '';
+
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+
+      buffer += decoder.decode(value, { stream: true });
+      const lines = buffer.split('\n');
+      buffer = lines.pop() || '';
+
+      for (const line of lines) {
+        if (line.startsWith('data: ')) {
+          const data = line.slice(6);
+          if (data === '[DONE]') return;
+          try {
+            const parsed = JSON.parse(data);
+            if (parsed.content) yield parsed.content;
+          } catch {
+            // Linha JSON inválida
+          }
+        }
+      }
+    }
     return;
   }
 
