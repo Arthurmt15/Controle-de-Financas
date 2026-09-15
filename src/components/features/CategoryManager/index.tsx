@@ -1,106 +1,84 @@
 /**
  * @file components/features/CategoryManager/index.tsx
- * @description Gerenciador de categorias de transações.
- * Permite criar, visualizar e excluir categorias com validação.
+ * @description Gerenciador de categorias redesenhado com shadcn + tailwind + framer-motion + lucide.
+ * Card form, Select shadcn, Badge e confirmação com Dialog inline.
  */
 
 import React, { useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Tags, Plus, Trash2, AlertCircle, Palette, Tag } from 'lucide-react';
 import { useTransactions } from '../../../hooks/useTransactions';
 import { getRandomColor } from '../../../utils/formatters';
-import Button from '../../common/Button';
-import Icon from '../../common/Icon';
-import * as C from './styles';
+import { Card, CardContent } from '../../ui/card';
+import { Button } from '../../ui/button';
+import { Input } from '../../ui/input';
+import { Label } from '../../ui/label';
+import { Badge } from '../../ui/badge';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../ui/select';
 
-/** Lista de ícones disponíveis para categorias */
+/** Ícones disponíveis para categorias (label amigável) */
 const AVAILABLE_ICONS = [
-  { value: 'FaUtensils', label: 'Utensílios' },
+  { value: 'FaUtensils', label: 'Alimentação' },
   { value: 'FaCar', label: 'Carro' },
   { value: 'FaHome', label: 'Casa' },
-  { value: 'FaGamepad', label: 'Jogo' },
+  { value: 'FaGamepad', label: 'Lazer' },
   { value: 'FaHeartbeat', label: 'Saúde' },
   { value: 'FaGraduationCap', label: 'Educação' },
   { value: 'FaMoneyBillWave', label: 'Dinheiro' },
-  { value: 'FaLaptop', label: 'Laptop' },
-  { value: 'FaChartLine', label: 'Gráfico' },
+  { value: 'FaLaptop', label: 'Trabalho' },
+  { value: 'FaChartLine', label: 'Investimentos' },
   { value: 'FaEllipsisH', label: 'Outros' },
   { value: 'FaShoppingCart', label: 'Compras' },
   { value: 'FaPlane', label: 'Viagem' },
   { value: 'FaGift', label: 'Presente' },
-  { value: 'FaBriefcase', label: 'Trabalho' },
+  { value: 'FaBriefcase', label: 'Negócios' },
   { value: 'FaDumbbell', label: 'Academia' },
 ];
 
-/**
- * Componente de gerenciamento de categorias
- * @returns {JSX.Element} Gerenciador renderizado
- *
- * @example
- * <CategoryManager />
- */
+/** Gerenciador de categorias — shadcn */
 const CategoryManager: React.FC = () => {
   const { categories, addCategory, deleteCategory, transactions } = useTransactions();
-  /** Controle de visibilidade do formulário */
+  // Estado do formulário e feedback
   const [isAdding, setIsAdding] = useState(false);
-  /** Estado do formulário de nova categoria */
   const [newCategory, setNewCategory] = useState({
     name: '',
     color: getRandomColor(),
     icon: 'FaEllipsisH',
     defaultType: 'expense' as 'income' | 'expense' | 'both',
   });
-  /** Mensagem de erro */
   const [error, setError] = useState('');
-  /** ID da categoria sendo excluída */
   const [deletingId, setDeletingId] = useState<string | null>(null);
 
-  /**
-   * Valida e adiciona uma nova categoria
-   * Verifica nome obrigatório, mínimo de caracteres e duplicatas
-   */
+  /** Valida e adiciona categoria */
   const handleAddCategory = () => {
     if (!newCategory.name.trim()) {
       setError('Nome da categoria é obrigatório');
       return;
     }
-
     if (newCategory.name.trim().length < 2) {
       setError('Nome deve ter pelo menos 2 caracteres');
       return;
     }
-
-    const exists = categories.some(
-      (c) => c.name.toLowerCase() === newCategory.name.trim().toLowerCase()
-    );
+    const exists = categories.some((c) => c.name.toLowerCase() === newCategory.name.trim().toLowerCase());
     if (exists) {
       setError('Já existe uma categoria com este nome');
       return;
     }
-
     addCategory({
       name: newCategory.name.trim(),
       color: newCategory.color,
       icon: newCategory.icon,
       defaultType: newCategory.defaultType,
     });
-
-    setNewCategory({
-      name: '',
-      color: getRandomColor(),
-      icon: 'FaEllipsisH',
-      defaultType: 'expense',
-    });
+    setNewCategory({ name: '', color: getRandomColor(), icon: 'FaEllipsisH', defaultType: 'expense' });
     setError('');
     setIsAdding(false);
   };
 
-  /**
-   * Confirma e executa a exclusão de uma categoria
-   * Verifica se a categoria possui transações antes de excluir
-   * @param id - ID da categoria a ser excluída
-   */
+  /** Confirma exclusão — bloqueia se houver transações */
   const handleConfirmDelete = (id: string) => {
-    const usedInTransaction = transactions.some((t) => t.categoryId === id);
-    if (usedInTransaction) {
+    const used = transactions.some((t) => t.categoryId === id);
+    if (used) {
       setError('Não é possível excluir uma categoria que possui transações');
       return;
     }
@@ -108,163 +86,237 @@ const CategoryManager: React.FC = () => {
     setDeletingId(null);
   };
 
-  /**
-   * Conta quantas transações usam uma categoria
-   * @param categoryId - ID da categoria
-   * @returns Número de transações que usam a categoria
-   */
-  const getCategoryUsageCount = (categoryId: string): number => {
-    return transactions.filter((t) => t.categoryId === categoryId).length;
-  };
+  /** Conta uso da categoria */
+  const getCategoryUsageCount = (categoryId: string): number => transactions.filter((t) => t.categoryId === categoryId).length;
 
   return (
-    <C.Container>
-      {/* Cabeçalho com título e botão de adicionar */}
-      <C.Header>
-        <C.Title>Gerenciar Categorias</C.Title>
+    <div className="space-y-5">
+      {/* Cabeçalho com título e ação */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div className="flex items-center gap-2.5">
+          <span className="w-8 h-8 rounded-xl bg-violet-500/10 text-violet-600 flex items-center justify-center border border-violet-100 dark:border-transparent">
+            <Tags className="h-4 w-4" />
+          </span>
+          <div>
+            <h2 className="text-[15px] font-semibold tracking-tight leading-none">Gerenciar categorias</h2>
+            <p className="text-xs text-muted-foreground mt-1">
+              {categories.length} {categories.length === 1 ? 'categoria' : 'categorias'} cadastradas
+            </p>
+          </div>
+        </div>
         {!isAdding && (
-          <Button onClick={() => setIsAdding(true)} size="sm">
-            + Nova Categoria
+          <Button onClick={() => setIsAdding(true)} size="sm" className="rounded-xl shrink-0">
+            <Plus className="mr-1.5 h-4 w-4" />
+            Nova categoria
           </Button>
         )}
-      </C.Header>
+      </div>
 
-      {/* Formulário de nova categoria */}
-      {isAdding && (
-        <C.AddForm>
-          <C.FormTitle>Nova Categoria</C.FormTitle>
-          <C.FieldsGrid>
-            <C.FieldGroup>
-              <C.Label>Nome</C.Label>
-              <C.Input
-                type="text"
-                value={newCategory.name}
-                onChange={(e) => {
-                  setNewCategory((prev) => ({ ...prev, name: e.target.value }));
-                  setError('');
-                }}
-                placeholder="Nome da categoria"
-              />
-            </C.FieldGroup>
+      {/* Formulário de nova categoria — animado */}
+      <AnimatePresence>
+        {isAdding && (
+          <motion.div
+            initial={{ opacity: 0, y: -8, height: 0 }}
+            animate={{ opacity: 1, y: 0, height: 'auto' }}
+            exit={{ opacity: 0, y: -8, height: 0 }}
+            transition={{ duration: 0.28 }}
+            className="overflow-hidden"
+          >
+            <Card className="rounded-2xl border-dashed bg-muted/20">
+              <CardContent className="p-5">
+                <h3 className="text-sm font-semibold mb-4 flex items-center gap-2">
+                  <Palette className="h-4 w-4 text-muted-foreground" />
+                  Nova categoria
+                </h3>
 
-            <C.FieldGroup>
-              <C.Label>Tipo</C.Label>
-              <C.Select
-                value={newCategory.defaultType}
-                onChange={(e) =>
-                  setNewCategory((prev) => ({
-                    ...prev,
-                    defaultType: e.target.value as 'income' | 'expense' | 'both',
-                  }))
-                }
-              >
-                <option value="expense">Saída</option>
-                <option value="income">Entrada</option>
-                <option value="both">Ambos</option>
-              </C.Select>
-            </C.FieldGroup>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  {/* Nome */}
+                  <div className="space-y-1.5">
+                    <Label className="text-xs">Nome</Label>
+                    <Input
+                      value={newCategory.name}
+                      onChange={(e) => {
+                        setNewCategory((prev) => ({ ...prev, name: e.target.value }));
+                        setError('');
+                      }}
+                      placeholder="Ex: Alimentação"
+                      className="h-9 rounded-xl"
+                    />
+                  </div>
 
-            <C.FieldGroup>
-              <C.Label>Cor</C.Label>
-              <C.ColorPicker>
-                <C.ColorInput
-                  type="color"
-                  value={newCategory.color}
-                  onChange={(e) =>
-                    setNewCategory((prev) => ({ ...prev, color: e.target.value }))
-                  }
-                />
-                <C.ColorValue>{newCategory.color}</C.ColorValue>
-              </C.ColorPicker>
-            </C.FieldGroup>
+                  {/* Tipo */}
+                  <div className="space-y-1.5">
+                    <Label className="text-xs">Tipo</Label>
+                    <Select
+                      value={newCategory.defaultType}
+                      onValueChange={(v) => setNewCategory((prev) => ({ ...prev, defaultType: v as typeof prev.defaultType }))}
+                    >
+                      <SelectTrigger className="h-9 rounded-xl">
+                        <SelectValue placeholder="Selecione o tipo" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="expense">Saída</SelectItem>
+                        <SelectItem value="income">Entrada</SelectItem>
+                        <SelectItem value="both">Ambos</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
 
-            <C.FieldGroup>
-              <C.Label>Ícone</C.Label>
-              <C.Select
-                value={newCategory.icon}
-                onChange={(e) =>
-                  setNewCategory((prev) => ({ ...prev, icon: e.target.value }))
-                }
-              >
-                {AVAILABLE_ICONS.map((icon) => (
-                  <option key={icon.value} value={icon.value}>
-                    {icon.label}
-                  </option>
-                ))}
-              </C.Select>
-            </C.FieldGroup>
-          </C.FieldsGrid>
+                  {/* Cor */}
+                  <div className="space-y-1.5">
+                    <Label className="text-xs">Cor</Label>
+                    <div className="flex items-center gap-3">
+                      <div className="relative h-9 w-12 rounded-xl overflow-hidden border shrink-0">
+                        <Input
+                          type="color"
+                          value={newCategory.color}
+                          onChange={(e) => setNewCategory((prev) => ({ ...prev, color: e.target.value }))}
+                          className="absolute inset-0 h-full w-full p-0 border-0 rounded-none cursor-pointer"
+                        />
+                      </div>
+                      <Badge variant="outline" className="rounded-full font-mono text-xs">
+                        {newCategory.color}
+                      </Badge>
+                      <span className="w-3 h-3 rounded-full shrink-0 border" style={{ background: newCategory.color }} />
+                    </div>
+                  </div>
 
-          {error && <C.ErrorMessage>{error}</C.ErrorMessage>}
+                  {/* Ícone */}
+                  <div className="space-y-1.5">
+                    <Label className="text-xs">Ícone</Label>
+                    <Select value={newCategory.icon} onValueChange={(v) => setNewCategory((prev) => ({ ...prev, icon: v }))}>
+                      <SelectTrigger className="h-9 rounded-xl">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {AVAILABLE_ICONS.map((icon) => (
+                          <SelectItem key={icon.value} value={icon.value}>
+                            {icon.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
 
-          <C.FormActions>
-            <Button
-              variant="ghost"
-              onClick={() => {
-                setIsAdding(false);
-                setError('');
-              }}
-            >
-              Cancelar
-            </Button>
-            <Button onClick={handleAddCategory}>Adicionar</Button>
-          </C.FormActions>
-        </C.AddForm>
+                {/* Erro validado */}
+                {error && (
+                  <div className="mt-4 flex gap-2 items-center text-sm text-red-600 bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-900 rounded-xl px-3 py-2">
+                    <AlertCircle className="h-4 w-4 shrink-0" />
+                    {error}
+                  </div>
+                )}
+
+                <div className="mt-5 flex justify-end gap-2">
+                  <Button
+                    variant="ghost"
+                    onClick={() => {
+                      setIsAdding(false);
+                      setError('');
+                    }}
+                  >
+                    Cancelar
+                  </Button>
+                  <Button onClick={handleAddCategory} className="rounded-xl">
+                    Adicionar
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Erro global fora do form */}
+      {!isAdding && error && (
+        <div className="flex gap-2 items-center text-sm text-red-600 bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-900 rounded-xl px-3 py-2">
+          <AlertCircle className="h-4 w-4 shrink-0" />
+          {error}
+        </div>
       )}
 
-      {/* Grid de categorias existentes */}
-      <C.CategoriesGrid>
-        {categories.map((category) => (
-          <C.CategoryCard key={category.id}>
-            <C.CategoryInfo>
-              <C.CategoryColor $color={category.color} />
-              <C.CategoryDetails>
-                <C.CategoryName>{category.name}</C.CategoryName>
-                <C.CategoryMeta>
-                  <C.CategoryType>
-                    {category.defaultType === 'income'
-                      ? 'Entrada'
-                      : category.defaultType === 'expense'
-                      ? 'Saída'
-                      : 'Ambos'}
-                  </C.CategoryType>
-                  <C.CategoryUsage>
-                    {getCategoryUsageCount(category.id)} transações
-                  </C.CategoryUsage>
-                </C.CategoryMeta>
-              </C.CategoryDetails>
-            </C.CategoryInfo>
+      {/* Grid de categorias */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        {categories.map((category, idx) => (
+          <motion.div
+            key={category.id}
+            initial={{ opacity: 0, y: 6 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: idx * 0.03, duration: 0.25 }}
+          >
+            <Card className="rounded-2xl hover:shadow-sm transition-shadow">
+              <CardContent className="p-3.5 flex items-center justify-between gap-3">
+                <div className="flex items-center gap-3 min-w-0">
+                  {/* Bolinha de cor */}
+                  <span className="w-3 h-3 rounded-full shrink-0 border border-black/5" style={{ background: category.color }} />
+                  <div className="min-w-0">
+                    <span className="text-[13.5px] font-semibold truncate flex items-center gap-1.5">
+                      <Tag className="h-3 w-3 text-muted-foreground hidden sm:inline" />
+                      {category.name}
+                    </span>
+                    <div className="mt-1 flex items-center gap-1.5 flex-wrap">
+                      <Badge
+                        variant="outline"
+                        className={`rounded-full text-[10px] px-2 py-0 ${
+                          category.defaultType === 'income'
+                            ? 'border-emerald-200 text-emerald-700 bg-emerald-50 dark:bg-emerald-950/20'
+                            : category.defaultType === 'expense'
+                              ? 'border-red-200 text-red-700 bg-red-50 dark:bg-red-950/20'
+                              : 'bg-muted'
+                        }`}
+                      >
+                        {category.defaultType === 'income' ? 'Entrada' : category.defaultType === 'expense' ? 'Saída' : 'Ambos'}
+                      </Badge>
+                      <Badge variant="secondary" className="rounded-full bg-muted text-muted-foreground text-[11px] font-normal">
+                        {getCategoryUsageCount(category.id)} transações
+                      </Badge>
+                    </div>
+                  </div>
+                </div>
 
-            <C.CategoryActions>
-              {deletingId === category.id ? (
-                <C.DeleteConfirm>
-                  <span>Excluir?</span>
-                  <C.ConfirmButton
-                    onClick={() => handleConfirmDelete(category.id)}
-                    $variant="danger"
-                  >
-                    Sim
-                  </C.ConfirmButton>
-                  <C.ConfirmButton onClick={() => setDeletingId(null)} $variant="ghost">
-                    Não
-                  </C.ConfirmButton>
-                </C.DeleteConfirm>
-              ) : (
-                <C.DeleteButton
-                  onClick={() => setDeletingId(category.id)}
-                  aria-label={`Excluir ${category.name}`}
-                >
-                  <Icon size={16}>
-                    <polyline points="3 6 5 6 21 6" />
-                    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
-                  </Icon>
-                </C.DeleteButton>
-              )}
-            </C.CategoryActions>
-          </C.CategoryCard>
+                {/* Ações: excluir com confirmação */}
+                <div className="shrink-0">
+                  {deletingId === category.id ? (
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-xs font-medium mr-1">Excluir?</span>
+                      <Button size="sm" variant="destructive" onClick={() => handleConfirmDelete(category.id)} className="h-7 px-2.5 rounded-lg text-xs">
+                        Sim
+                      </Button>
+                      <Button size="sm" variant="outline" onClick={() => setDeletingId(null)} className="h-7 px-2.5 rounded-lg text-xs">
+                        Não
+                      </Button>
+                    </div>
+                  ) : (
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-8 w-8 text-muted-foreground hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/30"
+                      onClick={() => setDeletingId(category.id)}
+                      aria-label={`Excluir ${category.name}`}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          </motion.div>
         ))}
-      </C.CategoriesGrid>
-    </C.Container>
+      </div>
+
+      {/* Estado vazio auxiliar se nenhuma categoria */}
+      {categories.length === 0 && (
+        <Card className="border-dashed bg-muted/20">
+          <CardContent className="p-8 text-center">
+            <span className="mx-auto mb-3 flex h-10 w-10 items-center justify-center rounded-xl bg-muted text-muted-foreground">
+              <Tags className="h-5 w-5" />
+            </span>
+            <p className="text-sm font-semibold">Nenhuma categoria ainda</p>
+            <p className="mt-1 text-xs text-muted-foreground">Clique em “Nova categoria” para começar.</p>
+          </CardContent>
+        </Card>
+      )}
+    </div>
   );
 };
 

@@ -1,14 +1,8 @@
 /**
  * @file pages/Dashboard/styles.ts
- * @description Estilos da página do Dashboard.
+ * @description Legado removido — página Dashboard agora é wrapper fino sem styled-components.
+ * @deprecated Não utilizado; DashboardComponent traz seu próprio container bento.
  */
 
-import styled from 'styled-components';
-
-/**
- * Container da página
- * Preenche toda a largura disponível
- */
-export const Container = styled.div`
-  width: 100%;
-`;
+// Mantido para compatibilidade — sem Container styled
+export const containerClass = 'w-full';

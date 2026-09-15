@@ -1,47 +1,39 @@
 /**
  * @file components/features/TransactionForm/index.tsx
- * @description Formulário para adicionar e editar transações financeiras.
- * Suporta validação, categorias dinâmicas e modo de edição.
+ * @description Formulário de transações redesenhado com shadcn + tailwind + framer-motion.
+ * Usa Input, Select, Textarea, Button, Label, Card. Preserva lógica de submit,
+ * validação, categorias e criação automática de parcelados.
  */
 
 import React, { useState, useEffect } from 'react';
-import Input from '../../common/Input';
-import Select from '../../common/Select';
-import Button from '../../common/Button';
+import { motion } from 'framer-motion';
+import { Wallet, TrendingUp, TrendingDown, Calendar, Tag, FileText, Layers } from 'lucide-react';
 import { useTransactions } from '../../../hooks/useTransactions';
 import { useInstallments } from '../../../contexts/InstallmentsContext';
 import { validateTransactionForm } from '../../../utils/validators';
 import { toInputDate } from '../../../utils/formatters';
-import * as C from './styles';
+import { Card, CardContent } from '../../ui/card';
+import { Button } from '../../ui/button';
+import { Input } from '../../ui/input';
+import { Label } from '../../ui/label';
+import { Textarea } from '../../ui/textarea';
+import { Badge } from '../../ui/badge';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../ui/select';
 import type { Transaction } from '../../../types';
 
-/**
- * Props do componente TransactionForm
- */
+/** Props do formulário */
 interface TransactionFormProps {
-  /** Transação sendo editada (null para nova transação) */
+  /** Transação sendo editada (null para nova) */
   editingTransaction?: Transaction | null;
-  /** Função chamada ao fechar o formulário */
+  /** Função chamada ao fechar */
   onClose?: () => void;
 }
 
 /**
- * Formulário de transações
- * @param {TransactionFormProps} props - Props do componente
- * @returns {JSX.Element} Componente TransactionForm renderizado
- *
- * @example
- * // Formulário para nova transação
- * <TransactionForm />
- *
- * @example
- * // Formulário para edição
- * <TransactionForm editingTransaction={transaction} onClose={() => setEditing(null)} />
+ * Formulário de transações - design shadcn
  */
-const TransactionForm: React.FC<TransactionFormProps> = ({
-  editingTransaction = null,
-  onClose,
-}) => {
+const TransactionForm: React.FC<TransactionFormProps> = ({ editingTransaction = null, onClose }) => {
+  // Hooks de dados
   const { addTransaction, updateTransaction, categories } = useTransactions();
   const { addInstallment } = useInstallments();
 
@@ -57,15 +49,12 @@ const TransactionForm: React.FC<TransactionFormProps> = ({
     totalInstallments: '10',
   });
 
-  // Estado de erros de validação
+  // Estado de erros
   const [errors, setErrors] = useState<Record<string, string>>({});
-
   // Estado de envio
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  /**
-   * Preenche o formulário quando editando uma transação
-   */
+  /** Preenche o formulário quando editando */
   useEffect(() => {
     if (editingTransaction) {
       setFormData({
@@ -81,43 +70,33 @@ const TransactionForm: React.FC<TransactionFormProps> = ({
     }
   }, [editingTransaction]);
 
-  /**
-   * Atualiza o valor de um campo do formulário
-   */
-  const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
-  ) => {
+  /** Atualiza campo do formulário */
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
-
-    // Limpa erro do campo ao digitar
+    // Limpa erro ao digitar
     if (errors[name]) {
       setErrors((prev) => ({ ...prev, [name]: '' }));
     }
   };
 
-  /**
-   * Atualiza o tipo da transação
-   */
+  /** Atualiza o tipo da transação e limpa categoria */
   const handleTypeChange = (type: 'income' | 'expense') => {
     setFormData((prev) => ({ ...prev, type, categoryId: '' }));
+    if (errors.categoryId) setErrors((prev) => ({ ...prev, categoryId: '' }));
   };
 
   // Preview do parcelamento
   const parsedAmount = parseFloat(formData.amount);
   const parsedInstallments = parseInt(formData.totalInstallments, 10);
   const previewInstallmentAmount =
-    formData.isInstallment && parsedAmount > 0 && parsedInstallments > 1
-      ? parsedAmount / parsedInstallments
-      : 0;
+    formData.isInstallment && parsedAmount > 0 && parsedInstallments > 1 ? parsedAmount / parsedInstallments : 0;
 
-  /**
-   * Valida e envia o formulário
-   */
+  /** Valida e envia o formulário */
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    // Valida os dados
+    // Valida dados via util central
     const validationErrors = validateTransactionForm({
       description: formData.description,
       amount: formData.amount,
@@ -130,9 +109,6 @@ const TransactionForm: React.FC<TransactionFormProps> = ({
       if (!n || n < 2 || n > 60) {
         validationErrors.totalInstallments = 'Parcelas deve ser entre 2 e 60';
       }
-      if (!editingTransaction && formData.type !== 'expense') {
-        // Parcelado normalmente é despesa, mas permite se usuário quiser
-      }
     }
 
     if (Object.keys(validationErrors).length > 0) {
@@ -143,6 +119,7 @@ const TransactionForm: React.FC<TransactionFormProps> = ({
     setIsSubmitting(true);
 
     try {
+      // Monta payload da transação
       const transactionData = {
         description: formData.description.trim(),
         amount: parseFloat(formData.amount),
@@ -154,12 +131,9 @@ const TransactionForm: React.FC<TransactionFormProps> = ({
 
       if (editingTransaction) {
         // Atualiza transação existente (não cria parcelado ao editar)
-        await updateTransaction({
-          ...transactionData,
-          id: editingTransaction.id,
-        });
+        await updateTransaction({ ...transactionData, id: editingTransaction.id });
       } else {
-        // Adiciona nova transação
+        // Cria nova transação
         await addTransaction(transactionData);
 
         // Se marcado como parcelado, cria automaticamente o parcelado
@@ -182,7 +156,7 @@ const TransactionForm: React.FC<TransactionFormProps> = ({
         }
       }
 
-      // Reseta o formulário
+      // Reseta formulário
       setFormData({
         description: '',
         amount: '',
@@ -194,8 +168,6 @@ const TransactionForm: React.FC<TransactionFormProps> = ({
         totalInstallments: '10',
       });
       setErrors({});
-
-      // Fecha o formulário se estiver em modo de edição
       onClose?.();
     } catch (error) {
       console.error('Erro ao salvar transação:', error);
@@ -205,145 +177,216 @@ const TransactionForm: React.FC<TransactionFormProps> = ({
   };
 
   // Filtra categorias baseado no tipo selecionado
-  const filteredCategories = categories.filter(
-    (cat) => cat.defaultType === formData.type || cat.defaultType === 'both'
-  );
+  const filteredCategories = categories.filter((cat) => cat.defaultType === formData.type || cat.defaultType === 'both');
 
   return (
-    <C.Form onSubmit={handleSubmit}>
-      <C.FormTitle>
-        {editingTransaction ? 'Editar Transação' : 'Nova Transação'}
-      </C.FormTitle>
+    <motion.form
+      onSubmit={handleSubmit}
+      initial={{ opacity: 0, y: 6 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.3 }}
+      className="space-y-5"
+    >
+      {/* Título com ícone */}
+      <div className="flex items-center gap-3">
+        <span className="w-9 h-9 rounded-xl bg-primary/10 border border-primary/10 flex items-center justify-center text-primary">
+          <Wallet size={16} />
+        </span>
+        <div>
+          <h3 className="text-[16px] font-semibold tracking-tight">{editingTransaction ? 'Editar Transação' : 'Nova Transação'}</h3>
+          <p className="text-xs text-muted-foreground">Preencha os campos e salve para registrar</p>
+        </div>
+      </div>
 
-      {/* Seleção de tipo */}
-      <C.TypeSelector>
-        <C.TypeButton
+      {/* Seletor de tipo - Button group shadcn */}
+      <div className="grid grid-cols-2 gap-2 p-1 bg-muted/60 rounded-2xl border">
+        <Button
           type="button"
-          $isActive={formData.type === 'expense'}
+          variant={formData.type === 'expense' ? 'destructive' : 'ghost'}
+          className={`rounded-xl gap-2 h-10 font-semibold ${formData.type === 'expense' ? 'shadow-sm' : 'hover:bg-background'}`}
           onClick={() => handleTypeChange('expense')}
         >
+          <TrendingDown className="h-4 w-4" />
           Saída
-        </C.TypeButton>
-        <C.TypeButton
+        </Button>
+        <Button
           type="button"
-          $isActive={formData.type === 'income'}
+          variant={formData.type === 'income' ? 'default' : 'ghost'}
+          className={`rounded-xl gap-2 h-10 font-semibold ${formData.type === 'income' ? 'bg-emerald-600 hover:bg-emerald-700 shadow-sm' : 'hover:bg-background'}`}
           onClick={() => handleTypeChange('income')}
         >
+          <TrendingUp className="h-4 w-4" />
           Entrada
-        </C.TypeButton>
-      </C.TypeSelector>
+        </Button>
+      </div>
 
       {/* Campos do formulário */}
-      <C.FieldsContainer>
-        <Input
-          name="description"
-          label="Descrição"
-          value={formData.description}
-          onChange={handleChange}
-          placeholder="Ex: Almoço no restaurante"
-          error={errors.description}
-          required
-        />
+      <div className="space-y-4">
+        {/* Descrição */}
+        <div className="space-y-1.5">
+          <Label htmlFor="description" className="flex items-center gap-1.5 text-sm">
+            <FileText className="h-3.5 w-3.5 text-muted-foreground" />
+            Descrição
+          </Label>
+          <Input
+            id="description"
+            name="description"
+            value={formData.description}
+            onChange={handleChange}
+            placeholder="Ex: Almoço no restaurante"
+            error={errors.description}
+            required
+            className="rounded-xl h-10"
+          />
+        </div>
 
-        <Input
-          name="amount"
-          label="Valor"
-          type="number"
-          value={formData.amount}
-          onChange={handleChange}
-          placeholder="0,00"
-          error={errors.amount}
-          required
-        />
+        {/* Valor */}
+        <div className="space-y-1.5">
+          <Label htmlFor="amount" className="flex items-center gap-1.5 text-sm">
+            <Wallet className="h-3.5 w-3.5 text-muted-foreground" />
+            Valor
+          </Label>
+          <Input
+            id="amount"
+            name="amount"
+            type="number"
+            value={formData.amount}
+            onChange={handleChange}
+            placeholder="0,00"
+            error={errors.amount}
+            required
+            className="rounded-xl h-10"
+            step="0.01"
+          />
+        </div>
 
-        <Select
-          name="categoryId"
-          label="Categoria"
-          value={formData.categoryId}
-          onChange={handleChange}
-          options={filteredCategories.map((cat) => ({
-            value: cat.id,
-            label: cat.name,
-          }))}
-          placeholder="Selecione uma categoria"
-          error={errors.categoryId}
-          required
-        />
+        {/* Categoria - Select shadcn */}
+        <div className="space-y-1.5">
+          <Label className="flex items-center gap-1.5 text-sm">
+            <Tag className="h-3.5 w-3.5 text-muted-foreground" />
+            Categoria
+          </Label>
+          <Select value={formData.categoryId} onValueChange={(v) => setFormData((p) => ({ ...p, categoryId: v }))}>
+            <SelectTrigger className={`rounded-xl h-10 ${errors.categoryId ? 'border-red-500 focus:ring-red-500' : ''}`}>
+              <SelectValue placeholder="Selecione uma categoria" />
+            </SelectTrigger>
+            <SelectContent>
+              {filteredCategories.length === 0 ? (
+                <SelectItem value="none" disabled>
+                  Nenhuma categoria para este tipo
+                </SelectItem>
+              ) : (
+                filteredCategories.map((cat) => (
+                  <SelectItem key={cat.id} value={cat.id}>
+                    <span className="flex items-center gap-2">
+                      <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: cat.color }} />
+                      {cat.name}
+                    </span>
+                  </SelectItem>
+                ))
+              )}
+            </SelectContent>
+          </Select>
+          {errors.categoryId && <p className="text-xs font-medium text-red-500">{errors.categoryId}</p>}
+        </div>
 
-        <Input
-          name="date"
-          label="Data"
-          type="date"
-          value={formData.date}
-          onChange={handleChange}
-          error={errors.date}
-          required
-        />
+        {/* Data */}
+        <div className="space-y-1.5">
+          <Label htmlFor="date" className="flex items-center gap-1.5 text-sm">
+            <Calendar className="h-3.5 w-3.5 text-muted-foreground" />
+            Data
+          </Label>
+          <Input
+            id="date"
+            name="date"
+            type="date"
+            value={formData.date}
+            onChange={handleChange}
+            error={errors.date}
+            required
+            className="rounded-xl h-10"
+          />
+        </div>
 
-        <C.TextareaContainer>
-          <C.TextareaLabel>Observações (opcional)</C.TextareaLabel>
-          <C.Textarea
+        {/* Observações */}
+        <div className="space-y-1.5">
+          <Label htmlFor="notes" className="text-sm">
+            Observações (opcional)
+          </Label>
+          <Textarea
+            id="notes"
             name="notes"
             value={formData.notes}
             onChange={handleChange}
             placeholder="Adicione detalhes..."
             rows={3}
+            className="rounded-xl"
           />
-        </C.TextareaContainer>
+        </div>
 
         {/* Parcelado automático - só para nova transação */}
         {!editingTransaction && (
-          <C.InstallmentSection>
-            <C.CheckboxRow>
-              <input
-                type="checkbox"
-                name="isInstallment"
-                checked={formData.isInstallment}
-                onChange={(e) => {
-                  setFormData((prev) => ({ ...prev, isInstallment: e.target.checked }));
-                  if (errors.totalInstallments) {
-                    setErrors((prev) => ({ ...prev, totalInstallments: '' }));
-                  }
-                }}
-              />
-              Compra parcelada? Criar automaticamente em Parcelados
-            </C.CheckboxRow>
-
-            {formData.isInstallment && (
-              <>
-                <Input
-                  name="totalInstallments"
-                  label="Número de Parcelas"
-                  type="number"
-                  value={formData.totalInstallments}
-                  onChange={handleChange}
-                  placeholder="10"
-                  error={errors.totalInstallments}
-                  required
+          <Card className="rounded-2xl border-dashed bg-muted/20">
+            <CardContent className="p-4 space-y-3">
+              <label className="flex items-center gap-2.5 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={formData.isInstallment}
+                  onChange={(e) => {
+                    setFormData((prev) => ({ ...prev, isInstallment: e.target.checked }));
+                    if (errors.totalInstallments) setErrors((prev) => ({ ...prev, totalInstallments: '' }));
+                  }}
+                  className="h-4 w-4 rounded border-input accent-primary"
                 />
-                {previewInstallmentAmount > 0 && (
-                  <C.InstallmentPreview>
-                    {`${parsedInstallments}x de R$ ${previewInstallmentAmount.toFixed(2).replace('.', ',')} • Total R$ ${parsedAmount.toFixed(2).replace('.', ',')}`}
-                  </C.InstallmentPreview>
-                )}
-              </>
-            )}
-          </C.InstallmentSection>
+                <span className="text-sm font-medium flex items-center gap-1.5">
+                  <Layers className="h-3.5 w-3.5 text-muted-foreground" />
+                  Compra parcelada? Criar automaticamente em Parcelados
+                </span>
+              </label>
+
+              {formData.isInstallment && (
+                <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} className="space-y-2 pt-1">
+                  <Label htmlFor="totalInstallments" className="text-sm">
+                    Número de Parcelas
+                  </Label>
+                  <Input
+                    id="totalInstallments"
+                    name="totalInstallments"
+                    type="number"
+                    value={formData.totalInstallments}
+                    onChange={handleChange}
+                    placeholder="10"
+                    error={errors.totalInstallments}
+                    required
+                    className="rounded-xl h-10"
+                    min={2}
+                    max={60}
+                  />
+                  {previewInstallmentAmount > 0 && (
+                    <Badge variant="outline" className="rounded-full px-3 py-1 text-xs font-medium gap-1">
+                      <Layers className="h-3 w-3" />
+                      {`${parsedInstallments}x de R$ ${previewInstallmentAmount.toFixed(2).replace('.', ',')} • Total R$ ${parsedAmount.toFixed(2).replace('.', ',')}`}
+                    </Badge>
+                  )}
+                </motion.div>
+              )}
+            </CardContent>
+          </Card>
         )}
-      </C.FieldsContainer>
+      </div>
 
       {/* Botões de ação */}
-      <C.Actions>
+      <div className="flex justify-end gap-2 pt-2 border-t">
         {onClose && (
-          <Button type="button" variant="ghost" onClick={onClose}>
+          <Button type="button" variant="ghost" onClick={onClose} className="rounded-xl">
             Cancelar
           </Button>
         )}
-        <Button type="submit" isLoading={isSubmitting}>
+        <Button type="submit" isLoading={isSubmitting} className="rounded-xl shadow-sm">
           {editingTransaction ? 'Salvar Alterações' : 'Adicionar Transação'}
         </Button>
-      </C.Actions>
-    </C.Form>
+      </div>
+    </motion.form>
   );
 };
 

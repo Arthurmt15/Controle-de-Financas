@@ -1,7 +1,7 @@
 /**
  * @file components/features/Dashboard/styles.ts
- * @description Estilos do componente Dashboard.
- * Re-exporta estilos de layout, cards e gráficos.
+ * @description Barrel legado — re-exporta helpers tailwind (sem styled-components).
+ * @deprecated Prefira importar classes/tokens direto de styles-*.ts ou use tailwind inline.
  */
 
 export * from './styles-layout';

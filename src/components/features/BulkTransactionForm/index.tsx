@@ -1,108 +1,64 @@
 /**
  * @file components/features/BulkTransactionForm/index.tsx
- * @description Formulário para adicionar múltiplas transações de uma vez.
- * Permite cadastrar vários itens com descrição, valor e categoria.
+ * @description Formulário de múltiplas transações com shadcn + tailwind + framer-motion + lucide.
+ * Inputs shadcn, Select shadcn, badges e animações.
  */
 
 import React, { useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Layers, Plus, Trash2, CalendarDays, CheckCircle2, Wallet, ArrowUpRight, ArrowDownRight, Hash } from 'lucide-react';
 import { useTransactions } from '../../../hooks/useTransactions';
 import { toInputDate } from '../../../utils/formatters';
-import Button from '../../common/Button';
-import Icon from '../../common/Icon';
-import * as C from './styles';
+import { Card, CardContent } from '../../ui/card';
+import { Button } from '../../ui/button';
+import { Input } from '../../ui/input';
+import { Label } from '../../ui/label';
+import { Badge } from '../../ui/badge';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../ui/select';
 
-/**
- * Interface que representa um item do formulário em lote
- */
+/** Item do formulário em lote */
 interface BulkItem {
-  /** Identificador único do item */
   id: string;
-  /** Descrição do item */
   description: string;
-  /** Valor do item (string para controle de input) */
   amount: string;
-  /** ID da categoria */
   categoryId: string;
 }
 
-/**
- * Formulário de transações em lote
- * @returns {JSX.Element} Formulário renderizado
- *
- * @example
- * <BulkTransactionForm />
- */
+/** Formulário em lote — shadcn */
 const BulkTransactionForm: React.FC = () => {
   const { addTransaction, categories } = useTransactions();
-  /** Tipo das transações (entrada/saída) */
+  // Tipo, data e lista de itens
   const [type, setType] = useState<'income' | 'expense'>('expense');
-  /** Data comum para todos os itens */
   const [date, setDate] = useState(toInputDate(new Date()));
-  /** Lista de itens do formulário */
-  const [items, setItems] = useState<BulkItem[]>([
-    { id: '1', description: '', amount: '', categoryId: '' },
-  ]);
-  /** Estado de envio */
+  const [items, setItems] = useState<BulkItem[]>([{ id: '1', description: '', amount: '', categoryId: '' }]);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  /** Mensagem de sucesso */
   const [success, setSuccess] = useState(false);
 
-  /** Categorias filtradas por tipo */
-  const filteredCategories = categories.filter(
-    (cat) => cat.defaultType === type || cat.defaultType === 'both'
-  );
+  // Categorias filtradas por tipo
+  const filteredCategories = categories.filter((cat) => cat.defaultType === type || cat.defaultType === 'both');
 
-  /**
-   * Adiciona um novo item vazio ao formulário
-   */
+  /** Adiciona novo item vazio */
   const addItem = () => {
-    setItems((prev) => [
-      ...prev,
-      {
-        id: Date.now().toString(),
-        description: '',
-        amount: '',
-        categoryId: '',
-      },
-    ]);
+    setItems((prev) => [...prev, { id: Date.now().toString(), description: '', amount: '', categoryId: '' }]);
   };
 
-  /**
-   * Remove um item pelo ID (mínimo 1 item)
-   * @param id - ID do item a ser removido
-   */
+  /** Remove item (mantém ao menos 1) */
   const removeItem = (id: string) => {
     if (items.length === 1) return;
     setItems((prev) => prev.filter((item) => item.id !== id));
   };
 
-  /**
-   * Atualiza um campo de um item específico
-   * @param id - ID do item
-   * @param field - Campo a ser atualizado
-   * @param value - Novo valor
-   */
+  /** Atualiza campo do item */
   const updateItem = (id: string, field: keyof BulkItem, value: string) => {
-    setItems((prev) =>
-      prev.map((item) => (item.id === id ? { ...item, [field]: value } : item))
-    );
+    setItems((prev) => prev.map((item) => (item.id === id ? { ...item, [field]: value } : item)));
   };
 
-  /**
-   * Valida e envia todas as transações válidas
-   * Filtra itens com descrição e valor válidos antes de salvar
-   */
+  /** Valida e salva transações válidas */
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
-    const validItems = items.filter(
-      (item) => item.description.trim() && item.amount && parseFloat(item.amount) > 0
-    );
-
+    const validItems = items.filter((item) => item.description.trim() && item.amount && parseFloat(item.amount) > 0);
     if (validItems.length === 0) return;
-
     setIsSubmitting(true);
-
     try {
       validItems.forEach((item) => {
         addTransaction({
@@ -114,8 +70,6 @@ const BulkTransactionForm: React.FC = () => {
           notes: '',
         });
       });
-
-      // Reseta o formulário
       setItems([{ id: '1', description: '', amount: '', categoryId: '' }]);
       setSuccess(true);
       setTimeout(() => setSuccess(false), 3000);
@@ -126,123 +80,176 @@ const BulkTransactionForm: React.FC = () => {
     }
   };
 
-  /** Calcula o total dos itens */
-  const total = items.reduce((sum, item) => {
-    const value = parseFloat(item.amount) || 0;
-    return sum + value;
-  }, 0);
+  // Total calculado
+  const total = items.reduce((sum, item) => sum + (parseFloat(item.amount) || 0), 0);
+  const isExpense = type === 'expense';
 
   return (
-    <C.Container>
-      {/* Cabeçalho com título e contagem */}
-      <C.Header>
-        <C.Title>Adicionar Múltiplos Itens</C.Title>
-        <C.ItemCount>{items.length} {items.length === 1 ? 'item' : 'itens'}</C.ItemCount>
-      </C.Header>
+    <div className="space-y-5">
+      {/* Cabeçalho com contagem */}
+      <div className="flex items-center justify-between gap-3">
+        <div className="flex items-center gap-2.5">
+          <span className="w-8 h-8 rounded-xl bg-sky-500/10 text-sky-600 flex items-center justify-center border border-sky-100 dark:border-transparent">
+            <Layers className="h-4 w-4" />
+          </span>
+          <div>
+            <h2 className="text-[15px] font-semibold tracking-tight leading-none">Adicionar múltiplos itens</h2>
+            <p className="text-xs text-muted-foreground mt-1">Lance várias transações com a mesma data</p>
+          </div>
+        </div>
+        <Badge variant="outline" className="rounded-full px-2.5 py-1 text-xs gap-1.5">
+          <Hash className="h-3 w-3" />
+          {items.length} {items.length === 1 ? 'item' : 'itens'}
+        </Badge>
+      </div>
 
-      <C.Form onSubmit={handleSubmit}>
-        {/* Seletor de tipo */}
-        <C.TypeSelector>
-          <C.TypeButton
+      <form onSubmit={handleSubmit} className="space-y-4">
+        {/* Seletor de tipo — segmented control shadcn */}
+        <div className="grid grid-cols-2 gap-2 p-1 bg-muted rounded-2xl">
+          <Button
             type="button"
-            $isActive={type === 'expense'}
-            onClick={() => setType('expense')}
-          >
-            Saída
-          </C.TypeButton>
-          <C.TypeButton
-            type="button"
-            $isActive={type === 'income'}
+            variant={!isExpense ? 'default' : 'ghost'}
             onClick={() => setType('income')}
+            className={`rounded-xl gap-2 ${isExpense ? 'text-muted-foreground' : 'shadow-sm'}`}
           >
+            <ArrowUpRight className="h-4 w-4" />
             Entrada
-          </C.TypeButton>
-        </C.TypeSelector>
+          </Button>
+          <Button
+            type="button"
+            variant={isExpense ? 'default' : 'ghost'}
+            onClick={() => setType('expense')}
+            className={`rounded-xl gap-2 ${!isExpense ? 'text-muted-foreground' : 'shadow-sm'}`}
+          >
+            <ArrowDownRight className="h-4 w-4" />
+            Saída
+          </Button>
+        </div>
 
         {/* Campo de data */}
-        <C.DateField>
-          <C.Label>Data</C.Label>
-          <C.DateInput
-            type="date"
-            value={date}
-            onChange={(e) => setDate(e.target.value)}
-          />
-        </C.DateField>
+        <div className="space-y-1.5 max-w-[200px]">
+          <Label className="text-xs flex items-center gap-1.5">
+            <CalendarDays className="h-3.5 w-3.5 text-muted-foreground" />
+            Data
+          </Label>
+          <Input type="date" value={date} onChange={(e) => setDate(e.target.value)} className="h-9 rounded-xl" />
+        </div>
 
         {/* Lista de itens */}
-        <C.ItemsList>
+        <div className="space-y-2.5">
           {items.map((item, index) => (
-            <C.ItemRow key={item.id}>
-              <C.ItemIndex>{index + 1}</C.ItemIndex>
+            <motion.div
+              key={item.id}
+              initial={{ opacity: 0, y: 6 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -6 }}
+              transition={{ duration: 0.2 }}
+            >
+              <Card className="rounded-2xl bg-muted/20">
+                <CardContent className="p-3 flex items-center gap-2.5">
+                  {/* Índice circular */}
+                  <span className="w-7 h-7 rounded-full bg-primary text-white flex items-center justify-center text-xs font-bold shrink-0">
+                    {index + 1}
+                  </span>
 
-              <C.ItemFields>
-                <C.ItemInput
-                  type="text"
-                  placeholder="Descrição"
-                  value={item.description}
-                  onChange={(e) => updateItem(item.id, 'description', e.target.value)}
-                />
-                <C.ItemInput
-                  type="number"
-                  placeholder="Valor"
-                  value={item.amount}
-                  onChange={(e) => updateItem(item.id, 'amount', e.target.value)}
-                  min="0"
-                  step="0.01"
-                />
-                <C.ItemSelect
-                  value={item.categoryId}
-                  onChange={(e) => updateItem(item.id, 'categoryId', e.target.value)}
-                >
-                  <option value="">Categoria</option>
-                  {filteredCategories.map((cat) => (
-                    <option key={cat.id} value={cat.id}>
-                      {cat.name}
-                    </option>
-                  ))}
-                </C.ItemSelect>
-              </C.ItemFields>
+                  {/* Campos do item */}
+                  <div className="flex-1 grid grid-cols-1 sm:grid-cols-3 gap-2">
+                    <Input
+                      type="text"
+                      placeholder="Descrição"
+                      value={item.description}
+                      onChange={(e) => updateItem(item.id, 'description', e.target.value)}
+                      className="h-9 rounded-xl"
+                    />
+                    <Input
+                      type="number"
+                      placeholder="Valor"
+                      value={item.amount}
+                      onChange={(e) => updateItem(item.id, 'amount', e.target.value)}
+                      min="0"
+                      step="0.01"
+                      className="h-9 rounded-xl"
+                    />
+                    <Select value={item.categoryId} onValueChange={(v) => updateItem(item.id, 'categoryId', v)}>
+                      <SelectTrigger className="h-9 rounded-xl">
+                        <SelectValue placeholder="Categoria" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {filteredCategories.map((cat) => (
+                          <SelectItem key={cat.id} value={cat.id}>
+                            <span className="flex items-center gap-2">
+                              <span className="w-2 h-2 rounded-full" style={{ background: cat.color }} />
+                              {cat.name}
+                            </span>
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
 
-              <C.RemoveButton
-                type="button"
-                onClick={() => removeItem(item.id)}
-                disabled={items.length === 1}
-                aria-label="Remover item"
-              >
-                <Icon size={16}>
-                  <line x1="18" y1="6" x2="6" y2="18" />
-                  <line x1="6" y1="6" x2="18" y2="18" />
-                </Icon>
-              </C.RemoveButton>
-            </C.ItemRow>
+                  {/* Remover */}
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => removeItem(item.id)}
+                    disabled={items.length === 1}
+                    aria-label="Remover item"
+                    className="h-8 w-8 shrink-0 text-muted-foreground hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/30 disabled:opacity-30"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </CardContent>
+              </Card>
+            </motion.div>
           ))}
-        </C.ItemsList>
+        </div>
 
         {/* Total */}
-        <C.Total>
-          Total: {type === 'expense' ? '-' : '+'}{' '}
-          {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(total)}
-        </C.Total>
+        <Card className="rounded-xl bg-card border-dashed">
+          <CardContent className="p-3 flex items-center justify-between">
+            <span className="text-sm font-medium flex items-center gap-2">
+              <Wallet className="h-4 w-4 text-muted-foreground" />
+              Total
+            </span>
+            <span className={`text-[15px] font-bold tracking-tight ${isExpense ? 'text-red-600' : 'text-emerald-600'}`}>
+              {isExpense ? '-' : '+'}{' '}
+              {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(total)}
+            </span>
+          </CardContent>
+        </Card>
 
-        {/* Botões de ação */}
-        <C.Actions>
-          <Button type="button" variant="ghost" onClick={addItem}>
-            + Adicionar Item
+        {/* Ações */}
+        <div className="flex flex-col sm:flex-row justify-end gap-2">
+          <Button type="button" variant="outline" onClick={addItem} className="rounded-xl">
+            <Plus className="mr-1.5 h-4 w-4" />
+            Adicionar item
           </Button>
-          <Button type="submit" isLoading={isSubmitting}>
-            Salvar Todos
+          <Button type="submit" isLoading={isSubmitting} className="rounded-xl">
+            Salvar todos
           </Button>
-        </C.Actions>
+        </div>
 
         {/* Mensagem de sucesso */}
-        {success && (
-          <C.SuccessMessage>
-            {items.length === 1 ? 'Item adicionado' : `${items.length} itens adicionados`} com
-            sucesso!
-          </C.SuccessMessage>
-        )}
-      </C.Form>
-    </C.Container>
+        <AnimatePresence>
+          {success && (
+            <motion.div
+              initial={{ opacity: 0, y: -6 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -6 }}
+              transition={{ duration: 0.3 }}
+            >
+              <Card className="border-emerald-200 bg-emerald-50 dark:bg-emerald-950/20 dark:border-emerald-900">
+                <CardContent className="p-3 flex items-center justify-center gap-2 text-sm font-medium text-emerald-700 dark:text-emerald-300">
+                  <CheckCircle2 className="h-4 w-4" />
+                  {items.length === 1 ? 'Item adicionado' : 'Itens adicionados'} com sucesso!
+                </CardContent>
+              </Card>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </form>
+    </div>
   );
 };
 

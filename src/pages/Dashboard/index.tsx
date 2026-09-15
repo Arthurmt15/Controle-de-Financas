@@ -1,26 +1,16 @@
 /**
  * @file pages/Dashboard/index.tsx
  * @description Página principal do Dashboard.
- * Exibe métricas, gráficos e resumo financeiro.
+ * Wrapper fino — todo layout/visual vive em components/features/Dashboard (shadcn+tailwind).
  */
 
 import React from 'react';
 import DashboardComponent from '../../components/features/Dashboard';
-import * as C from './styles';
 
-/**
- * Página do Dashboard
- * @returns {JSX.Element} Página renderizada
- *
- * @example
- * <DashboardPage />
- */
+/** Página do Dashboard */
 const DashboardPage: React.FC = () => {
-  return (
-    <C.Container>
-      <DashboardComponent />
-    </C.Container>
-  );
+  // Sem Container styled — DashboardComponent já traz max-w e padding bento
+  return <DashboardComponent />;
 };
 
 export default DashboardPage;

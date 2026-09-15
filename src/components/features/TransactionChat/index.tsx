@@ -1,12 +1,13 @@
 /**
  * @file components/features/TransactionChat/index.tsx
- * @description Componente de chat para adicionar transações por mensagem.
- * Permite ao usuário digitar mensagens como "Almoço R$ 25" e cria a transação.
- * Suporta comandos como "criar categoria", "resumo", "análise" e "ajuda".
- * Suporta upload de comprovantes via OCR com processamento inteligente.
+ * @description Chat rápido redesenhado com shadcn + tailwind + framer-motion + lucide.
+ * Card com mensagens, Input + Button, Badge e motion. Preserva toda lógica de chat,
+ * comandos, OCR, comprovantes e integração com IA advisor.
  */
 
 import React, { useState, useRef, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Send, Bot, User, Sparkles, Image as ImageIcon, Trash2, Lightbulb, Loader2, TrendingUp } from 'lucide-react';
 import { extractTextFromImage } from '../../../services/ocrService';
 import { useTransactions } from '../../../hooks/useTransactions';
 import { useInstallments } from '../../../contexts/InstallmentsContext';
@@ -14,14 +15,17 @@ import { getExampleMessages, parseTransactionFromMessage } from '../../../utils/
 import { detectCommand, executeCommand } from '../../../utils/chatCommands';
 import { generateSummary, generateAnalysis } from '../../../utils/analysisEngine';
 import { parseReceiptText, getReceiptResponse } from '../../../utils/receiptParser';
-import { Send } from 'lucide-react';
 import { buildFinancialContext, streamAdvisor } from '../../../services/financialAdvisorService';
-import * as C from './styles';
+import { CardHeader, CardTitle } from '../../ui/card';
+import { Button, buttonVariants } from '../../ui/button';
+import { Input } from '../../ui/input';
+import { Badge } from '../../ui/badge';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../ui/select';
+import { Label } from '../../ui/label';
+import { cn } from '../../../lib/utils';
 import type { Transaction } from '../../../types';
 
-/**
- * Interface para mensagens do chat
- */
+/** Interface para mensagens do chat */
 interface ChatMessage {
   id: string;
   text: string;
@@ -30,7 +34,7 @@ interface ChatMessage {
   transaction?: Transaction;
 }
 
-/** Renderiza markdown básico */
+/** Renderiza markdown básico para negrito, listas e quebras */
 function renderMarkdown(text: string): string {
   return text
     .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
@@ -40,14 +44,15 @@ function renderMarkdown(text: string): string {
 }
 
 /**
- * Componente de chat rápido com IA
+ * Chat rápido com IA - design shadcn
  */
 const TransactionChat: React.FC = () => {
-  const { 
-    transactions, 
-    addTransaction, 
-    addCategory, 
-    deleteCategory, 
+  // Dados do contexto
+  const {
+    transactions,
+    addTransaction,
+    addCategory,
+    deleteCategory,
     categories,
     recurringBills,
     addRecurringBill,
@@ -56,6 +61,8 @@ const TransactionChat: React.FC = () => {
     generateRecurringTransactions,
   } = useTransactions();
   const { addInstallment } = useInstallments();
+
+  // Estado do chat
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [inputValue, setInputValue] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
@@ -65,50 +72,52 @@ const TransactionChat: React.FC = () => {
     date: string;
     categoryId: string;
   } | null>(null);
+
+  // Refs para scroll e foco
   const inputRef = useRef<HTMLInputElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
 
+  // Exemplos de mensagens
   const examples = getExampleMessages();
-
   const STORAGE_KEY = 'financas_chat_messages';
 
-  /**
-   * Rola apenas a área de mensagens para baixo (sem rolar a página)
-   */
+  /** Rola apenas a área de mensagens para baixo (sem rolar a página) */
   useEffect(() => {
     const timer = setTimeout(() => {
-      if (messagesEndRef.current) {
-        const container = messagesEndRef.current.parentElement;
-        if (container) {
-          container.scrollTop = container.scrollHeight;
-        }
+      if (scrollContainerRef.current) {
+        scrollContainerRef.current.scrollTop = scrollContainerRef.current.scrollHeight;
       }
     }, 50);
     return () => clearTimeout(timer);
   }, [messages]);
 
-  /**
-   * Carrega mensagens do localStorage ou exibe boas-vindas
-   */
+  /** Carrega mensagens do localStorage ou exibe boas-vindas */
   useEffect(() => {
     try {
       const saved = localStorage.getItem(STORAGE_KEY);
       if (saved) {
         const parsed = JSON.parse(saved);
         if (Array.isArray(parsed) && parsed.length > 0) {
-          setMessages(parsed.map((m: ChatMessage) => ({
-            ...m,
-            timestamp: new Date(m.timestamp),
-          })));
+          setMessages(
+            parsed.map((m: ChatMessage) => ({
+              ...m,
+              timestamp: new Date(m.timestamp),
+            }))
+          );
           return;
         }
       }
-    } catch { /* ignora erro de parsing */ }
+    } catch {
+      /* ignora erro de parsing */
+    }
 
+    // Mensagem de boas-vindas
     setMessages([
       {
         id: 'welcome',
-        text: 'Olá! Sou seu assistente financeiro com IA. \n\n' +
+        text:
+          'Olá! Sou seu assistente financeiro com IA. \n\n' +
           ' Para adicionar transações:\n' +
           '• "Mercado ontem 150,50"\n' +
           '• "Recebi 4k de salário"\n\n' +
@@ -128,23 +137,17 @@ const TransactionChat: React.FC = () => {
     ]);
   }, []);
 
-  /**
-   * Salva mensagens no localStorage quando mudam
-   */
+  /** Salva mensagens no localStorage quando mudam */
   useEffect(() => {
     if (messages.length > 0) {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(messages));
     }
   }, [messages]);
 
-  /**
-   * Gera ID único para mensagem
-   */
+  /** Gera ID único para mensagem */
   const generateMessageId = () => `msg_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
 
-  /**
-   * Adiciona mensagem ao chat
-   */
+  /** Adiciona mensagem ao chat */
   const addMessage = (text: string, isUser: boolean, transaction?: Transaction): ChatMessage => {
     const newMessage: ChatMessage = {
       id: generateMessageId(),
@@ -153,19 +156,13 @@ const TransactionChat: React.FC = () => {
       timestamp: new Date(),
       transaction,
     };
-
     setMessages((prev) => [...prev, newMessage]);
     return newMessage;
   };
 
-  /**
-   * Processa mensagem do usuário
-   * Comandos e OCR vão direto. Todo o resto vai para a IA.
-   */
+  /** Processa mensagem do usuário - comandos, OCR e IA */
   const processMessage = async (text: string) => {
     setIsProcessing(true);
-
-    // Adiciona mensagem do usuário
     addMessage(text, true);
 
     // 1. Comandos locais (criar categoria, resumo, análise, ajuda)
@@ -182,7 +179,7 @@ const TransactionChat: React.FC = () => {
         updateRecurringBill,
         deleteRecurringBill,
         generateRecurringTransactions,
-        recurringBills,
+        recurringBills
       );
       addMessage(response, false);
       setIsProcessing(false);
@@ -190,25 +187,21 @@ const TransactionChat: React.FC = () => {
     }
 
     // 2. Texto colado de comprovante (2+ linhas)
-    const lines = text.split('\n').filter(l => l.trim().length > 0);
+    const lines = text.split('\n').filter((l) => l.trim().length > 0);
     if (lines.length >= 2) {
       const receipt = parseReceiptText(text);
       if (receipt.amount) {
         const searchTerms = [receipt.description, receipt.store].filter(Boolean).join(' ').toLowerCase();
-        let matchCat = categories.find(c => {
+        let matchCat = categories.find((c) => {
           const catName = c.name.toLowerCase();
-          return searchTerms.includes(catName) ||
-            catName.includes(searchTerms.split(' ')[0]);
+          return searchTerms.includes(catName) || catName.includes(searchTerms.split(' ')[0]);
         });
-
         if (!matchCat) {
-          matchCat = categories.find(c => c.name.toLowerCase() === 'outros') || categories[0];
+          matchCat = categories.find((c) => c.name.toLowerCase() === 'outros') || categories[0];
         }
-
         if (matchCat) {
           const responseMsg = getReceiptResponse(receipt);
           addMessage(responseMsg, false);
-
           const transactionData: Omit<Transaction, 'id'> = {
             description: receipt.description || receipt.store || 'Compra',
             amount: receipt.amount,
@@ -217,45 +210,35 @@ const TransactionChat: React.FC = () => {
             categoryId: matchCat.id,
             notes: '',
           };
-
           await addTransaction(transactionData);
           addMessage(
             ` Transação criada!\n` +
-            ` ${transactionData.description}\n` +
-            ` R$ ${transactionData.amount.toFixed(2).replace('.', ',')}\n` +
-            ` ${formatDateBR(transactionData.date)}\n` +
-            ` ${matchCat.name}`,
+              ` ${transactionData.description}\n` +
+              ` R$ ${transactionData.amount.toFixed(2).replace('.', ',')}\n` +
+              ` ${formatDateBR(transactionData.date)}\n` +
+              ` ${matchCat.name}`,
             false
           );
         } else {
-          addMessage(
-            ` Texto reconhecido mas sem categoria.\n` +
-            `Crie uma com "criar categoria [nome]"`,
-            false
-          );
+          addMessage(` Texto reconhecido mas sem categoria.\nCrie uma com "criar categoria [nome]"`, false);
         }
         setIsProcessing(false);
         return;
       }
     }
 
-    // 3. Tentar parsear como transação simples (ex: "uber 7", "almoço 25")
+    // 3. Tentar parsear como transação simples
     const parsed = parseTransactionFromMessage(text);
     if (parsed) {
-      let matchCat = categories.find(c => c.name.toLowerCase() === parsed.categoria.toLowerCase());
-
+      let matchCat = categories.find((c) => c.name.toLowerCase() === parsed.categoria.toLowerCase());
       if (!matchCat) {
-        matchCat = categories.find(c => c.name.toLowerCase() === 'outros') || categories[0];
+        matchCat = categories.find((c) => c.name.toLowerCase() === 'outros') || categories[0];
       }
-
       if (matchCat) {
         const installmentCount = parsed.parcelas || 0;
         const perInstallment = installmentCount > 0 ? parsed.valor / installmentCount : parsed.valor;
         const installmentLabel = installmentCount > 0 ? `1/${installmentCount}` : '';
-        const descriptionWithInstallment = installmentLabel
-          ? `${parsed.descricao} ${installmentLabel}`
-          : parsed.descricao;
-
+        const descriptionWithInstallment = installmentLabel ? `${parsed.descricao} ${installmentLabel}` : parsed.descricao;
         const transactionData: Omit<Transaction, 'id'> = {
           description: descriptionWithInstallment,
           amount: perInstallment,
@@ -264,10 +247,7 @@ const TransactionChat: React.FC = () => {
           categoryId: matchCat.id,
           notes: installmentCount > 0 ? `Parcelado em ${installmentCount}x - Total R$ ${parsed.valor.toFixed(2).replace('.', ',')}` : '',
         };
-
         await addTransaction(transactionData);
-
-        // Se for parcelado, cria automaticamente o parcelado para aparecer em Parcelados
         if (installmentCount > 0) {
           try {
             await addInstallment({
@@ -285,14 +265,15 @@ const TransactionChat: React.FC = () => {
             console.error('Transação criada, mas falhou ao criar parcelado:', installmentError);
           }
         }
-
         addMessage(
           ` Transação registrada!\n` +
-          ` ${transactionData.description}\n` +
-          ` R$ ${transactionData.amount.toFixed(2).replace('.', ',')}\n` +
-          ` ${formatDateBR(transactionData.date)}\n` +
-          ` ${matchCat.name}` +
-          (installmentCount > 0 ? `\n Total: R$ ${parsed.valor.toFixed(2).replace('.', ',')} (${installmentCount}x)\n Parcelado criado em "Parcelados" (${installmentCount}x de R$ ${perInstallment.toFixed(2).replace('.', ',')})` : ''),
+            ` ${transactionData.description}\n` +
+            ` R$ ${transactionData.amount.toFixed(2).replace('.', ',')}\n` +
+            ` ${formatDateBR(transactionData.date)}\n` +
+            ` ${matchCat.name}` +
+            (installmentCount > 0
+              ? `\n Total: R$ ${parsed.valor.toFixed(2).replace('.', ',')} (${installmentCount}x)\n Parcelado criado em "Parcelados" (${installmentCount}x de R$ ${perInstallment.toFixed(2).replace('.', ',')})`
+              : ''),
           false
         );
         setIsProcessing(false);
@@ -300,7 +281,7 @@ const TransactionChat: React.FC = () => {
       }
     }
 
-    // 4. Tudo o resto vai para a IA
+    // 4. Tudo o resto vai para a IA advisor (streaming)
     const aiMsg: ChatMessage = {
       id: generateMessageId(),
       text: '',
@@ -308,54 +289,37 @@ const TransactionChat: React.FC = () => {
       timestamp: new Date(),
     };
     setMessages((prev) => [...prev, aiMsg]);
-
     try {
       const context = buildFinancialContext(transactions, categories);
       const history = messages.slice(-20).map((m) => ({
         role: m.isUser ? ('user' as const) : ('assistant' as const),
         content: m.text,
       }));
-
       let accumulated = '';
       const chunks = streamAdvisor(text, context, history);
-      const updateAiMessage = (text: string) => {
-        setMessages((prev) =>
-          prev.map((m) => (m.id === aiMsg.id ? { ...m, text } : m))
-        );
+      const updateAiMessage = (t: string) => {
+        setMessages((prev) => prev.map((m) => (m.id === aiMsg.id ? { ...m, text: t } : m)));
       };
       for await (const chunk of chunks) {
         accumulated += chunk;
         updateAiMessage(accumulated);
       }
     } catch {
-      setMessages((prev) =>
-        prev.map((m) =>
-          m.id === aiMsg.id
-            ? { ...m, text: 'Erro ao conectar com a IA. Tente novamente.' }
-            : m
-        )
-      );
+      setMessages((prev) => prev.map((m) => (m.id === aiMsg.id ? { ...m, text: 'Erro ao conectar com a IA. Tente novamente.' } : m)));
     }
-
     setIsProcessing(false);
   };
 
-  /**
-   * Confirma comprovante como entrada ou saída
-   */
+  /** Confirma comprovante como entrada ou saída */
   const handleReceiptConfirm = async (type: 'income' | 'expense') => {
     if (!pendingReceiptType) return;
-
     const { description, amount, date, categoryId } = pendingReceiptType;
     const parsedAmount = parseFloat(amount.replace(',', '.'));
-    
     if (isNaN(parsedAmount) || parsedAmount <= 0) {
       addMessage(' Valor inválido. Verifique o valor digitado.', false);
       return;
     }
-
     setPendingReceiptType(null);
-
     const transactionData: Omit<Transaction, 'id'> = {
       description,
       amount: parsedAmount,
@@ -364,16 +328,11 @@ const TransactionChat: React.FC = () => {
       categoryId,
       notes: '',
     };
-
     try {
       await addTransaction(transactionData);
       const label = type === 'income' ? ' Entrada' : ' Saída';
       addMessage(
-        ` Transação criada!\n` +
-        `${label}: ${description}\n` +
-        ` R$ ${parsedAmount.toFixed(2).replace('.', ',')}\n` +
-        ` ${formatDateBR(transactionData.date)}\n` +
-        ` ${categories.find(c => c.id === categoryId)?.name || ''}`,
+        ` Transação criada!\n${label}: ${description}\n R$ ${parsedAmount.toFixed(2).replace('.', ',')}\n ${formatDateBR(transactionData.date)}\n ${categories.find((c) => c.id === categoryId)?.name || ''}`,
         false
       );
     } catch (error: unknown) {
@@ -382,326 +341,288 @@ const TransactionChat: React.FC = () => {
     }
   };
 
-  /**
-   * Envia mensagem
-   */
+  /** Envia mensagem */
   const handleSend = () => {
     const text = inputValue.trim();
     if (!text || isProcessing) return;
-
     setInputValue('');
     processMessage(text);
   };
 
-  /**
-   * Trata Enter no input
-   */
-  const handleKeyPress = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault();
-      handleSend();
-    }
-  };
-
-  /**
-   * Usa exemplo clicado
-   */
+  /** Usa exemplo clicado */
   const handleExampleClick = (example: string) => {
     setInputValue(example);
     inputRef.current?.focus();
   };
 
-  /**
-   * Trata upload de imagem (comprovante/nota fiscal)
-   * Usa processador inteligente para extrair valor, data, loja e método de pagamento
-   */
+  /** Trata upload de imagem (comprovante/nota fiscal) */
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-
     if (!file.type.startsWith('image/')) {
       addMessage('Por favor, selecione uma imagem válida.', false);
       return;
     }
-
     setIsProcessing(true);
     addMessage(' Analisando comprovante...', false);
-
     try {
       const ocrResult = await extractTextFromImage(file, 'por');
       const text = ocrResult.text;
-
       if (!text) {
         addMessage('Não consegui ler texto na imagem. Por favor, digite os dados manualmente.\nEx: "Mercado 150,50"', false);
         setIsProcessing(false);
         return;
       }
-
-      // Processa o texto do OCR com o parser inteligente de comprovantes
       const receipt = parseReceiptText(text);
-
-      // Se não conseguiu extrair valor, manda para a IA interpretar
       if (!receipt.amount) {
-        const aiMsg: ChatMessage = {
-          id: generateMessageId(),
-          text: '',
-          isUser: false,
-          timestamp: new Date(),
-        };
+        const aiMsg: ChatMessage = { id: generateMessageId(), text: '', isUser: false, timestamp: new Date() };
         setMessages((prev) => [...prev, aiMsg]);
-
         try {
           const context = buildFinancialContext(transactions, categories);
           const prompt = `Texto de comprovante/nota fiscal extraído por OCR:\n\n${text}\n\nInterprete este texto e me diga: valor, data, descrição e categoria sugerida. Se for uma transação, crie ela.`;
           let accumulated = '';
           const chunks = streamAdvisor(prompt, context, []);
-          const updateAiMessage = (text: string) => {
-            setMessages((prev) =>
-              prev.map((m) => (m.id === aiMsg.id ? { ...m, text } : m))
-            );
+          const updateAiMessage = (t: string) => {
+            setMessages((prev) => prev.map((m) => (m.id === aiMsg.id ? { ...m, text: t } : m)));
           };
           for await (const chunk of chunks) {
             accumulated += chunk;
             updateAiMessage(accumulated);
           }
         } catch {
-          setMessages((prev) =>
-            prev.map((m) =>
-              m.id === aiMsg.id
-                ? { ...m, text: ' Não consegui interpretar o comprovante. Por favor, digite manualmente.\nEx: "Mercado 150,50"' }
-                : m
-            )
-          );
+          setMessages((prev) => prev.map((m) => (m.id === aiMsg.id ? { ...m, text: ' Não consegui interpretar o comprovante. Por favor, digite manualmente.\nEx: "Mercado 150,50"' } : m)));
         }
         setIsProcessing(false);
         e.target.value = '';
         return;
       }
-
-      // Valor extraído com sucesso - encontra categoria e mostra formulário editável
       const searchTerms = [receipt.description, receipt.store].filter(Boolean).join(' ').toLowerCase();
-      let matchCat = categories.find(c => {
+      let matchCat = categories.find((c) => {
         const catName = c.name.toLowerCase();
-        return searchTerms.includes(catName) ||
-          catName.includes(searchTerms.split(' ')[0]);
+        return searchTerms.includes(catName) || catName.includes(searchTerms.split(' ')[0]);
       });
-
-      // Se não encontrou, usa "Outros"
       if (!matchCat) {
-        matchCat = categories.find(c => c.name.toLowerCase() === 'outros') || categories[0];
+        matchCat = categories.find((c) => c.name.toLowerCase() === 'outros') || categories[0];
       }
-
       if (matchCat) {
         const description = receipt.description || receipt.store || 'Comprovante';
         const receiptDate = receipt.date || '';
         const amountStr = receipt.amount.toFixed(2).replace('.', ',');
-
-        setPendingReceiptType({
-          description,
-          amount: amountStr,
-          date: receiptDate,
-          categoryId: matchCat.id,
-        });
-
+        setPendingReceiptType({ description, amount: amountStr, date: receiptDate, categoryId: matchCat.id });
         addMessage(
-          ` Dados identificados (edite antes de confirmar):\n\n` +
-          ` Valor: R$ ${amountStr}\n` +
-          ` Data: ${receiptDate ? formatDateBR(receiptDate + 'T12:00:00') : 'Hoje'}\n` +
-          ` Categoria: ${matchCat.name}\n` +
-          ` Descrição: ${description}\n\n` +
-          `Escolha uma opção:`,
+          ` Dados identificados (edite antes de confirmar):\n\n Valor: R$ ${amountStr}\n Data: ${receiptDate ? formatDateBR(receiptDate + 'T12:00:00') : 'Hoje'}\n Categoria: ${matchCat.name}\n Descrição: ${description}\n\nEscolha uma opção:`,
           false
         );
       } else {
-        addMessage(
-          ` Valor identificado: R$ ${receipt.amount.toFixed(2).replace('.', ',')}\n\n` +
-          ` Não consegui criar a transação automaticamente.\n` +
-          `Por favor, crie uma categoria primeiro:\n` +
-          `• "criar categoria [nome]"`,
-          false
-        );
+        addMessage(` Valor identificado: R$ ${receipt.amount.toFixed(2).replace('.', ',')}\n\n Não consegui criar a transação automaticamente.\nPor favor, crie uma categoria primeiro:\n• "criar categoria [nome]"`, false);
       }
     } catch (err) {
       console.error('Erro no OCR:', err);
       addMessage('Erro ao analisar a imagem. Por favor, digite os dados manualmente.', false);
     }
-
     setIsProcessing(false);
     e.target.value = '';
   };
 
-  /**
-   * Formata data no padrão brasileiro (DD/MM/AAAA)
-   */
+  /** Formata data no padrão brasileiro */
   const formatDateBR = (dateString: string): string => {
     const date = new Date(dateString);
     return date.toLocaleDateString('pt-BR');
   };
 
-  /**
-   * Formata hora
-   */
+  /** Formata hora */
   const formatTime = (date: Date) => {
     return date.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
   };
 
-  /**
-   * Limpa todo o histórico do chat
-   */
+  /** Limpa todo o histórico do chat */
   const handleClearChat = () => {
     localStorage.removeItem(STORAGE_KEY);
     setMessages([]);
   };
 
   return (
-    <C.ChatContainer>
-      {/* Cabeçalho */}
-      <C.ChatHeader>
-        <C.ChatTitle>
-          <C.TitleIcon></C.TitleIcon>
-          Chat Rápido
-        </C.ChatTitle>
-        {messages.length > 1 && (
-          <button
-            onClick={handleClearChat}
-            style={{
-              background: 'none',
-              border: 'none',
-              cursor: 'pointer',
-              fontSize: '14px',
-              opacity: 0.6,
-              padding: '4px 8px',
-            }}
-            title="Limpar histórico do chat"
+    <div className="flex flex-col h-[560px]">
+      {/* Cabeçalho do chat - com CardHeader estilizado */}
+      <CardHeader className="p-4 border-b bg-gradient-to-r from-primary/5 to-transparent">
+        <div className="flex items-center justify-between gap-2">
+          <CardTitle className="text-[14px] font-semibold flex items-center gap-2">
+            <span className="w-7 h-7 rounded-lg bg-primary text-white flex items-center justify-center">
+              <Bot className="h-4 w-4" />
+            </span>
+            Chat Rápido
+            <Badge variant="secondary" className="ml-1 gap-1 rounded-full text-[11px] px-2 py-0">
+              <Sparkles className="h-3 w-3" />
+              IA
+            </Badge>
+          </CardTitle>
+          {messages.length > 1 && (
+            <Button variant="ghost" size="sm" onClick={handleClearChat} className="h-7 rounded-lg gap-1 text-xs text-muted-foreground" title="Limpar histórico">
+              <Trash2 className="h-3.5 w-3.5" />
+              Limpar
+            </Button>
+          )}
+        </div>
+      </CardHeader>
+
+      {/* Área de mensagens */}
+      <div
+        ref={scrollContainerRef}
+        role="log"
+        aria-live="polite"
+        aria-label="Mensagens do chat"
+        className="flex-1 overflow-y-auto p-4 space-y-3 bg-muted/20"
+      >
+        {messages.map((message, idx) => (
+          <motion.div
+            key={message.id}
+            initial={{ opacity: 0, y: 6 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: idx * 0.02, duration: 0.25 }}
+            className={`flex flex-col gap-1 ${message.isUser ? 'items-end' : 'items-start'}`}
           >
-            
-          </button>
-        )}
-      </C.ChatHeader>
-
-      {/* Área de mensagens com suporte a leitores de tela */}
-      <C.MessagesArea role="log" aria-live="polite" aria-label="Mensagens do chat">
-        {messages.map((message) => (
-          <C.Message key={message.id} $isUser={message.isUser}>
-            <C.MessageBubble
-              $isUser={message.isUser}
-              dangerouslySetInnerHTML={
-                !message.isUser && message.text
-                  ? { __html: renderMarkdown(message.text) }
-                  : undefined
-              }
+            {/* Badge de autor */}
+            <span className={`flex items-center gap-1 text-[11px] font-medium ${message.isUser ? 'text-primary' : 'text-muted-foreground'}`}>
+              {message.isUser ? <User className="h-3 w-3" /> : <Bot className="h-3 w-3" />}
+              {message.isUser ? 'Você' : 'Assistente'}
+            </span>
+            {/* Balão da mensagem */}
+            <div
+              className={`max-w-[85%] rounded-2xl px-3.5 py-2.5 text-[13.5px] leading-relaxed shadow-sm ${
+                message.isUser
+                  ? 'bg-primary text-white rounded-br-md'
+                  : 'bg-background border text-foreground rounded-bl-md'
+              }`}
             >
-              {message.isUser || !message.text ? message.text : null}
-            </C.MessageBubble>
-            <C.MessageTime>{formatTime(message.timestamp)}</C.MessageTime>
-          </C.Message>
+              {message.isUser || !message.text ? (
+                message.text
+              ) : (
+                <span dangerouslySetInnerHTML={{ __html: renderMarkdown(message.text) }} />
+              )}
+            </div>
+            <span className="text-[11px] text-muted-foreground px-1">{formatTime(message.timestamp)}</span>
+          </motion.div>
         ))}
+        {/* Indicador de processamento */}
+        {isProcessing && (
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex items-center gap-2 text-sm text-muted-foreground">
+            <Loader2 className="h-4 w-4 animate-spin" />
+            Processando...
+          </motion.div>
+        )}
         <div ref={messagesEndRef} />
-      </C.MessagesArea>
+      </div>
 
-      {/* Botões de comprovante */}
-      {pendingReceiptType && (
-        <C.ReceiptForm>
-          <C.FormRow>
-            <C.FormLabel> Valor:</C.FormLabel>
-            <C.FormInput
-              type="text"
-              value={pendingReceiptType.amount}
-              onChange={(e) => setPendingReceiptType({ ...pendingReceiptType, amount: e.target.value })}
-              placeholder="0,00"
-            />
-          </C.FormRow>
-          <C.FormRow>
-            <C.FormLabel> Data:</C.FormLabel>
-            <C.FormInput
-              type="date"
-              value={pendingReceiptType.date}
-              onChange={(e) => setPendingReceiptType({ ...pendingReceiptType, date: e.target.value })}
-            />
-          </C.FormRow>
-          <C.FormRow>
-            <C.FormLabel> Categoria:</C.FormLabel>
-            <C.FormSelect
-              value={pendingReceiptType.categoryId}
-              onChange={(e) => setPendingReceiptType({ ...pendingReceiptType, categoryId: e.target.value })}
-            >
-              {categories.map((cat) => (
-                <option key={cat.id} value={cat.id}>{cat.name}</option>
-              ))}
-            </C.FormSelect>
-          </C.FormRow>
-          <C.FormRow>
-            <C.FormLabel> Descrição:</C.FormLabel>
-            <C.FormInput
-              type="text"
-              value={pendingReceiptType.description}
-              onChange={(e) => setPendingReceiptType({ ...pendingReceiptType, description: e.target.value })}
-              placeholder="Descrição"
-            />
-          </C.FormRow>
-          <C.TypeButtons>
-            <C.IncomeButton onClick={() => handleReceiptConfirm('income')}>
-               Entrada
-            </C.IncomeButton>
-            <C.ExpenseButton onClick={() => handleReceiptConfirm('expense')}>
-               Saída
-            </C.ExpenseButton>
-          </C.TypeButtons>
-        </C.ReceiptForm>
-      )}
+      {/* Formulário de comprovante pendente */}
+      <AnimatePresence>
+        {pendingReceiptType && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: 'auto' }}
+            exit={{ opacity: 0, height: 0 }}
+            className="border-t bg-amber-50/60 dark:bg-amber-500/10 p-3 space-y-2.5 overflow-hidden"
+          >
+            <p className="text-xs font-semibold text-amber-800 dark:text-amber-300 flex items-center gap-1.5">
+              <Lightbulb className="h-3.5 w-3.5" />
+              Dados identificados (edite antes de confirmar)
+            </p>
+            <div className="grid grid-cols-2 gap-2">
+              <div className="space-y-1">
+                <Label className="text-xs">Valor</Label>
+                <Input value={pendingReceiptType.amount} onChange={(e) => setPendingReceiptType({ ...pendingReceiptType!, amount: e.target.value })} placeholder="0,00" className="h-8 rounded-lg text-sm bg-background" />
+              </div>
+              <div className="space-y-1">
+                <Label className="text-xs">Data</Label>
+                <Input type="date" value={pendingReceiptType.date} onChange={(e) => setPendingReceiptType({ ...pendingReceiptType!, date: e.target.value })} className="h-8 rounded-lg text-sm bg-background" />
+              </div>
+            </div>
+            <div className="space-y-1">
+              <Label className="text-xs">Categoria</Label>
+              <Select value={pendingReceiptType.categoryId} onValueChange={(v) => setPendingReceiptType({ ...pendingReceiptType!, categoryId: v })}>
+                <SelectTrigger className="h-8 rounded-lg text-sm bg-background">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {categories.map((cat) => (
+                    <SelectItem key={cat.id} value={cat.id}>
+                      {cat.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-1">
+              <Label className="text-xs">Descrição</Label>
+              <Input value={pendingReceiptType.description} onChange={(e) => setPendingReceiptType({ ...pendingReceiptType!, description: e.target.value })} placeholder="Descrição" className="h-8 rounded-lg text-sm bg-background" />
+            </div>
+            <div className="grid grid-cols-2 gap-2 pt-1">
+              <Button onClick={() => handleReceiptConfirm('income')} className="rounded-xl gap-1.5 bg-emerald-600 hover:bg-emerald-700 h-9 text-sm">
+                <TrendingUp className="h-4 w-4" />
+                Entrada
+              </Button>
+              <Button onClick={() => handleReceiptConfirm('expense')} variant="destructive" className="rounded-xl gap-1.5 h-9 text-sm">
+                <TrendingUp className="h-4 w-4 rotate-180" />
+                Saída
+              </Button>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
-      {/* Input */}
-      <C.InputContainer>
-        <C.UploadButton
-          as="label"
+      {/* Input de mensagem */}
+      <div className="p-3 border-t bg-background flex items-center gap-2">
+        {/* Botão upload de imagem */}
+        <label
           htmlFor="chat-image-upload"
+          className={cn(buttonVariants({ variant: 'outline', size: 'icon' }), 'h-9 w-9 rounded-xl shrink-0 cursor-pointer')}
           title="Enviar foto de comprovante"
         >
-          <C.UploadIcon></C.UploadIcon>
-        </C.UploadButton>
-        <input
-          type="file"
-          id="chat-image-upload"
-          accept="image/*"
-          onChange={handleImageUpload}
-          style={{ display: 'none' }}
-        />
+          <ImageIcon className="h-4 w-4" />
+        </label>
+        <input type="file" id="chat-image-upload" accept="image/*" onChange={handleImageUpload} className="hidden" />
 
-        <C.MessageInput
+        <Input
           ref={inputRef}
           type="text"
           value={inputValue}
           onChange={(e) => setInputValue(e.target.value)}
-          onKeyPress={handleKeyPress}
-          placeholder={pendingReceiptType ? "Escolha uma opção acima" : "Pergunte sobre suas finanças..."}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' && !e.shiftKey) {
+              e.preventDefault();
+              handleSend();
+            }
+          }}
+          placeholder={pendingReceiptType ? 'Escolha uma opção acima' : 'Pergunte sobre suas finanças...'}
           disabled={isProcessing || !!pendingReceiptType}
           aria-label="Digite sua mensagem"
+          className="flex-1 h-9 rounded-xl"
         />
 
-        <C.SendButton
-          onClick={handleSend}
-          disabled={!inputValue.trim() || isProcessing || !!pendingReceiptType}
-          aria-label="Enviar mensagem"
-        >
-          <C.SendIcon><Send size={16} /></C.SendIcon>
-        </C.SendButton>
-      </C.InputContainer>
+        <Button onClick={handleSend} disabled={!inputValue.trim() || isProcessing || !!pendingReceiptType} size="icon" className="h-9 w-9 rounded-xl shrink-0" aria-label="Enviar mensagem">
+          <Send className="h-4 w-4" />
+        </Button>
+      </div>
 
-      {/* Dicas */}
-      <C.TipsContainer>
-        <C.TipsTitle>Exemplos (clique para usar):</C.TipsTitle>
-        <C.ExamplesList>
+      {/* Dicas / exemplos - chips */}
+      <div className="px-3 pb-3 bg-background">
+        <p className="text-[11px] font-semibold tracking-widest uppercase text-muted-foreground mb-1.5 flex items-center gap-1">
+          <Lightbulb className="h-3 w-3" />
+          Exemplos (clique para usar)
+        </p>
+        <div className="flex flex-wrap gap-1.5">
           {examples.map((example, index) => (
-            <C.ExampleChip
+            <Badge
               key={index}
+              variant="outline"
+              className="rounded-full px-2.5 py-1 text-xs font-medium cursor-pointer hover:bg-primary hover:text-white hover:border-primary transition-colors"
               onClick={() => handleExampleClick(example)}
             >
               {example}
-            </C.ExampleChip>
+            </Badge>
           ))}
-        </C.ExamplesList>
-      </C.TipsContainer>
-    </C.ChatContainer>
+        </div>
+      </div>
+    </div>
   );
 };
 

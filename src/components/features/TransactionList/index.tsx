@@ -1,67 +1,55 @@
 /**
  * @file components/features/TransactionList/index.tsx
- * @description Lista de transações com filtros, ordenação e ações.
- * Exibe transações em formato de tabela com opções de editar e excluir.
+ * @description Lista de transações redesenhada com shadcn + tailwind + framer-motion.
+ * Cards grid com Badge categoria, Dialog para edit/delete, motion stagger e lucide icons.
+ * Preserva lógica de filtros, formatters, categorias e exportação.
  */
 
 import React, { useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Pencil, Trash2, Search, Inbox, FileSpreadsheet, FileText, SlidersHorizontal } from 'lucide-react';
 import { useTransactions } from '../../../hooks/useTransactions';
 import { formatCurrency, formatDate } from '../../../utils/formatters';
 import { exportTransactionsCSV, exportTransactionsPDF } from '../../../utils/exportData';
-import Modal from '../../common/Modal';
-import Icon from '../../common/Icon';
 import TransactionForm from '../TransactionForm';
-import * as C from './styles';
+import { Card, CardContent, CardHeader, CardTitle } from '../../ui/card';
+import { Button } from '../../ui/button';
+import { Input } from '../../ui/input';
+import { Badge } from '../../ui/badge';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '../../ui/dialog';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../ui/select';
 import type { Transaction } from '../../../types';
 
 /**
- * Componente TransactionList
- * @returns {JSX.Element} Lista de transações renderizada
- *
- * @example
- * <TransactionList />
+ * Lista de transações com visual shadcn
  */
 const TransactionList: React.FC = () => {
-  const {
-    filteredTransactions,
-    categories,
-    filters,
-    setFilters,
-    deleteTransaction,
-  } = useTransactions();
+  // Dados e filtros do contexto
+  const { filteredTransactions, categories, filters, setFilters, deleteTransaction } = useTransactions();
 
   // Estado para edição
   const [editingTransaction, setEditingTransaction] = useState<Transaction | null>(null);
-
   // Estado para confirmação de exclusão
   const [deletingId, setDeletingId] = useState<string | null>(null);
 
-  /**
-   * Obtém o nome da categoria pelo ID
-   */
+  /** Obtém o nome da categoria pelo ID */
   const getCategoryName = (categoryId: string): string => {
     const category = categories.find((c) => c.id === categoryId);
     return category?.name || 'Sem categoria';
   };
 
-  /**
-   * Obtém a cor da categoria pelo ID
-   */
+  /** Obtém a cor da categoria pelo ID */
   const getCategoryColor = (categoryId: string): string => {
     const category = categories.find((c) => c.id === categoryId);
     return category?.color || '#6b7280';
   };
 
-  /**
-   * Abre o modal de edição
-   */
+  /** Abre o modal de edição */
   const handleEdit = (transaction: Transaction) => {
     setEditingTransaction(transaction);
   };
 
-  /**
-   * Confirma e executa a exclusão
-   */
+  /** Confirma e executa a exclusão */
   const handleConfirmDelete = () => {
     if (deletingId) {
       deleteTransaction(deletingId);
@@ -70,236 +58,256 @@ const TransactionList: React.FC = () => {
   };
 
   return (
-    <C.Container>
-      {/* Cabeçalho com filtros */}
-      <C.Header>
-        <C.Title>Transações</C.Title>
+    <div className="space-y-4">
+      {/* Cabeçalho com título e exportações + filtros em Card */}
+      <Card className="rounded-2xl">
+        <CardHeader className="pb-3">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <CardTitle className="text-[13px] font-semibold tracking-wide uppercase text-muted-foreground flex items-center gap-2">
+              <SlidersHorizontal className="h-4 w-4" />
+              Transações • {filteredTransactions.length} {filteredTransactions.length === 1 ? 'item' : 'itens'}
+            </CardTitle>
+            {/* Botões de exportação */}
+            <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                className="rounded-xl gap-1.5 h-8 text-xs"
+                onClick={() => exportTransactionsCSV({ transactions: filteredTransactions, categories })}
+                aria-label="Exportar como CSV"
+              >
+                <FileSpreadsheet className="h-3.5 w-3.5" />
+                CSV
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                className="rounded-xl gap-1.5 h-8 text-xs"
+                onClick={() => exportTransactionsPDF({ transactions: filteredTransactions, categories })}
+                aria-label="Exportar como PDF"
+              >
+                <FileText className="h-3.5 w-3.5" />
+                PDF
+              </Button>
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent className="pt-0">
+          {/* Filtros: busca + tipo + categoria */}
+          <div className="flex flex-col sm:flex-row gap-3">
+            {/* Campo de busca com ícone */}
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                type="text"
+                placeholder="Buscar transações..."
+                value={filters.searchTerm}
+                onChange={(e) => setFilters({ searchTerm: e.target.value })}
+                className="pl-9 h-10 rounded-xl"
+                aria-label="Buscar transações"
+              />
+            </div>
+            {/* Filtro por tipo - Select shadcn */}
+            <Select value={filters.type} onValueChange={(v) => setFilters({ type: v as 'income' | 'expense' | 'both' })}>
+              <SelectTrigger className="w-full sm:w-[160px] h-10 rounded-xl">
+                <SelectValue placeholder="Tipo" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="both">Todos</SelectItem>
+                <SelectItem value="income">Entradas</SelectItem>
+                <SelectItem value="expense">Saídas</SelectItem>
+              </SelectContent>
+            </Select>
+            {/* Filtro por categoria - Select shadcn */}
+            <Select value={filters.categoryId || 'all'} onValueChange={(v) => setFilters({ categoryId: v === 'all' ? null : v })}>
+              <SelectTrigger className="w-full sm:w-[180px] h-10 rounded-xl">
+                <SelectValue placeholder="Categoria" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todas categorias</SelectItem>
+                {categories.map((cat) => (
+                  <SelectItem key={cat.id} value={cat.id}>
+                    {cat.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        </CardContent>
+      </Card>
 
-        {/* Botões de exportação */}
-        <C.ExportButtons>
-          <C.ExportButton
-            onClick={() => exportTransactionsCSV({ transactions: filteredTransactions, categories })}
-            aria-label="Exportar como CSV"
-            title="Exportar CSV"
-          >
-            <Icon size={16}>
-              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-              <polyline points="14 2 14 8 20 8" />
-              <line x1="16" y1="13" x2="8" y2="13" />
-              <line x1="16" y1="17" x2="8" y2="17" />
-            </Icon>
-            CSV
-          </C.ExportButton>
-          <C.ExportButton
-            onClick={() => exportTransactionsPDF({ transactions: filteredTransactions, categories })}
-            aria-label="Exportar como PDF"
-            title="Exportar PDF"
-          >
-            <Icon size={16}>
-              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-              <polyline points="14 2 14 8 20 8" />
-            </Icon>
-            PDF
-          </C.ExportButton>
-        </C.ExportButtons>
-
-        {/* Filtros */}
-        <C.Filters>
-          <C.SearchInput
-            type="text"
-            placeholder="Buscar transações..."
-            value={filters.searchTerm}
-            onChange={(e) => setFilters({ searchTerm: e.target.value })}
-            aria-label="Buscar transações"
-          />
-
-          <C.FilterSelect
-            value={filters.type}
-            onChange={(e) =>
-              setFilters({ type: e.target.value as 'income' | 'expense' | 'both' })
-            }
-            aria-label="Filtrar por tipo"
-          >
-            <option value="both">Todos</option>
-            <option value="income">Entradas</option>
-            <option value="expense">Saídas</option>
-          </C.FilterSelect>
-
-          <C.FilterSelect
-            value={filters.categoryId || ''}
-            onChange={(e) => setFilters({ categoryId: e.target.value || null })}
-            aria-label="Filtrar por categoria"
-          >
-            <option value="">Todas categorias</option>
-            {categories.map((cat) => (
-              <option key={cat.id} value={cat.id}>
-                {cat.name}
-              </option>
-            ))}
-          </C.FilterSelect>
-        </C.Filters>
-      </C.Header>
-
-      {/* Tabela de transações */}
-      <C.TableWrapper>
-        <C.Table>
-          <C.Thead>
-            <C.Tr>
-              <C.Th>Descrição</C.Th>
-              <C.Th>Valor</C.Th>
-              <C.Th>Categoria</C.Th>
-              <C.Th>Data</C.Th>
-              <C.Th>Ações</C.Th>
-            </C.Tr>
-          </C.Thead>
-          <C.Tbody>
-            {filteredTransactions.length === 0 ? (
-              <C.EmptyRow>
-                <C.EmptyCell colSpan={5}>
-                  Nenhuma transação encontrada
-                </C.EmptyCell>
-              </C.EmptyRow>
-            ) : (
-              filteredTransactions.map((transaction) => (
-                <C.Tr key={transaction.id}>
-                  <C.Td>
-                    <C.Description>
-                      <C.TypeIndicator $type={transaction.type} />
-                      <span>{transaction.description}</span>
-                    </C.Description>
-                  </C.Td>
-                  <C.Td>
-                    <C.Amount $type={transaction.type}>
-                      {transaction.type === 'expense' ? '-' : '+'}{' '}
-                      {formatCurrency(transaction.amount)}
-                    </C.Amount>
-                  </C.Td>
-                  <C.Td>
-                    <C.CategoryBadge $color={getCategoryColor(transaction.categoryId)}>
-                      {getCategoryName(transaction.categoryId)}
-                    </C.CategoryBadge>
-                  </C.Td>
-                  <C.Td>{formatDate(transaction.date)}</C.Td>
-                  <C.Td>
-                    <C.Actions>
-                      <C.ActionButton
-                        onClick={() => handleEdit(transaction)}
-                        aria-label={`Editar ${transaction.description}`}
-                        title="Editar"
-                      >
-                        <Icon size={16}>
-                          <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
-                          <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
-                        </Icon>
-                      </C.ActionButton>
-                      <C.ActionButton
-                        $variant="danger"
-                        onClick={() => setDeletingId(transaction.id)}
-                        aria-label={`Excluir ${transaction.description}`}
-                        title="Excluir"
-                      >
-                        <Icon size={16} color="#ef4444">
-                          <polyline points="3 6 5 6 21 6" />
-                          <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
-                        </Icon>
-                      </C.ActionButton>
-                    </C.Actions>
-                  </C.Td>
-                </C.Tr>
-              ))
-            )}
-          </C.Tbody>
-        </C.Table>
-      </C.TableWrapper>
-
-      {/* Cards mobile */}
-      <C.MobileCards>
-        {filteredTransactions.length === 0 ? (
-          <C.MobileEmptyMessage>Nenhuma transação encontrada</C.MobileEmptyMessage>
-        ) : (
-          filteredTransactions.map((transaction) => (
-            <C.MobileCard key={transaction.id}>
-              <C.MobileCardTop>
-                <C.MobileCardDescription>
-                  <C.TypeIndicator $type={transaction.type} />
-                  <span>{transaction.description}</span>
-                </C.MobileCardDescription>
-                <C.MobileCardAmount $type={transaction.type}>
-                  {transaction.type === 'expense' ? '-' : '+'}{' '}
-                  {formatCurrency(transaction.amount)}
-                </C.MobileCardAmount>
-              </C.MobileCardTop>
-              <C.MobileCardBottom>
-                <C.MobileCardInfo>
-                  <C.MobileCategoryBadge $color={getCategoryColor(transaction.categoryId)}>
-                    {getCategoryName(transaction.categoryId)}
-                  </C.MobileCategoryBadge>
-                  <C.MobileCardDate>{formatDate(transaction.date)}</C.MobileCardDate>
-                </C.MobileCardInfo>
-                <C.MobileCardActions>
-                  <C.MobileActionButton
-                    onClick={() => handleEdit(transaction)}
-                    aria-label={`Editar ${transaction.description}`}
-                    title="Editar"
+      {/* Tabela desktop - Card com overflow */}
+      <Card className="rounded-2xl overflow-hidden hidden md:block">
+        <div className="overflow-x-auto">
+          <table className="w-full">
+            {/* Cabeçalho da tabela */}
+            <thead className="bg-muted/50 border-b">
+              <tr>
+                <th className="text-left text-xs font-semibold tracking-widest uppercase text-muted-foreground px-5 py-3">Descrição</th>
+                <th className="text-left text-xs font-semibold tracking-widest uppercase text-muted-foreground px-5 py-3">Valor</th>
+                <th className="text-left text-xs font-semibold tracking-widest uppercase text-muted-foreground px-5 py-3">Categoria</th>
+                <th className="text-left text-xs font-semibold tracking-widest uppercase text-muted-foreground px-5 py-3">Data</th>
+                <th className="text-right text-xs font-semibold tracking-widest uppercase text-muted-foreground px-5 py-3">Ações</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y">
+              {filteredTransactions.length === 0 ? (
+                <tr>
+                  <td colSpan={5} className="text-center py-12">
+                    <div className="flex flex-col items-center gap-2 text-muted-foreground">
+                      <Inbox className="h-8 w-8 opacity-40" />
+                      <p className="text-sm font-medium">Nenhuma transação encontrada</p>
+                      <p className="text-xs">Ajuste os filtros ou crie uma nova transação</p>
+                    </div>
+                  </td>
+                </tr>
+              ) : (
+                filteredTransactions.map((transaction, idx) => (
+                  <motion.tr
+                    key={transaction.id}
+                    initial={{ opacity: 0, y: 6 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: idx * 0.02, duration: 0.25 }}
+                    className="hover:bg-muted/40 transition-colors"
                   >
-                    <Icon size={14}>
-                      <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
-                      <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
-                    </Icon>
-                  </C.MobileActionButton>
-                  <C.MobileActionButton
-                    $variant="danger"
-                    onClick={() => setDeletingId(transaction.id)}
-                    aria-label={`Excluir ${transaction.description}`}
-                    title="Excluir"
-                  >
-                    <Icon size={14} color="#ef4444">
-                      <polyline points="3 6 5 6 21 6" />
-                      <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
-                    </Icon>
-                  </C.MobileActionButton>
-                </C.MobileCardActions>
-              </C.MobileCardBottom>
-            </C.MobileCard>
-          ))
-        )}
-      </C.MobileCards>
+                    {/* Descrição com indicador de tipo */}
+                    <td className="px-5 py-3.5">
+                      <div className="flex items-center gap-2.5">
+                        <span className={`w-2 h-2 rounded-full shrink-0 ${transaction.type === 'expense' ? 'bg-red-500' : 'bg-emerald-500'}`} aria-hidden />
+                        <span className="text-sm font-medium truncate max-w-[220px]">{transaction.description}</span>
+                      </div>
+                    </td>
+                    {/* Valor com cor por tipo */}
+                    <td className="px-5 py-3.5">
+                      <span className={`text-sm font-semibold ${transaction.type === 'expense' ? 'text-red-600 dark:text-red-400' : 'text-emerald-600 dark:text-emerald-400'}`}>
+                        {transaction.type === 'expense' ? '-' : '+'} {formatCurrency(transaction.amount)}
+                      </span>
+                    </td>
+                    {/* Badge categoria com cor */}
+                    <td className="px-5 py-3.5">
+                      <Badge
+                        className="rounded-full px-2.5 py-0.5 text-xs font-semibold text-white border-0"
+                        style={{ backgroundColor: getCategoryColor(transaction.categoryId) }}
+                      >
+                        {getCategoryName(transaction.categoryId)}
+                      </Badge>
+                    </td>
+                    <td className="px-5 py-3.5 text-sm text-muted-foreground">{formatDate(transaction.date)}</td>
+                    {/* Ações editar/excluir */}
+                    <td className="px-5 py-3.5">
+                      <div className="flex items-center justify-end gap-1">
+                        <Button variant="ghost" size="icon" className="h-7 w-7 rounded-lg" onClick={() => handleEdit(transaction)} aria-label={`Editar ${transaction.description}`} title="Editar">
+                          <Pencil className="h-3.5 w-3.5" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-7 w-7 rounded-lg hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-500/10"
+                          onClick={() => setDeletingId(transaction.id)}
+                          aria-label={`Excluir ${transaction.description}`}
+                          title="Excluir"
+                        >
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </Button>
+                      </div>
+                    </td>
+                  </motion.tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
+      </Card>
 
-      {/* Modal de edição */}
-      <Modal
-        isOpen={!!editingTransaction}
-        onClose={() => setEditingTransaction(null)}
-        title="Editar Transação"
-        size="lg"
-      >
-        <TransactionForm
-          editingTransaction={editingTransaction}
-          onClose={() => setEditingTransaction(null)}
-        />
-      </Modal>
+      {/* Cards mobile + grid desktop alternativo */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 md:hidden">
+        <AnimatePresence>
+          {filteredTransactions.length === 0 ? (
+            <Card className="rounded-2xl border-dashed col-span-full">
+              <CardContent className="p-10 text-center flex flex-col items-center gap-2 text-muted-foreground">
+                <Inbox className="h-8 w-8 opacity-40" />
+                <p className="text-sm font-semibold">Nenhuma transação encontrada</p>
+              </CardContent>
+            </Card>
+          ) : (
+            filteredTransactions.map((transaction, idx) => (
+              <motion.div
+                key={transaction.id}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                transition={{ delay: idx * 0.03, duration: 0.3 }}
+              >
+                <Card className="rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-all hover:-translate-y-0.5">
+                  <CardContent className="p-4 space-y-3">
+                    {/* Topo: descrição + valor */}
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="flex items-center gap-2 min-w-0">
+                        <span className={`w-2 h-2 rounded-full shrink-0 ${transaction.type === 'expense' ? 'bg-red-500' : 'bg-emerald-500'}`} />
+                        <span className="text-sm font-semibold truncate">{transaction.description}</span>
+                      </div>
+                      <span className={`text-sm font-bold shrink-0 ${transaction.type === 'expense' ? 'text-red-600' : 'text-emerald-600'}`}>
+                        {transaction.type === 'expense' ? '-' : '+'} {formatCurrency(transaction.amount)}
+                      </span>
+                    </div>
+                    {/* Rodapé: categoria + data + ações */}
+                    <div className="flex items-center justify-between gap-2">
+                      <div className="flex items-center gap-2 min-w-0">
+                        <Badge className="rounded-full px-2 py-0.5 text-[11px] font-semibold text-white border-0 shrink-0" style={{ backgroundColor: getCategoryColor(transaction.categoryId) }}>
+                          {getCategoryName(transaction.categoryId)}
+                        </Badge>
+                        <span className="text-xs text-muted-foreground truncate">{formatDate(transaction.date)}</span>
+                      </div>
+                      <div className="flex items-center gap-1 shrink-0">
+                        <Button variant="ghost" size="icon" className="h-7 w-7 rounded-lg" onClick={() => handleEdit(transaction)} aria-label={`Editar ${transaction.description}`}>
+                          <Pencil className="h-3.5 w-3.5" />
+                        </Button>
+                        <Button variant="ghost" size="icon" className="h-7 w-7 rounded-lg hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-500/10" onClick={() => setDeletingId(transaction.id)} aria-label={`Excluir ${transaction.description}`}>
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </Button>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </motion.div>
+            ))
+          )}
+        </AnimatePresence>
+      </div>
 
-      {/* Modal de confirmação de exclusão */}
-      <Modal
-        isOpen={!!deletingId}
-        onClose={() => setDeletingId(null)}
-        title="Confirmar Exclusão"
-        size="sm"
-        closeOnOverlayClick={false}
-      >
-        <C.DeleteConfirmation>
-          <p>Tem certeza que deseja excluir esta transação?</p>
-          <p>Esta ação não pode ser desfeita.</p>
-          <C.DeleteActions>
-            <C.DeleteButton onClick={() => setDeletingId(null)} $variant="ghost">
+      {/* Grid alternativo desktop quando quiser visual de cards (mantém tabela acima, grid abaixo é opcional para mobile-first) */}
+      {/* Para desktop grid adicional, oculto por padrão - tabela já cobre desktop */}
+
+      {/* Modal de edição - Dialog shadcn */}
+      <Dialog open={!!editingTransaction} onOpenChange={(open) => !open && setEditingTransaction(null)}>
+        <DialogContent className="sm:max-w-[560px] max-h-[90vh] overflow-y-auto rounded-2xl">
+          <DialogHeader>
+            <DialogTitle>Editar Transação</DialogTitle>
+            <DialogDescription>Atualize os dados da transação e salve as alterações.</DialogDescription>
+          </DialogHeader>
+          {editingTransaction && <TransactionForm editingTransaction={editingTransaction} onClose={() => setEditingTransaction(null)} />}
+        </DialogContent>
+      </Dialog>
+
+      {/* Modal de confirmação de exclusão - Dialog shadcn */}
+      <Dialog open={!!deletingId} onOpenChange={(open) => !open && setDeletingId(null)}>
+        <DialogContent className="sm:max-w-[420px] rounded-2xl">
+          <DialogHeader>
+            <DialogTitle>Confirmar Exclusão</DialogTitle>
+            <DialogDescription>Tem certeza que deseja excluir esta transação? Esta ação não pode ser desfeita.</DialogDescription>
+          </DialogHeader>
+          <div className="flex justify-end gap-2 mt-2">
+            <Button variant="outline" className="rounded-xl" onClick={() => setDeletingId(null)}>
               Cancelar
-            </C.DeleteButton>
-            <C.DeleteButton onClick={handleConfirmDelete} $variant="danger">
+            </Button>
+            <Button variant="destructive" className="rounded-xl gap-1.5" onClick={handleConfirmDelete}>
+              <Trash2 className="h-4 w-4" />
               Excluir
-            </C.DeleteButton>
-          </C.DeleteActions>
-        </C.DeleteConfirmation>
-      </Modal>
-    </C.Container>
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+    </div>
   );
 };
 
