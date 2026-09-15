@@ -9,6 +9,7 @@ import { useAuth } from '../../contexts/AuthContext';
 import { useTheme } from '../../contexts/ThemeContext';
 import { isSupabase } from '../../services/data';
 import Icon from '../../components/common/Icon';
+import { HeroVisual } from './components/HeroVisual';
 
 const GOOGLE_CLIENT_ID = process.env.REACT_APP_GOOGLE_CLIENT_ID || '';
 
@@ -85,10 +86,10 @@ const LoginPage: React.FC = () => {
       heroDesc: 'text-gray-400 text-lg leading-relaxed mt-6 mb-10',
       featureTitle: isDark ? 'text-white text-sm font-semibold' : 'text-gray-900 text-sm font-semibold',
       featureDesc: 'text-gray-400 text-xs',
-      loginSection: 'flex items-center justify-center p-12 lg:p-16',
+      loginSection: 'flex items-center justify-center p-8 lg:p-16 relative overflow-hidden',
       loginCard: isDark
-        ? 'w-full max-w-lg p-10 lg:p-12 bg-gradient-to-br from-[rgba(16,21,34,0.96)] to-[rgba(8,12,21,0.98)] border border-gray-700 rounded-3xl shadow-[0_30px_80px_rgba(0,0,0,0.45)]'
-        : 'w-full max-w-lg p-10 lg:p-12 bg-gradient-to-br from-[rgba(255,255,255,0.96)] to-[rgba(255,255,255,0.98)] border border-gray-200 rounded-3xl shadow-[0_30px_80px_rgba(0,0,0,0.1)]',
+        ? 'w-full max-w-[480px] p-8 lg:p-10 bg-[rgba(14,18,32,0.9)] backdrop-blur-xl border border-white/[0.08] rounded-[28px] shadow-[0_20px_80px_rgba(0,0,0,0.5),inset_0_1px_0_rgba(255,255,255,0.06)] relative'
+        : 'w-full max-w-[480px] p-8 lg:p-10 bg-white/80 backdrop-blur-xl border border-black/[0.06] rounded-[28px] shadow-[0_20px_80px_rgba(15,23,42,0.08),inset_0_1px_0_rgba(255,255,255,0.7)] relative',
       title: isDark ? 'text-white text-3xl font-bold' : 'text-gray-900 text-3xl font-bold',
       subtitle: 'text-gray-400 text-base',
       registerText: 'text-gray-500 text-xs',
@@ -109,77 +110,11 @@ const LoginPage: React.FC = () => {
 
   return (
     <div className={classes.container}>
-      <section className={classes.hero}>
-        <div className="w-full max-w-xl">
-          <div className={classes.logo}>
-            <span className="text-4xl font-bold text-white">$</span>
-          </div>
-
-          <h1 className={classes.heroTitle}>
-            Controle suas<br />
-            finanças com<br />
-            <span className={classes.gradientText}>inteligência</span>
-          </h1>
-
-          <p className={classes.heroDesc}>
-            Dashboards completos, controle de gastos
-            e relatórios que ajudam você a tomar
-            melhores decisões.
-          </p>
-
-          <div className="flex flex-col gap-6">
-            <div className="flex items-center gap-4">
-              <div className="w-12 h-12 flex items-center justify-center rounded-xl text-xl text-[#a855f7] bg-[rgba(168,85,247,0.08)] border border-[rgba(168,85,247,0.25)]">
-                ▮▮▮
-              </div>
-              <div>
-                <h3 className={classes.featureTitle}>Dashboards detalhados</h3>
-                <p className={classes.featureDesc}>Visualize seus dados de forma clara</p>
-              </div>
-            </div>
-
-            <div className="flex items-center gap-4">
-              <div className="w-12 h-12 flex items-center justify-center rounded-xl text-xl text-[#3b82f6] bg-[rgba(59,130,246,0.08)] border border-[rgba(59,130,246,0.25)]">
-                ▤
-              </div>
-              <div>
-                <h3 className={classes.featureTitle}>Controle de gastos</h3>
-                <p className={classes.featureDesc}>Acompanhe e categorize despesas</p>
-              </div>
-            </div>
-
-            <div className="flex items-center gap-4">
-              <div className="w-12 h-12 flex items-center justify-center rounded-xl text-xl text-[#00d9b5] bg-[rgba(0,217,181,0.08)] border border-[rgba(0,217,181,0.25)]">
-                ↗
-              </div>
-              <div>
-                <h3 className={classes.featureTitle}>Relatórios inteligentes</h3>
-                <p className={classes.featureDesc}>Insights para melhores decisões</p>
-              </div>
-            </div>
-          </div>
-
-          <div className="relative h-44 mt-12 overflow-hidden">
-            <div className="absolute bottom-0 left-5 flex items-end gap-3 h-full">
-              {[30, 55, 80, 65, 100, 130, 160].map((height, i) => (
-                <div
-                  key={i}
-                  className="w-7 rounded-t bg-gradient-to-t from-[rgba(99,102,241,0.15)] to-[rgba(99,102,241,0.45)]"
-                  style={{ height: `${height}px` }}
-                />
-              ))}
-            </div>
-            <svg className="absolute inset-0 w-full h-full" viewBox="0 0 400 180" preserveAspectRatio="none">
-              <path
-                d="M0 150 C40 140 60 120 100 130 C140 140 145 90 180 95 C220 100 225 145 260 120 C300 90 310 100 335 50 C350 25 375 20 400 5"
-                fill="none"
-                stroke="#00d9b5"
-                strokeWidth="3"
-                className="drop-shadow-[0_0_8px_rgba(0,217,181,0.4)]"
-              />
-            </svg>
-          </div>
-        </div>
+      <section className={`${classes.hero} relative overflow-hidden`}>
+        <div className="absolute -top-24 -left-24 w-[520px] h-[520px] rounded-full blur-[90px] opacity-20 pointer-events-none" style={{ background: 'radial-gradient(circle, #6366f1 0%, transparent 70%)' }} />
+        <div className="absolute -bottom-24 -right-24 w-[480px] h-[480px] rounded-full blur-[80px] opacity-15 pointer-events-none" style={{ background: 'radial-gradient(circle, #06b6d4 0%, transparent 70%)' }} />
+        <div className="absolute inset-0 opacity-[0.04]" style={{ backgroundImage: 'linear-gradient(rgba(255,255,255,0.6) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.6) 1px, transparent 1px)', backgroundSize: '32px 32px' }} />
+        <HeroVisual classes={classes} />
       </section>
 
       <section className={classes.loginSection}>

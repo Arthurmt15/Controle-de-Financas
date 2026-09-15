@@ -62,33 +62,33 @@ export interface Theme {
 function createTheme(base: 'light' | 'dark', accent: AccentColor): Theme {
   const accentColors = ACCENT_COLORS[accent];
   const isLight = base === 'light';
-
+  // Paleta fintech distintiva: light com slate-50, dark deep navy com grid sutil
   return {
     type: base,
     colors: {
-      background: isLight ? '#f5f5f5' : '#0f0f23',
-      surface: isLight ? '#ffffff' : '#1a1a2e',
-      surfaceHover: isLight ? '#f0f0f0' : '#252542',
-      text: isLight ? '#1a1a2e' : '#f1f1f1',
-      textSecondary: isLight ? '#6b7280' : '#9ca3af',
+      background: isLight ? '#fcfcfd' : '#06080f',
+      surface: isLight ? '#ffffff' : '#0e1220',
+      surfaceHover: isLight ? '#f1f5f9' : '#161a2e',
+      text: isLight ? '#0f172a' : '#f1f5f9',
+      textSecondary: isLight ? '#64748b' : '#94a3b8',
       primary: accentColors.primary,
       primaryHover: accentColors.primaryHover,
       secondary: accentColors.secondary,
-      success: isLight ? '#10b981' : '#34d399',
-      error: isLight ? '#ef4444' : '#f87171',
-      warning: isLight ? '#f59e0b' : '#fbbf24',
-      info: isLight ? '#3b82f6' : '#60a5fa',
-      border: isLight ? '#e5e7eb' : '#374151',
-      shadow: isLight ? 'rgba(0, 0, 0, 0.1)' : 'rgba(0, 0, 0, 0.3)',
-      overlay: isLight ? 'rgba(0, 0, 0, 0.5)' : 'rgba(0, 0, 0, 0.7)',
-      inputBackground: isLight ? '#ffffff' : '#252542',
-      placeholder: isLight ? '#9ca3af' : '#6b7280',
+      success: isLight ? '#059669' : '#10b981',
+      error: isLight ? '#dc2626' : '#f87171',
+      warning: isLight ? '#d97706' : '#fbbf24',
+      info: isLight ? '#2563eb' : '#60a5fa',
+      border: isLight ? '#e2e8f0' : 'rgba(255,255,255,0.08)',
+      shadow: isLight ? 'rgba(15,23,42,0.06)' : 'rgba(0,0,0,0.4)',
+      overlay: isLight ? 'rgba(15,23,42,0.4)' : 'rgba(0,0,0,0.7)',
+      inputBackground: isLight ? '#ffffff' : '#0f1425',
+      placeholder: isLight ? '#94a3b8' : '#64748b',
     },
-    borderRadius: '8px',
+    borderRadius: '16px',
     shadows: {
-      sm: isLight ? '0 1px 2px 0 rgba(0,0,0,0.05)' : '0 1px 2px 0 rgba(0,0,0,0.2)',
-      md: isLight ? '0 4px 6px -1px rgba(0,0,0,0.1)' : '0 4px 6px -1px rgba(0,0,0,0.3)',
-      lg: isLight ? '0 10px 15px -3px rgba(0,0,0,0.1)' : '0 10px 15px -3px rgba(0,0,0,0.4)',
+      sm: isLight ? '0 1px 2px rgba(15,23,42,0.04), 0 4px 12px rgba(15,23,42,0.06)' : '0 1px 2px rgba(0,0,0,0.2), 0 8px 24px rgba(0,0,0,0.3)',
+      md: isLight ? '0 4px 16px rgba(15,23,42,0.06), 0 8px 32px rgba(15,23,42,0.08)' : '0 8px 24px rgba(0,0,0,0.3), 0 16px 48px rgba(0,0,0,0.4)',
+      lg: isLight ? '0 12px 40px rgba(15,23,42,0.08)' : '0 16px 48px rgba(0,0,0,0.5)',
     },
   };
 }
