@@ -25,7 +25,7 @@ const InstallmentForm: React.FC<InstallmentFormProps> = ({
   onClose,
 }) => {
   const { addInstallment, updateInstallment } = useInstallments();
-  const { categories } = useTransactions();
+  const { categories, addTransaction } = useTransactions();
 
   /** Estado do formulário */
   const [formData, setFormData] = useState({
@@ -110,6 +110,19 @@ const InstallmentForm: React.FC<InstallmentFormProps> = ({
         await updateInstallment({ ...installmentData, id: installment.id });
       } else {
         await addInstallment(installmentData);
+        // Cria transação da 1ª parcela automaticamente para aparecer em Transações
+        try {
+          await addTransaction({
+            description: `${formData.description.trim()} (1/${parcels})`,
+            amount: total / parcels,
+            type: 'expense',
+            date: new Date(formData.startDate).toISOString(),
+            categoryId: formData.categoryId,
+            notes: formData.notes.trim() ? `Parcelado ${parcels}x - ${formData.notes.trim()}` : `Parcelado ${parcels}x - ${formData.description.trim()}`,
+          });
+        } catch (txError) {
+          console.error('Parcelado criado, mas falhou ao criar transação da 1ª parcela:', txError);
+        }
       }
 
       setFormData({

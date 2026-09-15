@@ -9,6 +9,7 @@ import Input from '../../common/Input';
 import Select from '../../common/Select';
 import Button from '../../common/Button';
 import { useTransactions } from '../../../hooks/useTransactions';
+import { useInstallments } from '../../../contexts/InstallmentsContext';
 import { validateTransactionForm } from '../../../utils/validators';
 import { toInputDate } from '../../../utils/formatters';
 import * as C from './styles';
@@ -42,6 +43,7 @@ const TransactionForm: React.FC<TransactionFormProps> = ({
   onClose,
 }) => {
   const { addTransaction, updateTransaction, categories } = useTransactions();
+  const { addInstallment } = useInstallments();
 
   // Estado do formulário
   const [formData, setFormData] = useState({
@@ -51,6 +53,8 @@ const TransactionForm: React.FC<TransactionFormProps> = ({
     date: toInputDate(new Date()),
     categoryId: '',
     notes: '',
+    isInstallment: false,
+    totalInstallments: '10',
   });
 
   // Estado de erros de validação
@@ -71,6 +75,8 @@ const TransactionForm: React.FC<TransactionFormProps> = ({
         date: editingTransaction.date.split('T')[0],
         categoryId: editingTransaction.categoryId,
         notes: editingTransaction.notes || '',
+        isInstallment: false,
+        totalInstallments: '10',
       });
     }
   }, [editingTransaction]);
@@ -97,6 +103,14 @@ const TransactionForm: React.FC<TransactionFormProps> = ({
     setFormData((prev) => ({ ...prev, type, categoryId: '' }));
   };
 
+  // Preview do parcelamento
+  const parsedAmount = parseFloat(formData.amount);
+  const parsedInstallments = parseInt(formData.totalInstallments, 10);
+  const previewInstallmentAmount =
+    formData.isInstallment && parsedAmount > 0 && parsedInstallments > 1
+      ? parsedAmount / parsedInstallments
+      : 0;
+
   /**
    * Valida e envia o formulário
    */
@@ -110,6 +124,16 @@ const TransactionForm: React.FC<TransactionFormProps> = ({
       date: formData.date,
       categoryId: formData.categoryId,
     });
+
+    if (formData.isInstallment) {
+      const n = parseInt(formData.totalInstallments, 10);
+      if (!n || n < 2 || n > 60) {
+        validationErrors.totalInstallments = 'Parcelas deve ser entre 2 e 60';
+      }
+      if (!editingTransaction && formData.type !== 'expense') {
+        // Parcelado normalmente é despesa, mas permite se usuário quiser
+      }
+    }
 
     if (Object.keys(validationErrors).length > 0) {
       setErrors(validationErrors);
@@ -129,7 +153,7 @@ const TransactionForm: React.FC<TransactionFormProps> = ({
       };
 
       if (editingTransaction) {
-        // Atualiza transação existente
+        // Atualiza transação existente (não cria parcelado ao editar)
         await updateTransaction({
           ...transactionData,
           id: editingTransaction.id,
@@ -137,6 +161,25 @@ const TransactionForm: React.FC<TransactionFormProps> = ({
       } else {
         // Adiciona nova transação
         await addTransaction(transactionData);
+
+        // Se marcado como parcelado, cria automaticamente o parcelado
+        if (formData.isInstallment && parsedInstallments > 1 && parsedAmount > 0) {
+          try {
+            await addInstallment({
+              description: formData.description.trim(),
+              totalAmount: parsedAmount,
+              installmentAmount: parsedAmount / parsedInstallments,
+              totalInstallments: parsedInstallments,
+              currentInstallment: 1,
+              startDate: formData.date,
+              categoryId: formData.categoryId,
+              notes: formData.notes.trim() || undefined,
+              source: 'manual',
+            });
+          } catch (installmentError) {
+            console.error('Transação criada, mas falhou ao criar parcelado:', installmentError);
+          }
+        }
       }
 
       // Reseta o formulário
@@ -147,6 +190,8 @@ const TransactionForm: React.FC<TransactionFormProps> = ({
         date: toInputDate(new Date()),
         categoryId: '',
         notes: '',
+        isInstallment: false,
+        totalInstallments: '10',
       });
       setErrors({});
 
@@ -245,6 +290,46 @@ const TransactionForm: React.FC<TransactionFormProps> = ({
             rows={3}
           />
         </C.TextareaContainer>
+
+        {/* Parcelado automático - só para nova transação */}
+        {!editingTransaction && (
+          <C.InstallmentSection>
+            <C.CheckboxRow>
+              <input
+                type="checkbox"
+                name="isInstallment"
+                checked={formData.isInstallment}
+                onChange={(e) => {
+                  setFormData((prev) => ({ ...prev, isInstallment: e.target.checked }));
+                  if (errors.totalInstallments) {
+                    setErrors((prev) => ({ ...prev, totalInstallments: '' }));
+                  }
+                }}
+              />
+              Compra parcelada? Criar automaticamente em Parcelados
+            </C.CheckboxRow>
+
+            {formData.isInstallment && (
+              <>
+                <Input
+                  name="totalInstallments"
+                  label="Número de Parcelas"
+                  type="number"
+                  value={formData.totalInstallments}
+                  onChange={handleChange}
+                  placeholder="10"
+                  error={errors.totalInstallments}
+                  required
+                />
+                {previewInstallmentAmount > 0 && (
+                  <C.InstallmentPreview>
+                    {`${parsedInstallments}x de R$ ${previewInstallmentAmount.toFixed(2).replace('.', ',')} • Total R$ ${parsedAmount.toFixed(2).replace('.', ',')}`}
+                  </C.InstallmentPreview>
+                )}
+              </>
+            )}
+          </C.InstallmentSection>
+        )}
       </C.FieldsContainer>
 
       {/* Botões de ação */}

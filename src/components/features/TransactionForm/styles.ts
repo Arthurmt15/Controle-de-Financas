@@ -118,6 +118,49 @@ export const Textarea = styled.textarea`
 `;
 
 /**
+ * Container do parcelado (checkbox + parcelas)
+ */
+export const InstallmentSection = styled.div`
+  grid-column: 1 / -1;
+  background-color: ${({ theme }) => theme.colors.background || '#f9fafb'};
+  border: 1px solid ${({ theme }) => theme.colors.border || '#e5e7eb'};
+  border-radius: 8px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+`;
+
+export const CheckboxRow = styled.label`
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  color: ${({ theme }) => theme.colors.text};
+  cursor: pointer;
+  user-select: none;
+
+  input[type='checkbox'] {
+    width: 18px;
+    height: 18px;
+    accent-color: ${({ theme }) => theme.colors.primary};
+    cursor: pointer;
+  }
+`;
+
+export const InstallmentPreview = styled.div`
+  background-color: ${({ theme }) => theme.colors?.backgroundAlt || '#f0fdf4'};
+  border: 1px solid ${({ theme }) => theme.colors?.success || '#10b981'};
+  border-radius: 8px;
+  padding: 10px 14px;
+  font-size: 13px;
+  font-weight: 500;
+  color: ${({ theme }) => theme.colors?.success || '#065f46'};
+  text-align: center;
+`;
+
+/**
  * Container dos botões de ação
  */
 export const Actions = styled.div`
