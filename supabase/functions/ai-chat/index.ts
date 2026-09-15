@@ -7,12 +7,22 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2"
 
-const ALLOWED_ORIGIN = Deno.env.get("SUPABASE_CORS_ORIGIN") || "*"
-
 const corsHeaders = {
-  "Access-Control-Allow-Origin": ALLOWED_ORIGIN,
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Origin": Deno.env.get("SUPABASE_CORS_ORIGIN") || "*",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-requested-with",
   "Access-Control-Allow-Methods": "POST, OPTIONS",
+  "Access-Control-Max-Age": "86400",
+}
+
+function getCorsHeaders(req: Request): Record<string, string> {
+  const origin = req.headers.get("origin") || Deno.env.get("SUPABASE_CORS_ORIGIN") || "*"
+  const allowedOrigin = Deno.env.get("SUPABASE_CORS_ORIGIN")
+  const allowOrigin = allowedOrigin ? allowedOrigin : origin || "*"
+  return {
+    ...corsHeaders,
+    "Access-Control-Allow-Origin": allowOrigin,
+    "Vary": "Origin",
+  }
 }
 
 async function authenticateUser(req: Request) {
@@ -31,13 +41,15 @@ async function authenticateUser(req: Request) {
 
 serve(async (req) => {
   if (req.method === "OPTIONS") {
-    return new Response("ok", { headers: corsHeaders })
+    return new Response(null, { status: 204, headers: getCorsHeaders(req) })
   }
+
+  const headers = getCorsHeaders(req)
 
   if (req.method !== "POST") {
     return new Response(
       JSON.stringify({ error: "Método não permitido" }),
-      { status: 405, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      { status: 405, headers: { ...headers, "Content-Type": "application/json" } }
     )
   }
 
@@ -46,7 +58,7 @@ serve(async (req) => {
     if (!user) {
       return new Response(
         JSON.stringify({ error: "Não autenticado" }),
-        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        { status: 401, headers: { ...headers, "Content-Type": "application/json" } }
       )
     }
 
@@ -54,7 +66,7 @@ serve(async (req) => {
     if (!groqApiKey) {
       return new Response(
         JSON.stringify({ error: "Groq não configurado" }),
-        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        { status: 500, headers: { ...headers, "Content-Type": "application/json" } }
       )
     }
 
@@ -63,7 +75,7 @@ serve(async (req) => {
     if (!messages || !Array.isArray(messages) || messages.length === 0) {
       return new Response(
         JSON.stringify({ error: "Mensagens inválidas" }),
-        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        { status: 400, headers: { ...headers, "Content-Type": "application/json" } }
       )
     }
 
@@ -86,7 +98,7 @@ serve(async (req) => {
       const error = await response.json()
       return new Response(
         JSON.stringify({ error: error.error?.message || "Erro na API Groq" }),
-        { status: response.status, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        { status: response.status, headers: { ...headers, "Content-Type": "application/json" } }
       )
     }
 
@@ -145,7 +157,7 @@ serve(async (req) => {
 
     return new Response(stream, {
       headers: {
-        ...corsHeaders,
+        ...headers,
         "Content-Type": "text/event-stream",
         "Cache-Control": "no-cache",
         "Connection": "keep-alive",
@@ -155,7 +167,7 @@ serve(async (req) => {
   } catch (error) {
     return new Response(
       JSON.stringify({ error: error.message }),
-      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      { status: 500, headers: { ...headers, "Content-Type": "application/json" } }
     )
   }
 })

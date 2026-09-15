@@ -8,11 +8,25 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2"
 
 // Headers CORS - restringir ao domínio do Vercel em produção
-const ALLOWED_ORIGIN = Deno.env.get("SUPABASE_CORS_ORIGIN") || "*"
+// NOTA: verify_jwt = false no config.toml é OBRIGATÓRIO para o preflight OPTIONS
+// chegar até aqui. Caso contrário o gateway retorna 404 antes da função.
 const corsHeaders = {
-  "Access-Control-Allow-Origin": ALLOWED_ORIGIN,
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Origin": Deno.env.get("SUPABASE_CORS_ORIGIN") || "*",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-requested-with",
   "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
+  "Access-Control-Max-Age": "86400",
+}
+
+function getCorsHeaders(req: Request): Record<string, string> {
+  const origin = req.headers.get("origin") || Deno.env.get("SUPABASE_CORS_ORIGIN") || "*"
+  const allowedOrigin = Deno.env.get("SUPABASE_CORS_ORIGIN")
+  // Se ALLOWED_ORIGIN específico, reflete apenas ele; se "*", reflete origin ou "*"
+  const allowOrigin = allowedOrigin ? allowedOrigin : origin || "*"
+  return {
+    ...corsHeaders,
+    "Access-Control-Allow-Origin": allowOrigin,
+    "Vary": "Origin",
+  }
 }
 
 /** Obtém API key da Pluggy usando Client ID e Secret */
@@ -45,10 +59,12 @@ async function authenticateUser(req: Request) {
 }
 
 serve(async (req) => {
-  // Responde pré-requisição CORS
+  // Responde pré-requisição CORS - deve ser ANTES de qualquer auth
   if (req.method === "OPTIONS") {
-    return new Response("ok", { headers: corsHeaders })
+    return new Response(null, { status: 204, headers: getCorsHeaders(req) })
   }
+
+  const headers = getCorsHeaders(req)
 
   try {
     // Verifica autenticação
@@ -56,7 +72,7 @@ serve(async (req) => {
     if (!user) {
       return new Response(
         JSON.stringify({ error: "Não autenticado" }),
-        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        { status: 401, headers: { ...headers, "Content-Type": "application/json" } }
       )
     }
 
@@ -67,9 +83,12 @@ serve(async (req) => {
       { global: { headers: { Authorization: req.headers.get("Authorization")! } } }
     )
 
-    // Analisa a rota e método
+    // Analisa a rota e método - suporta local e cloud
     const url = new URL(req.url)
-    const path = url.pathname.replace("/functions/v1/pluggy-proxy", "")
+    let path = url.pathname.replace(/^\/functions\/v1\/pluggy-proxy/, "").replace(/^\/pluggy-proxy/, "")
+    if (!path) path = "/"
+    // Remove trailing slash exceto raiz
+    if (path.length > 1 && path.endsWith("/")) path = path.slice(0, -1)
     const method = req.method
 
     // Lazy: obtém API key da Pluggy apenas quando a rota precisa dela
@@ -95,7 +114,7 @@ serve(async (req) => {
       const data = await res.json()
       return new Response(
         JSON.stringify({ success: true, data }),
-        { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        { headers: { ...headers, "Content-Type": "application/json" } }
       )
     }
 
@@ -107,7 +126,7 @@ serve(async (req) => {
         .eq("user_id", user.id)
       return new Response(
         JSON.stringify({ success: true, data: items || [] }),
-        { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        { headers: { ...headers, "Content-Type": "application/json" } }
       )
     }
 
@@ -127,7 +146,7 @@ serve(async (req) => {
       if (error) throw error
       return new Response(
         JSON.stringify({ success: true, data: item }),
-        { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        { headers: { ...headers, "Content-Type": "application/json" } }
       )
     }
 
@@ -144,7 +163,7 @@ serve(async (req) => {
       if (!dbItem) {
         return new Response(
           JSON.stringify({ error: "Item não encontrado" }),
-          { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+          { status: 404, headers: { ...headers, "Content-Type": "application/json" } }
         )
       }
       await ensurePluggy()
@@ -154,7 +173,7 @@ serve(async (req) => {
       const data = await res.json()
       return new Response(
         JSON.stringify({ success: true, data: data?.results || [] }),
-        { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        { headers: { ...headers, "Content-Type": "application/json" } }
       )
     }
 
@@ -170,7 +189,7 @@ serve(async (req) => {
       const data = await res.json()
       return new Response(
         JSON.stringify({ success: true, data: data?.results || [] }),
-        { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        { headers: { ...headers, "Content-Type": "application/json" } }
       )
     }
 
@@ -198,19 +217,19 @@ serve(async (req) => {
         .eq("user_id", user.id)
       return new Response(
         JSON.stringify({ success: true }),
-        { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        { headers: { ...headers, "Content-Type": "application/json" } }
       )
     }
 
     // Rota não encontrada
     return new Response(
       JSON.stringify({ error: "Rota não encontrada" }),
-      { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      { status: 404, headers: { ...headers, "Content-Type": "application/json" } }
     )
   } catch (error) {
     return new Response(
       JSON.stringify({ error: error.message }),
-      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      { status: 500, headers: { ...headers, "Content-Type": "application/json" } }
     )
   }
 })
