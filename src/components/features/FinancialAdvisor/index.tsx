@@ -43,20 +43,7 @@ const FinancialAdvisor: React.FC = () => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [isStreaming, setIsStreaming] = useState(false);
-  const scrollContainerRef = useRef<HTMLDivElement>(null);
-  const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
-
-  const scrollToBottom = useCallback(() => {
-    const el = scrollContainerRef.current;
-    if (!el) return;
-    // scroll apenas dentro do container, sem propagar para a página
-    el.scrollTo({ top: el.scrollHeight, behavior: 'smooth' });
-  }, []);
-
-  useEffect(() => {
-    scrollToBottom();
-  }, [messages, scrollToBottom]);
 
   const sendMessage = useCallback(
     async (text: string) => {
@@ -122,7 +109,7 @@ const FinancialAdvisor: React.FC = () => {
   };
 
   return (
-    <Card className="rounded-2xl overflow-hidden flex flex-col h-[700px] lg:h-[700px] max-lg:h-[500px] max-sm:h-[450px] shadow-sm">
+    <Card className="rounded-2xl overflow-hidden flex flex-col h-auto min-h-[420px] shadow-sm">
       {/* Header do chat */}
       <CardHeader className="py-3.5 px-4 flex flex-row items-center justify-center gap-2.5 border-b bg-card shrink-0 space-y-0">
         <span className="w-8 h-8 flex items-center justify-center rounded-xl bg-violet-500 text-white shrink-0">
@@ -136,8 +123,8 @@ const FinancialAdvisor: React.FC = () => {
         </div>
       </CardHeader>
 
-      {/* Área de mensagens — scroll contido sem arrastar a página */}
-      <div ref={scrollContainerRef} className="flex-1 overflow-y-auto overscroll-contain p-4 flex flex-col gap-3 bg-muted/20 min-h-0 scroll-smooth">
+      {/* Área de mensagens — sem scroll interno */}
+      <div className="flex-1 p-4 flex flex-col gap-3 bg-muted/20 min-h-0 overflow-hidden">
         {messages.length === 0 && (
           <motion.div
             initial={{ opacity: 0, y: 8 }}
@@ -213,7 +200,6 @@ const FinancialAdvisor: React.FC = () => {
             </motion.div>
           ))}
         </AnimatePresence>
-        <div ref={messagesEndRef} />
       </div>
 
       {/* Input + botão */}

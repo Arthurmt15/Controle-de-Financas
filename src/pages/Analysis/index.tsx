@@ -85,7 +85,7 @@ const AnalysisPage: React.FC = () => {
       </motion.div>
 
       {/* ================= DESKTOP LAYOUT (lg+) — bento premium ================= */}
-      <div className="hidden lg:grid grid-cols-[1fr_400px] gap-6 items-start mt-7 overscroll-contain">
+      <div className="hidden lg:grid grid-cols-[1fr_400px] gap-6 items-start mt-7">
         <div className="flex flex-col gap-5 min-w-0">
           {/* Summary 2x2 desktop — 2 em cima / 2 embaixo */}
           <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.08 }} className="grid grid-cols-2 gap-4">
@@ -148,8 +148,8 @@ const AnalysisPage: React.FC = () => {
           </motion.div>
         </div>
 
-        {/* Advisor sticky desktop — scroll isolado */}
-        <div className="sticky top-[84px] self-start overscroll-contain max-h-[calc(100vh-96px)] flex flex-col">
+        {/* Advisor desktop — sem sticky/scroll, acompanha o fluxo da página */}
+        <div className="self-start flex flex-col">
           <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.18 }}>
             <div className="flex items-center gap-2 mb-3 text-muted-foreground">
               <Sparkles className="h-3.5 w-3.5 text-violet-500" />
