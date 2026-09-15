@@ -1,6 +1,5 @@
 # @file .github/workflows/ci.yml
-# @description Pipeline de CI/CD para o projeto Controle de Finanças
-# Executa lint, testes e build em cada push e pull request
+# @description Pipeline de CI/CD para o projeto Controle de Finanças - 100% Supabase
 
 name: CI
 
@@ -12,7 +11,7 @@ on:
 
 jobs:
   frontend:
-    name: Frontend
+    name: Frontend (Supabase)
     runs-on: ubuntu-latest
 
     steps:
@@ -41,27 +40,4 @@ jobs:
         run: npm run test:coverage
 
       - name: Build
-        run: npm run build
-
-  backend:
-    name: Backend
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: 20
-          cache: 'npm'
-          cache-dependency-path: server/package-lock.json
-
-      - name: Install dependencies
-        working-directory: server
-        run: npm ci
-
-      - name: Build
-        working-directory: server
         run: npm run build

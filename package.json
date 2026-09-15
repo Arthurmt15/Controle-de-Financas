@@ -21,13 +21,10 @@
   },
   "scripts": {
     "start": "react-scripts start",
-    "start:server": "cd server && npm run dev",
     "build": "react-scripts build",
-    "build:server": "cd server && npm run build",
     "test": "react-scripts test",
     "test:coverage": "react-scripts test --coverage --watchAll=false",
     "eject": "react-scripts eject",
-    "dev": "concurrently \"npm run start:server\" \"npm start\"",
     "lint": "eslint src --ext .ts,.tsx",
     "lint:fix": "eslint src --ext .ts,.tsx --fix",
     "format": "prettier --write \"src/**/*.{ts,tsx,css,json}\"",

@@ -1,7 +1,7 @@
 /**
  * @file services/data.ts
- * @description Camada de abstração que alterna entre backend Express e Supabase
- * baseado na variável REACT_APP_USE_SUPABASE.
+ * @description Camada de dados - agora 100% Supabase.
+ * Railway/Express foi removido. Todas as operações usam Supabase diretamente.
  */
 
 import { transactionService as supabaseTransactionService } from './supabase/transactions';
@@ -12,220 +12,67 @@ import { installmentService as supabaseInstallmentService } from './supabase/ins
 import { futureExpenseService as supabaseFutureExpenseService } from './supabase/futureExpenses';
 import { authService as supabaseAuthService } from './supabase/auth';
 
-import {
-  transactionService as apiTransactionService,
-  categoryService as apiCategoryService,
-  recurringBillService as apiRecurringBillService,
-  budgetService as apiBudgetService,
-  installmentService as apiInstallmentService,
-  futureExpenseService as apiFutureExpenseService,
-  userService as apiUserService,
-} from './api/index';
-
 import type { Transaction, Category, RecurringBill, Installment, FutureExpense } from '../types';
 import type { Budget } from '../types/dashboard';
 
-const USE_SUPABASE = process.env.REACT_APP_USE_SUPABASE === 'true';
-
 export const transactionService = {
-  getAll: (userId: string, page?: number, limit?: number) =>
-    USE_SUPABASE
-      ? supabaseTransactionService.getAll(page, limit)
-      : apiTransactionService.getAll(userId, page, limit),
-  create: (transaction: Omit<Transaction, 'id'>, userId: string) =>
-    USE_SUPABASE
-      ? supabaseTransactionService.create(transaction)
-      : apiTransactionService.create(transaction, userId),
-  update: (transaction: Transaction) =>
-    USE_SUPABASE
-      ? supabaseTransactionService.update(transaction)
-      : apiTransactionService.update(transaction),
-  delete: (id: string) =>
-    USE_SUPABASE
-      ? supabaseTransactionService.delete(id)
-      : apiTransactionService.delete(id),
+  getAll: (userId: string, page?: number, limit?: number) => supabaseTransactionService.getAll(page, limit),
+  create: (transaction: Omit<Transaction, 'id'>, userId: string) => supabaseTransactionService.create(transaction),
+  update: (transaction: Transaction) => supabaseTransactionService.update(transaction),
+  delete: (id: string) => supabaseTransactionService.delete(id),
 };
 
 export const categoryService = {
-  getAll: (userId: string) =>
-    USE_SUPABASE
-      ? supabaseCategoryService.getAll()
-      : apiCategoryService.getAll(userId),
-  create: (category: Omit<Category, 'id'>, userId: string) =>
-    USE_SUPABASE
-      ? supabaseCategoryService.create(category)
-      : apiCategoryService.create(category, userId),
-  delete: (id: string) =>
-    USE_SUPABASE
-      ? supabaseCategoryService.delete(id)
-      : apiCategoryService.delete(id),
+  getAll: (userId: string) => supabaseCategoryService.getAll(),
+  create: (category: Omit<Category, 'id'>, userId: string) => supabaseCategoryService.create(category),
+  delete: (id: string) => supabaseCategoryService.delete(id),
 };
 
 export const recurringBillService = {
-  getAll: (userId: string) =>
-    USE_SUPABASE
-      ? supabaseRecurringBillService.getAll()
-      : apiRecurringBillService.getAll(userId),
-  create: (bill: Omit<RecurringBill, 'id'>, userId: string) =>
-    USE_SUPABASE
-      ? supabaseRecurringBillService.create(bill)
-      : apiRecurringBillService.create(bill, userId),
-  update: (bill: RecurringBill) =>
-    USE_SUPABASE
-      ? supabaseRecurringBillService.update(bill)
-      : apiRecurringBillService.update(bill),
-  delete: (id: string) =>
-    USE_SUPABASE
-      ? supabaseRecurringBillService.delete(id)
-      : apiRecurringBillService.delete(id),
-  generate: (userId: string) =>
-    USE_SUPABASE
-      ? supabaseRecurringBillService.generate()
-      : apiRecurringBillService.generate(userId),
+  getAll: (userId: string) => supabaseRecurringBillService.getAll(),
+  create: (bill: Omit<RecurringBill, 'id'>, userId: string) => supabaseRecurringBillService.create(bill),
+  update: (bill: RecurringBill) => supabaseRecurringBillService.update(bill),
+  delete: (id: string) => supabaseRecurringBillService.delete(id),
+  generate: (userId: string) => supabaseRecurringBillService.generate(),
 };
 
 export const budgetService = {
-  getAll: (userId: string) =>
-    USE_SUPABASE
-      ? supabaseBudgetService.getAll()
-      : apiBudgetService.getAll(userId),
-  create: (budget: Omit<Budget, 'id'>, userId: string) =>
-    USE_SUPABASE
-      ? supabaseBudgetService.create(budget)
-      : apiBudgetService.create(budget, userId),
-  delete: (id: string) =>
-    USE_SUPABASE
-      ? supabaseBudgetService.delete(id)
-      : apiBudgetService.delete(id),
+  getAll: (userId: string) => supabaseBudgetService.getAll(),
+  create: (budget: Omit<Budget, 'id'>, userId: string) => supabaseBudgetService.create(budget),
+  delete: (id: string) => supabaseBudgetService.delete(id),
 };
 
 export const installmentService = {
-  getAll: (userId: string) =>
-    USE_SUPABASE
-      ? supabaseInstallmentService.getAll()
-      : apiInstallmentService.getAll(userId),
-  create: (installment: Omit<Installment, 'id'>, userId: string) =>
-    USE_SUPABASE
-      ? supabaseInstallmentService.create(installment)
-      : apiInstallmentService.create(installment, userId),
-  update: (installment: Installment) =>
-    USE_SUPABASE
-      ? supabaseInstallmentService.update(installment)
-      : apiInstallmentService.update(installment),
-  delete: (id: string) =>
-    USE_SUPABASE
-      ? supabaseInstallmentService.delete(id)
-      : apiInstallmentService.delete(id),
-  advance: (id: string) =>
-    USE_SUPABASE
-      ? supabaseInstallmentService.advanceInstallment(id)
-      : apiInstallmentService.advanceInstallment(id),
+  getAll: (userId: string) => supabaseInstallmentService.getAll(),
+  create: (installment: Omit<Installment, 'id'>, userId: string) => supabaseInstallmentService.create(installment),
+  update: (installment: Installment) => supabaseInstallmentService.update(installment),
+  delete: (id: string) => supabaseInstallmentService.delete(id),
+  advance: (id: string) => supabaseInstallmentService.advanceInstallment(id),
 };
 
 export const futureExpenseService = {
-  getAll: (userId: string) =>
-    USE_SUPABASE
-      ? supabaseFutureExpenseService.getAll()
-      : apiFutureExpenseService.getAll(userId),
-  create: (expense: Omit<FutureExpense, 'id'>, userId: string) =>
-    USE_SUPABASE
-      ? supabaseFutureExpenseService.create(expense)
-      : apiFutureExpenseService.create(expense, userId),
-  update: (expense: FutureExpense) =>
-    USE_SUPABASE
-      ? supabaseFutureExpenseService.update(expense)
-      : apiFutureExpenseService.update(expense),
-  delete: (id: string) =>
-    USE_SUPABASE
-      ? supabaseFutureExpenseService.delete(id)
-      : apiFutureExpenseService.delete(id),
-  markAsPaid: (id: string) =>
-    USE_SUPABASE
-      ? supabaseFutureExpenseService.markAsPaid(id)
-      : apiFutureExpenseService.markAsPaid(id),
+  getAll: (userId: string) => supabaseFutureExpenseService.getAll(),
+  create: (expense: Omit<FutureExpense, 'id'>, userId: string) => supabaseFutureExpenseService.create(expense),
+  update: (expense: FutureExpense) => supabaseFutureExpenseService.update(expense),
+  delete: (id: string) => supabaseFutureExpenseService.delete(id),
+  markAsPaid: (id: string) => supabaseFutureExpenseService.markAsPaid(id),
 };
 
 export const authService = {
-  async signInWithGoogle() {
-    if (USE_SUPABASE) {
-      return supabaseAuthService.signInWithGoogle();
-    }
-    throw new Error('Login local deve ser feito via Google Identity Services');
+  signInWithGoogle: (..._args: unknown[]) => supabaseAuthService.signInWithGoogle(),
+  signOut: (..._args: unknown[]) => supabaseAuthService.signOut(),
+  getSession: (..._args: unknown[]) => supabaseAuthService.getSession(),
+  getUser: (..._args: unknown[]) => supabaseAuthService.getUser(),
+  onAuthStateChange: (callback: (user: import('../types').User | null) => void) =>
+    supabaseAuthService.onAuthStateChange(callback),
+  createOrFind: async (user: { googleId: string; name: string; email: string; avatar?: string }) => {
+    const supabaseUser = await supabaseAuthService.getUser();
+    return supabaseUser;
   },
-
-  async signOut() {
-    if (USE_SUPABASE) {
-      return supabaseAuthService.signOut();
-    }
-    localStorage.removeItem('financas_user');
-    localStorage.removeItem('financas_token');
-  },
-
-  async getSession() {
-    if (USE_SUPABASE) {
-      return supabaseAuthService.getSession();
-    }
-    return null;
-  },
-
-  async getUser() {
-    if (USE_SUPABASE) {
-      return supabaseAuthService.getUser();
-    }
-    const stored = localStorage.getItem('financas_user');
-    return stored ? JSON.parse(stored) : null;
-  },
-
-  onAuthStateChange(callback: (user: import('../types').User | null) => void) {
-    if (USE_SUPABASE) {
-      return supabaseAuthService.onAuthStateChange(callback);
-    }
-    return { data: { subscription: { unsubscribe: () => {} } } };
-  },
-
-  async createOrFind(user: { googleId: string; name: string; email: string; avatar?: string }) {
-    if (USE_SUPABASE) {
-      const supabaseUser = await supabaseAuthService.getUser();
-      return supabaseUser;
-    }
-    return apiUserService.createOrFind(user);
-  },
-
-  async getCurrentUser() {
-    if (USE_SUPABASE) {
-      return supabaseAuthService.getUser();
-    }
-    return apiUserService.getCurrentUser();
-  },
-
-  setAuthToken(token: string | null) {
-    if (!USE_SUPABASE) {
-      const TOKEN_KEY = 'financas_token';
-      const TOKEN_COOKIE_KEY = 'financas_token';
-      if (token) {
-        localStorage.setItem(TOKEN_KEY, token);
-        const expires = new Date(Date.now() + 30 * 864e5).toUTCString();
-        document.cookie = `${TOKEN_COOKIE_KEY}=${encodeURIComponent(token)}; expires=${expires}; path=/; SameSite=Lax`;
-      } else {
-        localStorage.removeItem(TOKEN_KEY);
-        document.cookie = `${TOKEN_COOKIE_KEY}=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/`;
-      }
-    }
-  },
-
-  hasStoredToken(): boolean {
-    if (USE_SUPABASE) return false;
-    const TOKEN_KEY = 'financas_token';
-    const TOKEN_COOKIE_KEY = 'financas_token';
-    return !!(localStorage.getItem(TOKEN_KEY) || document.cookie.match(new RegExp('(^| )' + TOKEN_COOKIE_KEY + '=([^;]+)')));
-  },
-
-  getTokenFromCookie(): string | null {
-    if (USE_SUPABASE) return null;
-    const TOKEN_COOKIE_KEY = 'financas_token';
-    const match = document.cookie.match(new RegExp('(^| )' + TOKEN_COOKIE_KEY + '=([^;]+)'));
-    return match ? decodeURIComponent(match[2]) : null;
-  },
+  getCurrentUser: (..._args: unknown[]) => supabaseAuthService.getUser(),
+  setAuthToken: (..._args: unknown[]) => {},
+  hasStoredToken: (..._args: unknown[]) => false,
+  getTokenFromCookie: (..._args: unknown[]): string | null => null,
 };
 
-export const isSupabase = USE_SUPABASE;
+export const isSupabase = true;

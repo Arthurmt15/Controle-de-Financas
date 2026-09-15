@@ -1,7 +1,6 @@
 /**
  * @file src/services/openFinanceService.ts
- * @description Serviço para comunicação com a API do Open Finance.
- * Em produção, usa Edge Functions do Supabase. Em desenvolvimento, usa backend Express.
+ * @description Serviço para comunicação com a API do Open Finance via Supabase Edge Functions (pluggy-proxy).
  */
 
 import { supabase } from '../lib/supabase';
@@ -11,8 +10,6 @@ import {
   OpenFinanceItem,
   ConnectToken,
 } from '../types/openFinance';
-
-const USE_SUPABASE = process.env.REACT_APP_USE_SUPABASE === 'true';
 
 /** Interface de resposta da API para tokens */
 interface TokenResponse { data: ConnectToken; }
@@ -31,9 +28,6 @@ interface TransactionsListResponse { data: OpenFinanceTransaction[]; }
 
 /**
  * Chama Edge Function do Supabase com autenticação.
- * @param functionName Nome da Edge Function
- * @param subPath Sub-caminho roteado pela Edge Function (ex: '/token', '/items')
- * @param options Opções do fetch
  */
 async function callEdgeFunction<T>(
   functionName: string,
@@ -60,77 +54,44 @@ async function callEdgeFunction<T>(
   return response.json();
 }
 
-/**
- * Obtém um connect token para autenticar o widget Pluggy Connect.
- */
+/** Obtém um connect token para autenticar o widget Pluggy Connect. */
 export async function getConnectToken(): Promise<ConnectToken> {
-  if (USE_SUPABASE) {
-    const response = await callEdgeFunction<TokenResponse>('pluggy-proxy', '/token', {
-      method: 'POST',
-    });
-    return response.data;
-  }
-  const { apiRequest } = await import('./api');
-  const response = await apiRequest<TokenResponse>('/pluggy/token', { method: 'POST' });
+  const response = await callEdgeFunction<TokenResponse>('pluggy-proxy', '/token', {
+    method: 'POST',
+  });
   return response.data;
 }
 
-/**
- * Salva um item (conexão) criado pelo widget no banco.
- */
+/** Salva um item (conexão) criado pelo widget no banco. */
 export async function saveItem(
   pluggyItemId: string,
   connectorId: number,
   institutionName: string
 ): Promise<OpenFinanceItem> {
-  if (USE_SUPABASE) {
-    const response = await callEdgeFunction<ItemResponse>('pluggy-proxy', '/items', {
-      method: 'POST',
-      body: JSON.stringify({ pluggyItemId, connectorId, institutionName }),
-    });
-    return response.data;
-  }
-  const { apiRequest } = await import('./api');
-  const response = await apiRequest<ItemResponse>('/pluggy/items', {
+  const response = await callEdgeFunction<ItemResponse>('pluggy-proxy', '/items', {
     method: 'POST',
     body: JSON.stringify({ pluggyItemId, connectorId, institutionName }),
   });
   return response.data;
 }
 
-/**
- * Lista todos os itens conectados do usuário.
- */
+/** Lista todos os itens conectados do usuário. */
 export async function listItems(): Promise<OpenFinanceItem[]> {
-  if (USE_SUPABASE) {
-    const response = await callEdgeFunction<ItemsListResponse>('pluggy-proxy', '/items', {
-      method: 'GET',
-    });
-    return response.data;
-  }
-  const { apiRequest } = await import('./api');
-  const response = await apiRequest<ItemsListResponse>('/pluggy/items');
+  const response = await callEdgeFunction<ItemsListResponse>('pluggy-proxy', '/items', {
+    method: 'GET',
+  });
   return response.data;
 }
 
-/**
- * Lista as contas de um item específico.
- */
+/** Lista as contas de um item específico. */
 export async function getAccountsByItem(itemId: string): Promise<OpenFinanceAccount[]> {
-  if (USE_SUPABASE) {
-    const response = await callEdgeFunction<AccountsListResponse>('pluggy-proxy', `/items/${itemId}/accounts`, {
-      method: 'GET',
-    });
-    return response.data;
-  }
-  const { apiRequest } = await import('./api');
-  const response = await apiRequest<AccountsListResponse>(`/pluggy/items/${itemId}/accounts`);
+  const response = await callEdgeFunction<AccountsListResponse>('pluggy-proxy', `/items/${itemId}/accounts`, {
+    method: 'GET',
+  });
   return response.data;
 }
 
-/**
- * Lista todas as contas de todos os itens do usuário.
- */
+/** Lista todas as contas de todos os itens do usuário. */
 export async function getAllAccounts(): Promise<OpenFinanceAccount[]> {
   const items = await listItems();
   const allAccounts: OpenFinanceAccount[] = [];
@@ -147,9 +108,7 @@ export async function getAllAccounts(): Promise<OpenFinanceAccount[]> {
   return allAccounts;
 }
 
-/**
- * Lista as transações de uma conta específica.
- */
+/** Lista as transações de uma conta específica. */
 export async function getTransactions(
   accountId: string,
   from?: string,
@@ -161,29 +120,15 @@ export async function getTransactions(
   if (to) params.append('to', to);
   params.append('limit', limit.toString());
 
-  if (USE_SUPABASE) {
-    const response = await callEdgeFunction<TransactionsListResponse>('pluggy-proxy', `/accounts/${accountId}/transactions?${params.toString()}`, {
-      method: 'GET',
-    });
-    return response.data;
-  }
-  const { apiRequest } = await import('./api');
-  const response = await apiRequest<TransactionsListResponse>(
-    `/pluggy/accounts/${accountId}/transactions?${params.toString()}`
-  );
+  const response = await callEdgeFunction<TransactionsListResponse>('pluggy-proxy', `/accounts/${accountId}/transactions?${params.toString()}`, {
+    method: 'GET',
+  });
   return response.data;
 }
 
-/**
- * Remove um item (desconecta uma instituição).
- */
+/** Remove um item (desconecta uma instituição). */
 export async function removeItem(itemId: string): Promise<void> {
-  if (USE_SUPABASE) {
-    await callEdgeFunction('pluggy-proxy', `/items/${itemId}`, {
-      method: 'DELETE',
-    });
-    return;
-  }
-  const { apiRequest } = await import('./api');
-  await apiRequest(`/pluggy/items/${itemId}`, { method: 'DELETE' });
+  await callEdgeFunction('pluggy-proxy', `/items/${itemId}`, {
+    method: 'DELETE',
+  });
 }

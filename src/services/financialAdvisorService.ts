@@ -1,13 +1,10 @@
 /**
  * @file services/financialAdvisorService.ts
- * @description Serviço de consultor financeiro com IA.
- * Em produção, usa Edge Functions do Supabase. Em desenvolvimento, usa backend Express.
+ * @description Serviço de consultor financeiro com IA via Supabase Edge Function ai-chat.
  */
 
 import type { Transaction, Category } from '../types';
 import { supabase } from '../lib/supabase';
-
-const USE_SUPABASE = process.env.REACT_APP_USE_SUPABASE === 'true';
 
 /** Mensagem no formato do chat */
 interface ChatMessage {
@@ -15,10 +12,7 @@ interface ChatMessage {
   content: string;
 }
 
-/**
- * Constrói um resumo textual dos dados financeiros do usuário
- * para enviar como contexto ao modelo de IA.
- */
+/** Constrói um resumo textual dos dados financeiros do usuário para enviar como contexto ao modelo de IA. */
 export function buildFinancialContext(
   transactions: Transaction[],
   categories: Category[]
@@ -109,31 +103,26 @@ ${recent || '  Nenhuma transação recente'}
 `.trim();
 }
 
-/**
- * Envia pergunta ao consultor financeiro IA.
- * Em produção, usa Edge Function do Supabase. Em desenvolvimento, usa backend Express.
- * Retorna um AsyncGenerator que yield cada chunk de texto.
- */
+/** Envia pergunta ao consultor financeiro IA via Supabase Edge Function ai-chat. */
 export async function* streamAdvisor(
   userMessage: string,
   financialContext: string,
   history: ChatMessage[]
 ): AsyncGenerator<string> {
-  if (USE_SUPABASE) {
-    const { data: { session } } = await supabase.auth.getSession();
-    const url = `${process.env.REACT_APP_SUPABASE_URL}/functions/v1/ai-chat`;
-    
-    const response = await fetch(url, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${session?.access_token || ''}`,
-        'apikey': process.env.REACT_APP_SUPABASE_ANON_KEY || '',
-      },
-      body: JSON.stringify({ messages: [
-        {
-          role: 'system',
-          content: `Você é um consultor financeiro pessoal experiente e direto. Analise os dados reais do usuário abaixo para dar conselhos personalizados.
+  const { data: { session } } = await supabase.auth.getSession();
+  const url = `${process.env.REACT_APP_SUPABASE_URL}/functions/v1/ai-chat`;
+  
+  const response = await fetch(url, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${session?.access_token || ''}`,
+      'apikey': process.env.REACT_APP_SUPABASE_ANON_KEY || '',
+    },
+    body: JSON.stringify({ messages: [
+      {
+        role: 'system',
+        content: `Você é um consultor financeiro pessoal experiente e direto. Analise os dados reais do usuário abaixo para dar conselhos personalizados.
 
 DADOS FINANCEIROS DO USUÁRIO:
 ${financialContext || 'Nenhum dado financeiro disponível'}
@@ -147,60 +136,19 @@ REGRAS:
 - Se não tiver dados suficientes, peça mais informações
 - Formatando: use **negrito** para valores e listas para recomendações
 - Máximo de 200 palavras por resposta`,
-        },
-        ...history,
-        { role: 'user', content: userMessage },
-      ]}),
-    });
-
-    if (!response.ok) {
-      const error = await response.json().catch(() => ({}));
-      throw new Error(error.error || `Erro na IA: ${response.status}`);
-    }
-
-    // Edge function retorna SSE streaming
-    const reader = response.body?.getReader();
-    if (!reader) throw new Error('Não foi possível ler a resposta');
-
-    const decoder = new TextDecoder();
-    let buffer = '';
-
-    while (true) {
-      const { done, value } = await reader.read();
-      if (done) break;
-
-      buffer += decoder.decode(value, { stream: true });
-      const lines = buffer.split('\n');
-      buffer = lines.pop() || '';
-
-      for (const line of lines) {
-        if (line.startsWith('data: ')) {
-          const data = line.slice(6);
-          if (data === '[DONE]') return;
-          try {
-            const parsed = JSON.parse(data);
-            if (parsed.content) yield parsed.content;
-          } catch {
-            // Linha JSON inválida
-          }
-        }
-      }
-    }
-    return;
-  }
-
-  // Modo desenvolvimento: backend Express com streaming
-  const { apiStream } = await import('./api');
-  const response = await apiStream('/ai/chat', {
-    message: userMessage,
-    financialContext,
-    history,
+      },
+      ...history,
+      { role: 'user', content: userMessage },
+    ]}),
   });
 
-  const reader = response.body?.getReader();
-  if (!reader) {
-    throw new Error('Não foi possível ler a resposta do servidor');
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({}));
+    throw new Error(error.error || `Erro na IA: ${response.status}`);
   }
+
+  const reader = response.body?.getReader();
+  if (!reader) throw new Error('Não foi possível ler a resposta');
 
   const decoder = new TextDecoder();
   let buffer = '';
@@ -216,16 +164,12 @@ REGRAS:
     for (const line of lines) {
       if (line.startsWith('data: ')) {
         const data = line.slice(6);
-        if (data === '[DONE]') {
-          return;
-        }
+        if (data === '[DONE]') return;
         try {
           const parsed = JSON.parse(data);
-          if (parsed.content) {
-            yield parsed.content;
-          }
+          if (parsed.content) yield parsed.content;
         } catch {
-          // Ignora linhas JSON inválidas
+          // Linha JSON inválida
         }
       }
     }
