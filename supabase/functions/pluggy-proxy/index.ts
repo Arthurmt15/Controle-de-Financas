@@ -129,6 +129,12 @@ serve(async (req) => {
           { status: res.status, headers: { ...headers, "Content-Type": "application/json" } }
         )
       }
+      if (!data?.accessToken) {
+        return new Response(
+          JSON.stringify({ error: `Pluggy não retornou accessToken: ${text.slice(0, 500)}` }),
+          { status: 500, headers: { ...headers, "Content-Type": "application/json" } }
+        )
+      }
       return new Response(
         JSON.stringify({ success: true, data }),
         { headers: { ...headers, "Content-Type": "application/json" } }

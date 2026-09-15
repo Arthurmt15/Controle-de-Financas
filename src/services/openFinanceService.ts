@@ -79,13 +79,17 @@ async function callEdgeFunction<T>(
 
 /** Obtém um connect token para autenticar o widget Pluggy Connect. */
 export async function getConnectToken(): Promise<ConnectToken> {
-  // tenta Supabase primeiro
   try {
     const response = await callEdgeFunction<TokenResponse>('pluggy-proxy', '/token', { method: 'POST' });
-    if (!response?.data?.accessToken) throw new Error('Token vazio retornado pelo servidor');
-    return response.data;
+    // edge retorna { success, data: { accessToken } } — Pluggy retorna { accessToken }
+    const token = (response as any)?.data?.accessToken || (response as any)?.accessToken || (response as any)?.data?.data?.accessToken;
+    if (!token) {
+      const dump = JSON.stringify(response).slice(0, 800);
+      console.error('Token vazio, resposta:', dump);
+      throw new Error(`Token vazio retornado pelo servidor. Resposta: ${dump}. Verifique se PLUGGY_CLIENT_ID/SECRET estão corretos e se a função foi redeployada.`);
+    }
+    return { accessToken: token } as ConnectToken;
   } catch (e: any) {
-    // fallback: se tiver REACT_APP_PLUGGY_CONNECT_TOKEN (demo) permite testar UI sem backend
     const demo = (process.env as any).REACT_APP_PLUGGY_DEMO_TOKEN || (process.env as any).REACT_APP_DEMO_PLUGGY_TOKEN;
     if (demo) {
       console.warn('Usando token demo para Open Finance', e?.message);
