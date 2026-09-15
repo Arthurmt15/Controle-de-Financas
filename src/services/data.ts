@@ -1,75 +1,83 @@
 /**
  * @file services/data.ts
- * @description Camada de dados - agora 100% Supabase.
- * Railway/Express foi removido. Todas as operações usam Supabase diretamente.
+ * @description Facade que mantém API legada mas delega para arquitetura OOP.
+ * Princípio OOP: Dependency Inversion - depende de abstrações (FinanceService) não de detalhes.
+ * Mantém compatibilidade com contexts existentes enquanto usa classes de domínio.
  */
 
-import { transactionService as supabaseTransactionService } from './supabase/transactions';
-import { categoryService as supabaseCategoryService } from './supabase/categories';
-import { recurringBillService as supabaseRecurringBillService } from './supabase/recurringBills';
-import { budgetService as supabaseBudgetService } from './supabase/budgets';
-import { installmentService as supabaseInstallmentService } from './supabase/installments';
-import { futureExpenseService as supabaseFutureExpenseService } from './supabase/futureExpenses';
-import { authService as supabaseAuthService } from './supabase/auth';
-
+import { financeService } from '../application/services/FinanceService';
+import * as legacyCategory from './supabase/categories';
+import * as legacyRecurring from './supabase/recurringBills';
+import * as legacyBudget from './supabase/budgets';
+import * as legacyFuture from './supabase/futureExpenses';
+import * as legacyAuth from './supabase/auth';
 import type { Transaction, Category, RecurringBill, Installment, FutureExpense } from '../types';
 import type { Budget } from '../types/dashboard';
 
+// Re-exporta OOP para novos fluxos (parcelado)
+export { financeService } from '../application/services/FinanceService';
+export { TransactionEntity } from '../domain/entities/TransactionEntity';
+export { InstallmentEntity } from '../domain/entities/InstallmentEntity';
+export { Money } from '../domain/value-objects/Money';
+export { InstallmentPlan } from '../domain/value-objects/InstallmentPlan';
+
 export const transactionService = {
-  getAll: (userId: string, page?: number, limit?: number) => supabaseTransactionService.getAll(page, limit),
-  create: (transaction: Omit<Transaction, 'id'>, userId: string) => supabaseTransactionService.create(transaction),
-  update: (transaction: Transaction) => supabaseTransactionService.update(transaction),
-  delete: (id: string) => supabaseTransactionService.delete(id),
+  getAll: (userId: string, page?: number, limit?: number) => financeService.listTransactions(page, limit),
+  create: (transaction: Omit<Transaction, 'id'>, userId: string) => financeService.createTransaction(transaction),
+  createParcelled: (tx: Omit<Transaction, 'id'>, totalInstallments: number) =>
+    financeService.createParcelledTransaction(tx, totalInstallments),
+  update: (transaction: Transaction) => financeService.updateTransaction(transaction),
+  delete: (id: string) => financeService.deleteTransaction(id),
 };
 
 export const categoryService = {
-  getAll: (userId: string) => supabaseCategoryService.getAll(),
-  create: (category: Omit<Category, 'id'>, userId: string) => supabaseCategoryService.create(category),
-  delete: (id: string) => supabaseCategoryService.delete(id),
+  getAll: (userId: string) => legacyCategory.categoryService.getAll(),
+  create: (category: Omit<Category, 'id'>, userId: string) => legacyCategory.categoryService.create(category),
+  delete: (id: string) => legacyCategory.categoryService.delete(id),
 };
 
 export const recurringBillService = {
-  getAll: (userId: string) => supabaseRecurringBillService.getAll(),
-  create: (bill: Omit<RecurringBill, 'id'>, userId: string) => supabaseRecurringBillService.create(bill),
-  update: (bill: RecurringBill) => supabaseRecurringBillService.update(bill),
-  delete: (id: string) => supabaseRecurringBillService.delete(id),
-  generate: (userId: string) => supabaseRecurringBillService.generate(),
+  getAll: (userId: string) => legacyRecurring.recurringBillService.getAll(),
+  create: (bill: Omit<RecurringBill, 'id'>, userId: string) => legacyRecurring.recurringBillService.create(bill),
+  update: (bill: RecurringBill) => legacyRecurring.recurringBillService.update(bill),
+  delete: (id: string) => legacyRecurring.recurringBillService.delete(id),
+  generate: (userId: string) => legacyRecurring.recurringBillService.generate(),
 };
 
 export const budgetService = {
-  getAll: (userId: string) => supabaseBudgetService.getAll(),
-  create: (budget: Omit<Budget, 'id'>, userId: string) => supabaseBudgetService.create(budget),
-  delete: (id: string) => supabaseBudgetService.delete(id),
+  getAll: (userId: string) => legacyBudget.budgetService.getAll(),
+  create: (budget: Omit<Budget, 'id'>, userId: string) => legacyBudget.budgetService.create(budget),
+  delete: (id: string) => legacyBudget.budgetService.delete(id),
 };
 
 export const installmentService = {
-  getAll: (userId: string) => supabaseInstallmentService.getAll(),
-  create: (installment: Omit<Installment, 'id'>, userId: string) => supabaseInstallmentService.create(installment),
-  update: (installment: Installment) => supabaseInstallmentService.update(installment),
-  delete: (id: string) => supabaseInstallmentService.delete(id),
-  advance: (id: string) => supabaseInstallmentService.advanceInstallment(id),
+  getAll: (userId: string) => financeService.listInstallments(),
+  create: (installment: Omit<Installment, 'id'>, userId: string) => financeService.createInstallment(installment),
+  update: (installment: Installment) => financeService.updateInstallment(installment),
+  delete: (id: string) => financeService.deleteInstallment(id),
+  advance: (id: string) => financeService.advanceInstallment(id),
 };
 
 export const futureExpenseService = {
-  getAll: (userId: string) => supabaseFutureExpenseService.getAll(),
-  create: (expense: Omit<FutureExpense, 'id'>, userId: string) => supabaseFutureExpenseService.create(expense),
-  update: (expense: FutureExpense) => supabaseFutureExpenseService.update(expense),
-  delete: (id: string) => supabaseFutureExpenseService.delete(id),
-  markAsPaid: (id: string) => supabaseFutureExpenseService.markAsPaid(id),
+  getAll: (userId: string) => legacyFuture.futureExpenseService.getAll(),
+  create: (expense: Omit<FutureExpense, 'id'>, userId: string) => legacyFuture.futureExpenseService.create(expense),
+  update: (expense: FutureExpense) => legacyFuture.futureExpenseService.update(expense),
+  delete: (id: string) => legacyFuture.futureExpenseService.delete(id),
+  markAsPaid: (id: string) => legacyFuture.futureExpenseService.markAsPaid(id),
 };
 
 export const authService = {
-  signInWithGoogle: (..._args: unknown[]) => supabaseAuthService.signInWithGoogle(),
-  signOut: (..._args: unknown[]) => supabaseAuthService.signOut(),
-  getSession: (..._args: unknown[]) => supabaseAuthService.getSession(),
-  getUser: (..._args: unknown[]) => supabaseAuthService.getUser(),
+  signInWithGoogle: (..._args: unknown[]) => legacyAuth.authService.signInWithGoogle(),
+  signOut: (..._args: unknown[]) => legacyAuth.authService.signOut(),
+  getSession: (..._args: unknown[]) => legacyAuth.authService.getSession(),
+  getUser: (..._args: unknown[]) => legacyAuth.authService.getUser(),
   onAuthStateChange: (callback: (user: import('../types').User | null) => void) =>
-    supabaseAuthService.onAuthStateChange(callback),
+    legacyAuth.authService.onAuthStateChange(callback),
   createOrFind: async (user: { googleId: string; name: string; email: string; avatar?: string }) => {
-    const supabaseUser = await supabaseAuthService.getUser();
+    const supabaseUser = await legacyAuth.authService.getUser();
     return supabaseUser;
   },
-  getCurrentUser: (..._args: unknown[]) => supabaseAuthService.getUser(),
+  getCurrentUser: (..._args: unknown[]) => legacyAuth.authService.getUser(),
   setAuthToken: (..._args: unknown[]) => {},
   hasStoredToken: (..._args: unknown[]) => false,
   getTokenFromCookie: (..._args: unknown[]): string | null => null,

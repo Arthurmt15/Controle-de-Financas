@@ -28,6 +28,7 @@ export function parseTransactionFromMessage(message: string): ParsedTransaction 
   return { descricao, valor, tipo, categoria: catResult.category, data, parcelas };
 }
 
+/** Parseia texto OCR em amount/date/description (primeira linha não numérica) */
 export function parseImageText(text: string): ImageParseResult {
   const result: ImageParseResult = { amount: null, description: null, date: null, rawText: text };
   const amountResult = extractAmount(text);
@@ -42,6 +43,7 @@ export function parseImageText(text: string): ImageParseResult {
   return result;
 }
 
+/** Exemplos de input para o chat (usado como chips) */
 export function getExampleMessages(): string[] {
   return ['Mercado ontem 150,50','Entrada 4k salário','Compra 1000 reais 10x','conta recorrente cartão 1500 dia 10','ajuda'];
 }

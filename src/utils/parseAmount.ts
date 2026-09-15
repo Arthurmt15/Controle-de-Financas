@@ -1,3 +1,4 @@
+/** Extrai valor monetário do texto (suporta R$, k, conto, vírgula/ponto) e retorna texto limpo */
 export function extractAmount(text: string): { value: number; clean: string } | null {
   const lower = text.toLowerCase();
   const kPattern = /(\d+(?:[.,]\d+)?)\s*k\b/i;

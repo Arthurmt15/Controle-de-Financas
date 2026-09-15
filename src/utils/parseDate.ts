@@ -10,11 +10,13 @@ const MONTH_MAP: Record<string, number> = {
   'agosto': 7, 'ago': 7, 'setembro': 8, 'set': 8, 'outubro': 9, 'out': 9, 'novembro': 10, 'nov': 10, 'dezembro': 11, 'dez': 11,
 };
 
+/** Formata Date para YYYY-MM-DD */
 export function formatDate(d: Date): string {
   const y = d.getFullYear(); const m = String(d.getMonth() + 1).padStart(2, '0'); const day = String(d.getDate()).padStart(2, '0');
   return `${y}-${m}-${day}`;
 }
 
+/** Extrai data relativa/absoluta do texto (hoje/ontem/dia da semana/DD/MM) e retorna texto limpo */
 export function extractDate(text: string): { value: string; clean: string } | null {
   const lower = text.toLowerCase(); const today = new Date(); today.setHours(12, 0, 0, 0);
   const hojeMatch = lower.match(/\bhoje\b/i);

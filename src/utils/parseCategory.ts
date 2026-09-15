@@ -3,6 +3,7 @@ import { CATEGORY_MAP } from './categories';
 const INCOME_KEYWORDS = ['entrada','recebi','recebido','ganhei','ganho','salário','salario','pagamento','ordenha','depósito','deposito','transferência recebida','rendimento','cashback','estorno','reembolso','prêmio','premio','dividendos','caiu','entrou','crédito','credito'];
 const EXPENSE_KEYWORDS = ['saída','saida','gastei','paguei','comprei','saiu','perdi','compra','despesa','conta','mercado','supermercado','restaurante','almoço','almoco','jantar','café','cafe','farmácia','farmacia','posto','combustível','combustivel','transporte','uber','taxi','ônibus','onibus','aluguel','condomínio','condominio','luz','água','agua','internet','telefone','iptu'];
 
+/** Detecta tipo despesa/receita por palavras-chave no texto */
 export function detectType(text: string): 'despesa' | 'receita' {
   const lower = text.toLowerCase();
   for (const k of INCOME_KEYWORDS) if (lower.includes(k)) return 'receita';
@@ -11,6 +12,7 @@ export function detectType(text: string): 'despesa' | 'receita' {
   return 'despesa';
 }
 
+/** Detecta categoria pelo CATEGORY_MAP e tipo, retorna fallback Outros/Salário */
 export function detectCategory(text: string, tipo: 'despesa' | 'receita'): { category: string; clean: string } {
   const lower = text.toLowerCase();
   for (const { keywords, category } of CATEGORY_MAP) {
@@ -24,6 +26,7 @@ export function detectCategory(text: string, tipo: 'despesa' | 'receita'): { cat
   return { category: tipo === 'receita' ? 'Salário' : 'Outros', clean: text };
 }
 
+/** Extrai descrição limpa removendo keywords de tipo, números e parcelado */
 export function extractDescription(remainingText: string): string {
   let desc = remainingText;
   const typeKeywords = ['gastei','paguei','comprei','saiu','perdi','despesa','recebi','recebido','ganhei','ganho','pagamento','entrada','salário','salario','rendimento','cashback','estorno','reembolso'];
