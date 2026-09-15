@@ -87,21 +87,23 @@ const AnalysisPage: React.FC = () => {
       {/* ================= DESKTOP LAYOUT (lg+) — bento premium ================= */}
       <div className="hidden lg:grid grid-cols-[1fr_400px] gap-6 items-start mt-7">
         <div className="flex flex-col gap-5 min-w-0">
-          {/* Summary 4 col desktop — cards altos com hover lift */}
-          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.08 }} className="grid grid-cols-4 gap-3.5">
+          {/* Summary 4 col desktop — respiro, altura generosa */}
+          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.08 }} className="grid grid-cols-4 gap-4">
             {summaryCards.map((card, idx) => (
               <motion.div key={card.key} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.08 + idx * 0.04 }}>
-                <Card className="relative overflow-hidden rounded-2xl border bg-card shadow-sm hover:shadow-md transition-all hover:-translate-y-0.5 min-h-[132px] group">
-                  <span className="absolute left-0 top-0 bottom-0 w-[3px] opacity-90 group-hover:opacity-100 transition-opacity" style={{ background: accentByTone[card.tone] }} />
-                  <CardContent className="p-5 flex gap-3.5">
-                    <span className={`w-11 h-11 shrink-0 flex items-center justify-center rounded-xl border ${iconWrapByTone[card.tone]}`}>
-                      <card.icon size={18} />
-                    </span>
-                    <div className="min-w-0 flex-1">
-                      <span className="block text-[11px] font-semibold tracking-widest uppercase text-muted-foreground">{card.label}</span>
-                      <strong className="block mt-1.5 text-[19px] font-bold tracking-tight leading-none truncate">{card.value}</strong>
+                <Card className="relative overflow-hidden rounded-2xl border bg-card shadow-sm hover:shadow-md transition-all hover:-translate-y-1 min-h-[164px] group">
+                  <span className="absolute left-0 top-0 bottom-0 w-[3.5px] opacity-90 group-hover:opacity-100 transition-opacity" style={{ background: accentByTone[card.tone] }} />
+                  <CardContent className="p-5 pt-6 flex flex-col gap-3">
+                    <div className="flex items-center gap-3">
+                      <span className={`w-10 h-10 shrink-0 flex items-center justify-center rounded-xl border shadow-sm ${iconWrapByTone[card.tone]}`}>
+                        <card.icon size={17} />
+                      </span>
+                      <span className="text-[11px] font-semibold tracking-widest uppercase text-muted-foreground leading-tight">{card.label}</span>
+                    </div>
+                    <div className="space-y-2">
+                      <strong className="block text-[22px] font-bold tracking-tight leading-none">{card.value}</strong>
                       <span
-                        className={`mt-2 inline-flex items-center gap-1 text-[11px] font-medium px-2.5 py-1 rounded-full border ${
+                        className={`inline-flex items-center gap-1 text-[11px] font-medium px-2.5 py-1 rounded-full border leading-none ${
                           card.key === 'balance' || card.key === 'annual'
                             ? card.positive
                               ? 'text-emerald-700 bg-emerald-50 border-emerald-100 dark:text-emerald-300 dark:bg-emerald-500/10 dark:border-emerald-500/20'
@@ -162,31 +164,33 @@ const AnalysisPage: React.FC = () => {
 
       {/* ================= MOBILE LAYOUT (base→lg) — stack compacto ================= */}
       <div className="lg:hidden flex flex-col gap-4 mt-6">
-        {/* Summary 2x2 compacto — altura reduzida, tipografia menor */}
-        <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.08 }} className="grid grid-cols-2 gap-3">
+        {/* Summary 2x2 mobile — respiro corrigido */}
+        <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.08 }} className="grid grid-cols-2 gap-3.5">
           {summaryCards.map((card, idx) => (
             <motion.div key={card.key} initial={{ opacity: 0, scale: 0.97 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.08 + idx * 0.04 }}>
-              <Card className="relative overflow-hidden rounded-2xl border bg-card shadow-sm active:scale-[0.98] transition-transform min-h-[108px]">
+              <Card className="relative overflow-hidden rounded-2xl border bg-card shadow-sm active:scale-[0.98] transition-transform min-h-[138px]">
                 <span className="absolute left-0 top-0 bottom-0 w-[3px]" style={{ background: accentByTone[card.tone] }} />
-                <CardContent className="p-3.5">
-                  <div className="flex items-center gap-2 mb-2">
-                    <span className={`w-8 h-8 flex items-center justify-center rounded-lg border ${iconWrapByTone[card.tone]}`}>
-                      <card.icon size={14} />
+                <CardContent className="p-4 flex flex-col gap-2.5 h-full">
+                  <div className="flex items-center gap-2.5">
+                    <span className={`w-9 h-9 flex items-center justify-center rounded-xl border shadow-sm ${iconWrapByTone[card.tone]}`}>
+                      <card.icon size={15} />
                     </span>
-                    <span className="text-[10px] font-semibold tracking-widest uppercase text-muted-foreground leading-none">{card.label}</span>
+                    <span className="text-[10.5px] font-semibold tracking-widest uppercase text-muted-foreground leading-tight flex-1">{card.label}</span>
                   </div>
-                  <strong className="block text-[15px] font-bold tracking-tight leading-none truncate">{card.value}</strong>
-                  <span
-                    className={`mt-1.5 inline-flex text-[10px] font-medium px-2 py-0.5 rounded-full border leading-none ${
-                      card.key === 'balance' || card.key === 'annual'
-                        ? card.positive
-                          ? 'text-emerald-700 bg-emerald-50 border-emerald-100 dark:text-emerald-300 dark:bg-emerald-500/10 dark:border-emerald-500/20'
-                          : 'text-red-700 bg-red-50 border-red-100 dark:text-red-300 dark:bg-red-500/10 dark:border-red-500/20'
-                        : 'text-muted-foreground bg-muted border-transparent'
-                    }`}
-                  >
-                    {card.sub}
-                  </span>
+                  <div className="mt-1 space-y-1.5">
+                    <strong className="block text-[17px] font-bold tracking-tight leading-none">{card.value}</strong>
+                    <span
+                      className={`inline-flex text-[10px] font-medium px-2 py-1 rounded-full border leading-none ${
+                        card.key === 'balance' || card.key === 'annual'
+                          ? card.positive
+                            ? 'text-emerald-700 bg-emerald-50 border-emerald-100 dark:text-emerald-300 dark:bg-emerald-500/10 dark:border-emerald-500/20'
+                            : 'text-red-700 bg-red-50 border-red-100 dark:text-red-300 dark:bg-red-500/10 dark:border-red-500/20'
+                          : 'text-muted-foreground bg-muted border-transparent'
+                      }`}
+                    >
+                      {card.sub}
+                    </span>
+                  </div>
                 </CardContent>
               </Card>
             </motion.div>
