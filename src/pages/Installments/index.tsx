@@ -72,11 +72,6 @@ const InstallmentsPage: React.FC = () => {
     return d;
   }
 
-  function getNextDueDateStr(inst: { startDate: string; currentInstallment: number }): string {
-    const d = addMonths(inst.startDate, inst.currentInstallment);
-    return formatDate(d.toISOString().split('T')[0]);
-  }
-
   function getDaysUntil(date: Date): number {
     const today = new Date();
     today.setHours(0, 0, 0, 0);

@@ -1,5 +1,5 @@
 import type { Category, RecurringBill } from '../types';
-import { capitalizeFirst, getCategoryStyle } from './chatCommandsParser';
+import { getCategoryStyle } from './chatCommandsParser';
 
 export type CommandType =
   | { type: 'create_category'; name: string }

@@ -2,15 +2,15 @@
  * @file utils/chatCommands.ts
  * @description Detector de comandos - re-exporta módulos splitados (<300 linhas cada).
  */
-export * from './chatCommandsPatterns';
-export * from './chatCommandsParser';
-export * from './chatCommandsExecutor';
-
 import {
   CREATE_CATEGORY_PATTERNS, DELETE_CATEGORY_PATTERNS, GENERATE_BILLS_PATTERNS, CREATE_RECURRING_PATTERNS, UPDATE_RECURRING_PATTERNS, DELETE_RECURRING_PATTERNS, LIST_RECURRING_PATTERNS, SUMMARY_PATTERNS, ANALYSIS_PATTERNS, LIST_CATEGORIES_PATTERNS, HELP_PATTERNS,
 } from './chatCommandsPatterns';
 import { parseRecurringBillInput, parseRecurringBillUpdate, capitalizeFirst } from './chatCommandsParser';
 import type { CommandType } from './chatCommandsExecutor';
+
+export * from './chatCommandsPatterns';
+export * from './chatCommandsParser';
+export * from './chatCommandsExecutor';
 
 export function detectCommand(text: string): CommandType {
   const trimmed = text.trim();
