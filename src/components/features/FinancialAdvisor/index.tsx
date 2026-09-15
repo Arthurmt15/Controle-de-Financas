@@ -5,7 +5,7 @@
  * estilizadas, Input shadcn e Button com ícone Send. Preserva streaming via financialAdvisorService.
  */
 
-import React, { useState, useRef, useEffect, useCallback } from 'react';
+import React, { useState, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Bot, Sparkles, SendHorizontal, Loader2, User } from 'lucide-react';
 import { useTransactions } from '../../../hooks/useTransactions';
