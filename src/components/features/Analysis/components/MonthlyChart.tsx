@@ -14,10 +14,11 @@ import type { Transaction } from '../../../../types';
 
 interface MonthlyChartProps {
   transactions: Transaction[];
+  height?: number;
 }
 
 // Gráfico de evolução mensal (últimos 12 meses)
-const MonthlyChart: React.FC<MonthlyChartProps> = ({ transactions }) => {
+const MonthlyChart: React.FC<MonthlyChartProps> = ({ transactions, height = 300 }) => {
   // Paleta fixa (evita dependência de styled-components theme)
   const colors = useMemo(
     () => ({
@@ -77,7 +78,7 @@ const MonthlyChart: React.FC<MonthlyChartProps> = ({ transactions }) => {
 
   return (
     <div className="w-full min-w-0 overflow-hidden">
-      <ResponsiveContainer width="100%" height={300}>
+      <ResponsiveContainer width="100%" height={height}>
         <BarChart data={monthlyData}>
           <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.6} />
           <XAxis dataKey="name" stroke={colors.axis} fontSize={12} tickLine={false} axisLine={false} />
