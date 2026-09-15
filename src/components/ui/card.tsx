@@ -1,3 +1,4 @@
+/* eslint-disable jsx-a11y/heading-has-content -- CardTitle é wrapper genérico, conteúdo vem via props.children */
 import * as React from "react"
 import { cn } from "../../lib/utils"
 
