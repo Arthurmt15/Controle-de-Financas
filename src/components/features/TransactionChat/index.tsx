@@ -9,6 +9,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { extractTextFromImage } from '../../../services/ocrService';
 import { useTransactions } from '../../../hooks/useTransactions';
+import { useInstallments } from '../../../contexts/InstallmentsContext';
 import { getExampleMessages, parseTransactionFromMessage } from '../../../utils/parseTransaction';
 import { detectCommand, executeCommand } from '../../../utils/chatCommands';
 import { generateSummary, generateAnalysis } from '../../../utils/analysisEngine';
@@ -53,6 +54,7 @@ const TransactionChat: React.FC = () => {
     deleteRecurringBill,
     generateRecurringTransactions,
   } = useTransactions();
+  const { addInstallment } = useInstallments();
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [inputValue, setInputValue] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
@@ -263,13 +265,33 @@ const TransactionChat: React.FC = () => {
         };
 
         await addTransaction(transactionData);
+
+        // Se for parcelado, cria automaticamente o parcelado para aparecer em Parcelados
+        if (installmentCount > 0) {
+          try {
+            await addInstallment({
+              description: parsed.descricao,
+              totalAmount: parsed.valor,
+              installmentAmount: perInstallment,
+              totalInstallments: installmentCount,
+              currentInstallment: 1,
+              startDate: parsed.data,
+              categoryId: matchCat.id,
+              notes: `Criado via chat - Total R$ ${parsed.valor.toFixed(2).replace('.', ',')} em ${installmentCount}x`,
+              source: 'manual',
+            });
+          } catch (installmentError) {
+            console.error('Transação criada, mas falhou ao criar parcelado:', installmentError);
+          }
+        }
+
         addMessage(
           `✅ Transação registrada!\n` +
           `📝 ${transactionData.description}\n` +
           `💰 R$ ${transactionData.amount.toFixed(2).replace('.', ',')}\n` +
           `📅 ${formatDateBR(transactionData.date)}\n` +
           `🏷️ ${matchCat.name}` +
-          (installmentCount > 0 ? `\n📋 Total: R$ ${parsed.valor.toFixed(2).replace('.', ',')} (${installmentCount}x)` : ''),
+          (installmentCount > 0 ? `\n📋 Total: R$ ${parsed.valor.toFixed(2).replace('.', ',')} (${installmentCount}x)` + `\n📌 Parcelado criado em "Parcelados" (${installmentCount}x de R$ ${perInstallment.toFixed(2).replace('.', ',')})` : ''),
           false
         );
         setIsProcessing(false);
