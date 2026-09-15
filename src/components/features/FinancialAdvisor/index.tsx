@@ -43,11 +43,15 @@ const FinancialAdvisor: React.FC = () => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [isStreaming, setIsStreaming] = useState(false);
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
   const scrollToBottom = useCallback(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    const el = scrollContainerRef.current;
+    if (!el) return;
+    // scroll apenas dentro do container, sem propagar para a página
+    el.scrollTo({ top: el.scrollHeight, behavior: 'smooth' });
   }, []);
 
   useEffect(() => {
@@ -132,8 +136,8 @@ const FinancialAdvisor: React.FC = () => {
         </div>
       </CardHeader>
 
-      {/* Área de mensagens */}
-      <div className="flex-1 overflow-y-auto p-4 flex flex-col gap-3 bg-muted/20 min-h-0">
+      {/* Área de mensagens — scroll contido sem arrastar a página */}
+      <div ref={scrollContainerRef} className="flex-1 overflow-y-auto overscroll-contain p-4 flex flex-col gap-3 bg-muted/20 min-h-0 scroll-smooth">
         {messages.length === 0 && (
           <motion.div
             initial={{ opacity: 0, y: 8 }}
