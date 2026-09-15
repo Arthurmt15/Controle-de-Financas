@@ -53,7 +53,7 @@ const SummaryCards: React.FC = () => {
     },
     {
       variant: 'annual' as const,
-      icon: '📅',
+      icon: '',
       label: 'Saldo Anual',
       value: formatCurrency(metrics.yearlyBalance),
       subtext: `Ano ${new Date().getFullYear()}`,

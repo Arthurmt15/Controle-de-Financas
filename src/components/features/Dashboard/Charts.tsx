@@ -128,7 +128,7 @@ const Charts: React.FC = () => {
           </ResponsiveContainer>
         ) : (
           <C.EmptyChartMessage>
-            <C.EmptyIcon>📊</C.EmptyIcon>
+            <C.EmptyIcon></C.EmptyIcon>
             <strong>Nenhum dado disponível</strong>
             <span>Adicione transações para ver o gráfico</span>
           </C.EmptyChartMessage>
@@ -170,7 +170,7 @@ const Charts: React.FC = () => {
           </>
         ) : (
           <C.CategoryEmpty>
-            <C.CategoryIcon>📁</C.CategoryIcon>
+            <C.CategoryIcon></C.CategoryIcon>
             <strong>Nenhuma despesa este mês</strong>
             <span>Registre despesas para ver a distribuição por categoria</span>
           </C.CategoryEmpty>

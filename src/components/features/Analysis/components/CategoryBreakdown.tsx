@@ -55,7 +55,7 @@ const CategoryBreakdown: React.FC<CategoryBreakdownProps> = ({ transactions, cat
         <C.SectionTitle>Para onde vai seu dinheiro</C.SectionTitle>
         <C.SectionDescription>Gastos do mês por categoria</C.SectionDescription>
         <C.EmptyState>
-          <span>💸</span>
+          <span></span>
           <p>Nenhuma despesa registrada este mês</p>
         </C.EmptyState>
       </C.Section>

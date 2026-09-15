@@ -482,10 +482,10 @@ function formatDate(d: Date): string {
  */
 export function getReceiptResponse(receipt: ReceiptData): string {
   if (!receipt.amount) {
-    return '❌ Não consegui identificar o valor no comprovante.\nPor favor, digite manualmente.\nEx: "Mercado 150,50"';
+    return ' Não consegui identificar o valor no comprovante.\nPor favor, digite manualmente.\nEx: "Mercado 150,50"';
   }
 
-  const confidenceEmoji = receipt.confidence === 'high' ? '✅' : receipt.confidence === 'medium' ? '⚠️' : '❓';
+  const confidenceEmoji = receipt.confidence === 'high' ? '' : receipt.confidence === 'medium' ? '' : '';
   const confidenceText = receipt.confidence === 'high'
     ? 'Dados extraídos com sucesso!'
     : receipt.confidence === 'medium'
@@ -495,20 +495,20 @@ export function getReceiptResponse(receipt: ReceiptData): string {
   const currencySymbol = receipt.currency || 'R$';
 
   let response = `${confidenceEmoji} ${confidenceText}\n\n`;
-  response += `💰 Valor: ${currencySymbol} ${receipt.amount.toFixed(2).replace('.', ',')}\n`;
+  response += ` Valor: ${currencySymbol} ${receipt.amount.toFixed(2).replace('.', ',')}\n`;
 
   if (receipt.description) {
-    response += `📝 Descrição: ${receipt.description}\n`;
+    response += ` Descrição: ${receipt.description}\n`;
   }
   if (receipt.date) {
     const [y, m, d] = receipt.date.split('-');
-    response += `📅 Data: ${d}/${m}/${y}\n`;
+    response += ` Data: ${d}/${m}/${y}\n`;
   }
   if (receipt.store) {
-    response += `🏪 Local: ${receipt.store}\n`;
+    response += ` Local: ${receipt.store}\n`;
   }
   if (receipt.paymentMethod) {
-    response += `💳 Pagamento: ${receipt.paymentMethod}\n`;
+    response += ` Pagamento: ${receipt.paymentMethod}\n`;
   }
 
   return response;

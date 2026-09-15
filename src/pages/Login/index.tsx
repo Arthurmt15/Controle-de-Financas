@@ -211,7 +211,7 @@ const LoginPage: React.FC = () => {
 
           {error && (
             <div className="flex items-center justify-center gap-2 px-4 py-3 mb-4 bg-red-500/10 border border-red-500 rounded-lg text-red-500 text-sm text-center" role="alert">
-              <span>⚠️</span>
+              <span></span>
               <span>{error}</span>
               <button onClick={clearError} className="ml-1 text-red-500 text-lg leading-none" aria-label="Fechar erro">×</button>
             </div>

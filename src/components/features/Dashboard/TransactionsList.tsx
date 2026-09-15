@@ -38,7 +38,7 @@ const TransactionsList: React.FC = () => {
         </C.TransactionsHeader>
         <C.TransactionsEmpty>
           <C.TransactionIcon style={{ background: `${theme.colors.primary}20`, color: theme.colors.primary }}>
-            💳
+            
           </C.TransactionIcon>
           <strong style={{ fontSize: '13px' }}>Nenhuma transação</strong>
           <span style={{ color: theme.colors.textSecondary, fontSize: '12px' }}>

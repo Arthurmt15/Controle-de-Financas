@@ -313,7 +313,7 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
       notes: '',
     };
 
-    console.log('📤 Enviando transação:', transactionData);
+    console.log(' Enviando transação:', transactionData);
 
     try {
       await addTransaction(transactionData);
@@ -331,7 +331,7 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
   return (
     <C.UploaderContainer>
       <C.Title>
-        <C.TitleIcon>📸</C.TitleIcon>
+        <C.TitleIcon></C.TitleIcon>
         Foto de Comprovante
       </C.Title>
 
@@ -352,7 +352,7 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
           }
         }}
       >
-        <C.UploadIcon>📤</C.UploadIcon>
+        <C.UploadIcon></C.UploadIcon>
         <C.InstructionText>
           Arraste uma foto ou <C.HighlightText>clique para selecionar</C.HighlightText>
         </C.InstructionText>
@@ -373,7 +373,7 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
         <C.ImagePreview>
           <C.PreviewImage src={previewUrl} alt="Preview do comprovante" />
           <C.RemoveButton onClick={handleRemove} title="Remover imagem">
-            ✕
+            
           </C.RemoveButton>
         </C.ImagePreview>
       )}
@@ -381,7 +381,7 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
       {/* Indicador de análise */}
       {isAnalyzing && (
         <C.AnalysisResult>
-          <C.AnalysisTitle>🔍 {analysisProgress}</C.AnalysisTitle>
+          <C.AnalysisTitle> {analysisProgress}</C.AnalysisTitle>
         </C.AnalysisResult>
       )}
 
@@ -389,7 +389,7 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
       {analysisResult && (
         <C.AnalysisResult>
           <C.AnalysisTitle>
-            ✅ Dados Identificados
+             Dados Identificados
             <C.EditHint>(edite antes de confirmar)</C.EditHint>
           </C.AnalysisTitle>
 
@@ -445,14 +445,14 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
                 onClick={() => { setEditableType('income'); setError(null); }}
                 aria-pressed={editableType === 'income'}
               >
-                📈 Entrada
+                 Entrada
               </C.IncomeButton>
               <C.ExpenseButton
                 $active={editableType === 'expense'}
                 onClick={() => { setEditableType('expense'); setError(null); }}
                 aria-pressed={editableType === 'expense'}
               >
-                📉 Saída
+                 Saída
               </C.ExpenseButton>
             </C.TypeButtons>
           </C.AnalysisField>

@@ -14,6 +14,7 @@ import { getExampleMessages, parseTransactionFromMessage } from '../../../utils/
 import { detectCommand, executeCommand } from '../../../utils/chatCommands';
 import { generateSummary, generateAnalysis } from '../../../utils/analysisEngine';
 import { parseReceiptText, getReceiptResponse } from '../../../utils/receiptParser';
+import { Send } from 'lucide-react';
 import { buildFinancialContext, streamAdvisor } from '../../../services/financialAdvisorService';
 import * as C from './styles';
 import type { Transaction } from '../../../types';
@@ -107,20 +108,20 @@ const TransactionChat: React.FC = () => {
     setMessages([
       {
         id: 'welcome',
-        text: 'Olá! Sou seu assistente financeiro com IA. 💬\n\n' +
-          '📝 Para adicionar transações:\n' +
+        text: 'Olá! Sou seu assistente financeiro com IA. \n\n' +
+          ' Para adicionar transações:\n' +
           '• "Mercado ontem 150,50"\n' +
           '• "Recebi 4k de salário"\n\n' +
-          '📅 Para contas recorrentes:\n' +
+          ' Para contas recorrentes:\n' +
           '• "conta recorrente cartão nubank 1500 dia 10"\n' +
           '• "contas recorrentes" — listar todas\n' +
           '• "gerar contas" — criar transações do mês\n\n' +
-          '📂 Para criar categorias:\n' +
+          ' Para criar categorias:\n' +
           '• "criar categoria [nome]"\n\n' +
-          '📊 Para ver análises:\n' +
+          ' Para ver análises:\n' +
           '• "Como estão meus gastos?"\n' +
           '• "Posso viajar este mês?"\n\n' +
-          '❓ Pergunte qualquer coisa sobre suas finanças!',
+          ' Pergunte qualquer coisa sobre suas finanças!',
         isUser: false,
         timestamp: new Date(),
       },
@@ -219,16 +220,16 @@ const TransactionChat: React.FC = () => {
 
           await addTransaction(transactionData);
           addMessage(
-            `✅ Transação criada!\n` +
-            `📝 ${transactionData.description}\n` +
-            `💰 R$ ${transactionData.amount.toFixed(2).replace('.', ',')}\n` +
-            `📅 ${formatDateBR(transactionData.date)}\n` +
-            `🏷️ ${matchCat.name}`,
+            ` Transação criada!\n` +
+            ` ${transactionData.description}\n` +
+            ` R$ ${transactionData.amount.toFixed(2).replace('.', ',')}\n` +
+            ` ${formatDateBR(transactionData.date)}\n` +
+            ` ${matchCat.name}`,
             false
           );
         } else {
           addMessage(
-            `📝 Texto reconhecido mas sem categoria.\n` +
+            ` Texto reconhecido mas sem categoria.\n` +
             `Crie uma com "criar categoria [nome]"`,
             false
           );
@@ -286,12 +287,12 @@ const TransactionChat: React.FC = () => {
         }
 
         addMessage(
-          `✅ Transação registrada!\n` +
-          `📝 ${transactionData.description}\n` +
-          `💰 R$ ${transactionData.amount.toFixed(2).replace('.', ',')}\n` +
-          `📅 ${formatDateBR(transactionData.date)}\n` +
-          `🏷️ ${matchCat.name}` +
-          (installmentCount > 0 ? `\n📋 Total: R$ ${parsed.valor.toFixed(2).replace('.', ',')} (${installmentCount}x)\n📌 Parcelado criado em "Parcelados" (${installmentCount}x de R$ ${perInstallment.toFixed(2).replace('.', ',')})` : ''),
+          ` Transação registrada!\n` +
+          ` ${transactionData.description}\n` +
+          ` R$ ${transactionData.amount.toFixed(2).replace('.', ',')}\n` +
+          ` ${formatDateBR(transactionData.date)}\n` +
+          ` ${matchCat.name}` +
+          (installmentCount > 0 ? `\n Total: R$ ${parsed.valor.toFixed(2).replace('.', ',')} (${installmentCount}x)\n Parcelado criado em "Parcelados" (${installmentCount}x de R$ ${perInstallment.toFixed(2).replace('.', ',')})` : ''),
           false
         );
         setIsProcessing(false);
@@ -349,7 +350,7 @@ const TransactionChat: React.FC = () => {
     const parsedAmount = parseFloat(amount.replace(',', '.'));
     
     if (isNaN(parsedAmount) || parsedAmount <= 0) {
-      addMessage('❌ Valor inválido. Verifique o valor digitado.', false);
+      addMessage(' Valor inválido. Verifique o valor digitado.', false);
       return;
     }
 
@@ -366,13 +367,13 @@ const TransactionChat: React.FC = () => {
 
     try {
       await addTransaction(transactionData);
-      const label = type === 'income' ? '📈 Entrada' : '📉 Saída';
+      const label = type === 'income' ? ' Entrada' : ' Saída';
       addMessage(
-        `✅ Transação criada!\n` +
+        ` Transação criada!\n` +
         `${label}: ${description}\n` +
-        `💰 R$ ${parsedAmount.toFixed(2).replace('.', ',')}\n` +
-        `📅 ${formatDateBR(transactionData.date)}\n` +
-        `🏷️ ${categories.find(c => c.id === categoryId)?.name || ''}`,
+        ` R$ ${parsedAmount.toFixed(2).replace('.', ',')}\n` +
+        ` ${formatDateBR(transactionData.date)}\n` +
+        ` ${categories.find(c => c.id === categoryId)?.name || ''}`,
         false
       );
     } catch (error: unknown) {
@@ -424,7 +425,7 @@ const TransactionChat: React.FC = () => {
     }
 
     setIsProcessing(true);
-    addMessage('🔍 Analisando comprovante...', false);
+    addMessage(' Analisando comprovante...', false);
 
     try {
       const ocrResult = await extractTextFromImage(file, 'por');
@@ -467,7 +468,7 @@ const TransactionChat: React.FC = () => {
           setMessages((prev) =>
             prev.map((m) =>
               m.id === aiMsg.id
-                ? { ...m, text: '❌ Não consegui interpretar o comprovante. Por favor, digite manualmente.\nEx: "Mercado 150,50"' }
+                ? { ...m, text: ' Não consegui interpretar o comprovante. Por favor, digite manualmente.\nEx: "Mercado 150,50"' }
                 : m
             )
           );
@@ -503,18 +504,18 @@ const TransactionChat: React.FC = () => {
         });
 
         addMessage(
-          `✅ Dados identificados (edite antes de confirmar):\n\n` +
-          `💰 Valor: R$ ${amountStr}\n` +
-          `📅 Data: ${receiptDate ? formatDateBR(receiptDate + 'T12:00:00') : 'Hoje'}\n` +
-          `🏷️ Categoria: ${matchCat.name}\n` +
-          `📝 Descrição: ${description}\n\n` +
+          ` Dados identificados (edite antes de confirmar):\n\n` +
+          ` Valor: R$ ${amountStr}\n` +
+          ` Data: ${receiptDate ? formatDateBR(receiptDate + 'T12:00:00') : 'Hoje'}\n` +
+          ` Categoria: ${matchCat.name}\n` +
+          ` Descrição: ${description}\n\n` +
           `Escolha uma opção:`,
           false
         );
       } else {
         addMessage(
-          `💡 Valor identificado: R$ ${receipt.amount.toFixed(2).replace('.', ',')}\n\n` +
-          `⚠️ Não consegui criar a transação automaticamente.\n` +
+          ` Valor identificado: R$ ${receipt.amount.toFixed(2).replace('.', ',')}\n\n` +
+          ` Não consegui criar a transação automaticamente.\n` +
           `Por favor, crie uma categoria primeiro:\n` +
           `• "criar categoria [nome]"`,
           false
@@ -557,7 +558,7 @@ const TransactionChat: React.FC = () => {
       {/* Cabeçalho */}
       <C.ChatHeader>
         <C.ChatTitle>
-          <C.TitleIcon>💬</C.TitleIcon>
+          <C.TitleIcon></C.TitleIcon>
           Chat Rápido
         </C.ChatTitle>
         {messages.length > 1 && (
@@ -573,7 +574,7 @@ const TransactionChat: React.FC = () => {
             }}
             title="Limpar histórico do chat"
           >
-            🗑️
+            
           </button>
         )}
       </C.ChatHeader>
@@ -602,7 +603,7 @@ const TransactionChat: React.FC = () => {
       {pendingReceiptType && (
         <C.ReceiptForm>
           <C.FormRow>
-            <C.FormLabel>💰 Valor:</C.FormLabel>
+            <C.FormLabel> Valor:</C.FormLabel>
             <C.FormInput
               type="text"
               value={pendingReceiptType.amount}
@@ -611,7 +612,7 @@ const TransactionChat: React.FC = () => {
             />
           </C.FormRow>
           <C.FormRow>
-            <C.FormLabel>📅 Data:</C.FormLabel>
+            <C.FormLabel> Data:</C.FormLabel>
             <C.FormInput
               type="date"
               value={pendingReceiptType.date}
@@ -619,7 +620,7 @@ const TransactionChat: React.FC = () => {
             />
           </C.FormRow>
           <C.FormRow>
-            <C.FormLabel>🏷️ Categoria:</C.FormLabel>
+            <C.FormLabel> Categoria:</C.FormLabel>
             <C.FormSelect
               value={pendingReceiptType.categoryId}
               onChange={(e) => setPendingReceiptType({ ...pendingReceiptType, categoryId: e.target.value })}
@@ -630,7 +631,7 @@ const TransactionChat: React.FC = () => {
             </C.FormSelect>
           </C.FormRow>
           <C.FormRow>
-            <C.FormLabel>📝 Descrição:</C.FormLabel>
+            <C.FormLabel> Descrição:</C.FormLabel>
             <C.FormInput
               type="text"
               value={pendingReceiptType.description}
@@ -640,10 +641,10 @@ const TransactionChat: React.FC = () => {
           </C.FormRow>
           <C.TypeButtons>
             <C.IncomeButton onClick={() => handleReceiptConfirm('income')}>
-              📈 Entrada
+               Entrada
             </C.IncomeButton>
             <C.ExpenseButton onClick={() => handleReceiptConfirm('expense')}>
-              📉 Saída
+               Saída
             </C.ExpenseButton>
           </C.TypeButtons>
         </C.ReceiptForm>
@@ -656,7 +657,7 @@ const TransactionChat: React.FC = () => {
           htmlFor="chat-image-upload"
           title="Enviar foto de comprovante"
         >
-          <C.UploadIcon>📷</C.UploadIcon>
+          <C.UploadIcon></C.UploadIcon>
         </C.UploadButton>
         <input
           type="file"
@@ -682,7 +683,7 @@ const TransactionChat: React.FC = () => {
           disabled={!inputValue.trim() || isProcessing || !!pendingReceiptType}
           aria-label="Enviar mensagem"
         >
-          <C.SendIcon>➤</C.SendIcon>
+          <C.SendIcon><Send size={16} /></C.SendIcon>
         </C.SendButton>
       </C.InputContainer>
 

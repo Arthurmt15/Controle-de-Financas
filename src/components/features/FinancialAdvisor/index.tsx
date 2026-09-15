@@ -133,7 +133,7 @@ const FinancialAdvisor: React.FC = () => {
   return (
     <C.Container>
       <C.Header>
-        <C.HeaderIcon>🤖</C.HeaderIcon>
+        <C.HeaderIcon></C.HeaderIcon>
         <div>
           <C.Title>Consultor Financeiro</C.Title>
           <C.Subtitle>IA analisa seus dados reais</C.Subtitle>
@@ -143,7 +143,7 @@ const FinancialAdvisor: React.FC = () => {
       <C.MessagesArea>
         {messages.length === 0 && (
           <C.Welcome>
-            <C.WelcomeIcon>💡</C.WelcomeIcon>
+            <C.WelcomeIcon></C.WelcomeIcon>
             <C.WelcomeTitle>Olá! Sou seu consultor financeiro.</C.WelcomeTitle>
             <C.WelcomeText>
               Analiso seus dados reais para dar conselhos personalizados.
@@ -171,7 +171,7 @@ const FinancialAdvisor: React.FC = () => {
             >
               {msg.role === 'user' || !msg.content
                 ? msg.content ||
-                  (isStreaming && msg.role === 'assistant' ? '⏳ Pensando...' : '')
+                  (isStreaming && msg.role === 'assistant' ? ' Pensando...' : '')
                 : null}
             </C.MessageBubble>
             <C.MessageTime>
@@ -195,7 +195,7 @@ const FinancialAdvisor: React.FC = () => {
           disabled={isStreaming}
         />
         <C.SendButton type="submit" disabled={!input.trim() || isStreaming}>
-          {isStreaming ? '⏳' : '➤'}
+          {isStreaming ? '' : '>'}
         </C.SendButton>
       </C.InputForm>
     </C.Container>

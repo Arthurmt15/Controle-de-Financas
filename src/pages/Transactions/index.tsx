@@ -29,13 +29,13 @@ const TransactionsPage: React.FC = () => {
           $isActive={activeTab === 'chat'}
           onClick={() => setActiveTab('chat')}
         >
-          💬 Chat Rápido
+           Chat Rápido
         </C.Tab>
         <C.Tab
           $isActive={activeTab === 'form'}
           onClick={() => setActiveTab('form')}
         >
-          📝 Formulário
+           Formulário
         </C.Tab>
       </C.TabContainer>
 

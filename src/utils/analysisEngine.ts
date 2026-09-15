@@ -30,7 +30,7 @@ export function generateSummary(
   const monthName = getMonthAbbreviation(now.getMonth());
 
   if (monthly.length === 0) {
-    return `📊 Nenhuma transação encontrada para ${monthName}. Adicione uma transação primeiro!`;
+    return ` Nenhuma transação encontrada para ${monthName}. Adicione uma transação primeiro!`;
   }
 
   const income = monthly
@@ -41,16 +41,16 @@ export function generateSummary(
     .reduce((s, t) => s + t.amount, 0);
   const balance = income - expense;
 
-  const balanceIcon = balance >= 0 ? '💚' : '🔴';
+  const balanceIcon = balance >= 0 ? '' : '';
   const balanceText = balance >= 0 ? 'Saldo positivo' : 'Saldo negativo';
 
   return (
-    `📊 Resumo de ${monthName}\n` +
+    ` Resumo de ${monthName}\n` +
     `━━━━━━━━━━━━━━━━━━\n` +
-    `📈 Entradas: ${currency(income)}\n` +
-    `📉 Saídas: ${currency(expense)}\n` +
+    ` Entradas: ${currency(income)}\n` +
+    ` Saídas: ${currency(expense)}\n` +
     `${balanceIcon} Saldo: ${currency(balance)} (${balanceText})\n` +
-    `📝 ${monthly.length} transação(ões) no período`
+    ` ${monthly.length} transação(ões) no período`
   );
 }
 
@@ -67,7 +67,7 @@ export function generateAnalysis(
   const monthName = getMonthAbbreviation(now.getMonth());
 
   if (monthly.length === 0) {
-    return `📊 Nenhuma transação encontrada para ${monthName}. Adicione transações para ver a análise!`;
+    return ` Nenhuma transação encontrada para ${monthName}. Adicione transações para ver a análise!`;
   }
 
   const income = monthly
@@ -112,12 +112,12 @@ export function generateAnalysis(
   // Maior gasto
   if (sortedCategories.length > 0) {
     const top = sortedCategories[0];
-    insights.push(`🎯 Maior gasto: ${top.name} (${top.percent.toFixed(0)}% do total)`);
+    insights.push(` Maior gasto: ${top.name} (${top.percent.toFixed(0)}% do total)`);
   }
 
   // Saldo negativo
   if (income > 0 && expense > income) {
-    insights.push(`⚠️ Saldo negativo! Gastos superam receitas em ${currency(expense - income)}`);
+    insights.push(` Saldo negativo! Gastos superam receitas em ${currency(expense - income)}`);
   }
 
   // Gastos concentrados
@@ -125,7 +125,7 @@ export function generateAnalysis(
     const topTwo = sortedCategories[0].total + sortedCategories[1].total;
     const topTwoPercent = expense > 0 ? (topTwo / expense) * 100 : 0;
     if (topTwoPercent > 60) {
-      insights.push(`📊 Gastos concentrados: ${sortedCategories[0].name} + ${sortedCategories[1].name} = ${topTwoPercent.toFixed(0)}%`);
+      insights.push(` Gastos concentrados: ${sortedCategories[0].name} + ${sortedCategories[1].name} = ${topTwoPercent.toFixed(0)}%`);
     }
   }
 
@@ -133,11 +133,11 @@ export function generateAnalysis(
   if (sortedCategories.length > 0) {
     const top = sortedCategories[0];
     const saveAmount = top.total * 0.1;
-    insights.push(`💡 Se reduzir 10% em ${top.name}, economiza ${currency(saveAmount)}/mês`);
+    insights.push(` Se reduzir 10% em ${top.name}, economiza ${currency(saveAmount)}/mês`);
   }
 
   const insightsText = insights.length > 0
-    ? `\n\n💡 Insights:\n${insights.map(i => `  ${i}`).join('\n')}`
+    ? `\n\n Insights:\n${insights.map(i => `  ${i}`).join('\n')}`
     : '';
 
   const yearlyIncome = yearly
@@ -148,14 +148,14 @@ export function generateAnalysis(
     .reduce((s, t) => s + t.amount, 0);
 
   return (
-    `📊 Análise de ${monthName}\n` +
+    ` Análise de ${monthName}\n` +
     `━━━━━━━━━━━━━━━━━━\n\n` +
-    `📈 Entradas: ${currency(income)}\n` +
-    `📉 Saídas: ${currency(expense)}\n` +
-    `💰 Saldo: ${currency(balance)}\n\n` +
-    `📂 Gastos por categoria:\n${categoryBars}\n` +
+    ` Entradas: ${currency(income)}\n` +
+    ` Saídas: ${currency(expense)}\n` +
+    ` Saldo: ${currency(balance)}\n\n` +
+    ` Gastos por categoria:\n${categoryBars}\n` +
     `${insightsText}\n\n` +
-    `📅 Acumulado do ano:\n` +
+    ` Acumulado do ano:\n` +
     `  Entradas: ${currency(yearlyIncome)}\n` +
     `  Saídas: ${currency(yearlyExpense)}\n` +
     `  Saldo: ${currency(yearlyIncome - yearlyExpense)}`
@@ -196,17 +196,17 @@ export function generateTrendAnalysis(
   const currentName = getMonthAbbreviation(currentMonth);
   const prevName = getMonthAbbreviation(prevMonth);
 
-  const incomeArrow = incomeChange >= 0 ? '📈' : '📉';
-  const expenseArrow = expenseChange >= 0 ? '📈' : '📉';
+  const incomeArrow = incomeChange >= 0 ? '' : '';
+  const expenseArrow = expenseChange >= 0 ? '' : '';
   const incomeSign = incomeChange >= 0 ? '+' : '';
   const expenseSign = expenseChange >= 0 ? '+' : '';
 
   return (
-    `📊 Comparativo: ${currentName} vs ${prevName}\n` +
+    ` Comparativo: ${currentName} vs ${prevName}\n` +
     `━━━━━━━━━━━━━━━━━━\n\n` +
-    `📈 Entradas ${currentName}: ${currency(currentIncome)}\n` +
+    ` Entradas ${currentName}: ${currency(currentIncome)}\n` +
     `   ${incomeArrow} ${incomeSign}${incomeChange.toFixed(1)}% vs ${prevName}\n\n` +
-    `📉 Saídas ${currentName}: ${currency(currentExpense)}\n` +
+    ` Saídas ${currentName}: ${currency(currentExpense)}\n` +
     `   ${expenseArrow} ${expenseSign}${expenseChange.toFixed(1)}% vs ${prevName}`
   );
 }

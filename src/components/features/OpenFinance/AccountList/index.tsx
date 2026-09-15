@@ -49,13 +49,13 @@ function formatCurrency(amount: number): string {
  */
 function getAccountTypeIcon(type: string): string {
   const icons: Record<string, string> = {
-    CHECKING: '🏦',
-    SAVINGS: '💰',
-    CREDIT_CARD: '💳',
-    INVESTMENT: '📈',
-    LOAN: '📋',
+    CHECKING: '',
+    SAVINGS: '',
+    CREDIT_CARD: '',
+    INVESTMENT: '',
+    LOAN: '',
   };
-  return icons[type] || '🏦';
+  return icons[type] || '';
 }
 
 /**

@@ -53,7 +53,7 @@ const SpendingInsights: React.FC<SpendingInsightsProps> = ({ transactions, categ
       result.push({
         id: 'top-category',
         type: 'alert',
-        icon: '🎯',
+        icon: '',
         title: `Maior gasto: ${top.name}`,
         text: `${formatCurrency(top.value)} (${percent}% do total) vão para ${top.name}. Considere revisar gastos nessa categoria.`,
       });
@@ -65,7 +65,7 @@ const SpendingInsights: React.FC<SpendingInsightsProps> = ({ transactions, categ
       result.push({
         id: 'negative-balance',
         type: 'alert',
-        icon: '⚠️',
+        icon: '',
         title: 'Saldo negativo este mês',
         text: `Você gastou ${formatCurrency(deficit)} a mais do que recebeu. Reduza despesas ou aumente a receita para equilibrar.`,
       });
@@ -79,7 +79,7 @@ const SpendingInsights: React.FC<SpendingInsightsProps> = ({ transactions, categ
         result.push({
           id: 'concentrated',
           type: 'warning',
-          icon: '📊',
+          icon: '',
           title: 'Gastos concentrados',
           text: `${sortedCategories[0].name} e ${sortedCategories[1].name} representam ${topTwoPercent.toFixed(0)}% dos seus gastos. Diversificar pode reduzir riscos.`,
         });
@@ -94,7 +94,7 @@ const SpendingInsights: React.FC<SpendingInsightsProps> = ({ transactions, categ
         result.push({
           id: 'save-tip',
           type: 'tip',
-          icon: '💡',
+          icon: '',
           title: 'Dica: Reduza 10% no maior gasto',
           text: `Se reduzir 10% em ${maxCategory.name}, economiza ${formatCurrency(reduceAmount)} por mês (${formatCurrency(reduceAmount * 12)} por ano).`,
         });
@@ -121,7 +121,7 @@ const SpendingInsights: React.FC<SpendingInsightsProps> = ({ transactions, categ
       result.push({
         id: 'many-small',
         type: 'info',
-        icon: '📋',
+        icon: '',
         title: 'Vários gastos pequenos',
         text: `${lowCategories.length} categorias representam menos de 5% cada. Gastos pequenos somam: ${formatCurrency(lowCategories.reduce((s, c) => s + c.value, 0))}.`,
       });
@@ -136,7 +136,7 @@ const SpendingInsights: React.FC<SpendingInsightsProps> = ({ transactions, categ
         <C.SectionTitle>Insights</C.SectionTitle>
         <C.SectionDescription>Análise automática dos seus gastos</C.SectionDescription>
         <C.EmptyState>
-          <span>📊</span>
+          <span></span>
           <p>Adicione transações para gerar insights personalizados</p>
         </C.EmptyState>
       </C.Section>
