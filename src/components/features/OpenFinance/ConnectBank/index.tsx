@@ -8,7 +8,9 @@ import React, { useEffect, useState, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { PlugZap, Loader2, AlertCircle, ShieldCheck, X, Smartphone, Monitor, QrCode, Copy, Check, ArrowRight, ExternalLink, RefreshCw } from 'lucide-react';
 import { useOpenFinance } from '../../../../contexts/OpenFinanceContext';
+import { useAuth } from '../../../../contexts/AuthContext';
 import { getConnectToken } from '../../../../services/openFinanceService';
+import { supabase } from '../../../../lib/supabase';
 import { Card, CardContent } from '../../../ui/card';
 import { Button } from '../../../ui/button';
 import { Badge } from '../../../ui/badge';
@@ -30,6 +32,7 @@ function isDesktopDevice(): boolean {
 
 const ConnectBank: React.FC<ConnectBankProps> = ({ onSuccess, onError, onClose }) => {
   const { addItem } = useOpenFinance();
+  const { isAuthenticated, isLoading: authLoading } = useAuth();
   const [connectToken, setConnectToken] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -58,12 +61,17 @@ const ConnectBank: React.FC<ConnectBankProps> = ({ onSuccess, onError, onClose }
   }, []);
 
   useEffect(() => {
+    if (authLoading) return;
+    if (!isAuthenticated) {
+      setLoading(false);
+      setError('Você precisa estar logado para conectar seu banco. Faça login e tente novamente.');
+      return;
+    }
     let cancelled = false;
     async function loadToken() {
       setLoading(true);
       setError(null);
       try {
-        // timeout de 10s para não ficar em loading infinito no mobile
         const timeout = new Promise<never>((_, reject) => setTimeout(() => reject(new Error('timeout')), 10000));
         const token = await Promise.race([getConnectToken(), timeout]) as Awaited<ReturnType<typeof getConnectToken>>;
         if (!cancelled) setConnectToken(token.accessToken);
@@ -79,7 +87,7 @@ const ConnectBank: React.FC<ConnectBankProps> = ({ onSuccess, onError, onClose }
     }
     loadToken();
     return () => { cancelled = true; };
-  }, [onError]);
+  }, [onError, isAuthenticated, authLoading]);
 
   useEffect(() => {
     if (!connectToken || !showWidget) return;
@@ -125,6 +133,14 @@ const ConnectBank: React.FC<ConnectBankProps> = ({ onSuccess, onError, onClose }
     getConnectToken().then(t => { setConnectToken(t.accessToken); setLoading(false); }).catch((e: any) => { const m = e?.message || 'Erro ao gerar token de conexão'; setError(m); onError(m); setLoading(false); });
   };
 
+  const handleLoginAgain = async () => {
+    try {
+      await supabase.auth.signInWithOAuth({ provider: 'google', options: { redirectTo: `${window.location.origin}/` } });
+    } catch (e: any) {
+      toast.error(e?.message || 'Erro ao iniciar login');
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex flex-col items-center justify-center py-8 gap-3 text-muted-foreground">
@@ -159,13 +175,22 @@ const ConnectBank: React.FC<ConnectBankProps> = ({ onSuccess, onError, onClose }
               {error?.includes('Supabase não configurado') && (
                 <p className="text-xs text-red-600/80 dark:text-red-400 mt-1.5 leading-relaxed">Configure REACT_APP_SUPABASE_URL e REACT_APP_SUPABASE_ANON_KEY na Vercel → Project Settings → Environment Variables.</p>
               )}
+              {error?.toLowerCase().includes('autenticado') && (
+                <p className="text-xs text-red-600/80 dark:text-red-400 mt-1.5 leading-relaxed">Sua sessão expirou ou não foi reconhecida. Faça login novamente para gerar a conexão segura.</p>
+              )}
             </div>
           </CardContent>
         </Card>
         <div className="flex gap-2">
-          <Button onClick={handleRetry} className="flex-1 rounded-xl gap-1.5">
-            <RefreshCw className="h-4 w-4" /> Tentar novamente
-          </Button>
+          {error?.toLowerCase().includes('autenticado') ? (
+            <Button onClick={handleLoginAgain} className="flex-1 rounded-xl gap-1.5">
+              <PlugZap className="h-4 w-4" /> Fazer login novamente
+            </Button>
+          ) : (
+            <Button onClick={handleRetry} className="flex-1 rounded-xl gap-1.5">
+              <RefreshCw className="h-4 w-4" /> Tentar novamente
+            </Button>
+          )}
           <Button variant="outline" onClick={onClose} className="rounded-xl">
             <X className="mr-2 h-4 w-4" /> Fechar
           </Button>

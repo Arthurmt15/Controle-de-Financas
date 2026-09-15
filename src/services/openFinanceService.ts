@@ -29,7 +29,23 @@ async function callEdgeFunction<T>(
     throw new Error('Supabase não configurado (REACT_APP_SUPABASE_URL ausente). Configure as envs na Vercel.');
   }
 
-  const { data: { session } } = await supabase.auth.getSession();
+  // Aguarda sessão ficar pronta (AuthProvider pode estar hidratando)
+  let session: any = null;
+  for (let i = 0; i < 3; i++) {
+    const { data: { session: s } } = await supabase.auth.getSession();
+    if (s?.access_token) { session = s; break; }
+    // tenta refresh silencioso
+    try { const { data: { session: rs } } = await supabase.auth.refreshSession(); if (rs?.access_token) { session = rs; break; } } catch {}
+    if (i < 2) await new Promise(r => setTimeout(r, 400));
+  }
+  if (!session?.access_token) {
+    // fallback: pega do localStorage do supabase (sb-...-auth-token)
+    try {
+      const raw = localStorage.getItem(`sb-${new URL(baseUrl).hostname.split('.')[0]}-auth-token`) || '';
+      const parsed = raw ? JSON.parse(raw) : null;
+      if (parsed?.access_token) session = { access_token: parsed.access_token };
+    } catch {}
+  }
   const url = `${baseUrl}/functions/v1/${functionName}${subPath}`;
 
   const headers: Record<string, string> = {
