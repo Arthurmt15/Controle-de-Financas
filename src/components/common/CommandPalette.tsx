@@ -28,7 +28,7 @@ export const CommandPalette: React.FC<{ open: boolean; onOpenChange: (o: boolean
   if (!open) return null;
   return (
     <div className="fixed inset-0 z-[100] flex items-start justify-center pt-[20vh] p-4 bg-black/40 backdrop-blur-sm" onClick={() => onOpenChange(false)}>
-      <div onClick={(e) => e.stopPropagation()} className="w-full max-w-lg rounded-2xl border bg-white shadow-2xl overflow-hidden">
+      <div onClick={(e) => e.stopPropagation()} className="w-full max-w-lg rounded-2xl border bg-popover text-popover-foreground shadow-2xl overflow-hidden">
         <Command className="p-0">
           <div className="flex items-center gap-2 px-3 border-b">
             <Search size={16} className="text-muted-foreground" />

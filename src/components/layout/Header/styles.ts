@@ -5,14 +5,15 @@ export const Container = styled.header`
   position: sticky; top: 0; z-index: 50;
   display: flex; align-items: center; justify-content: space-between;
   padding: 10px 20px;
-  background: rgba(255,255,255,0.82);
+  background: ${({ theme }) => theme.type === 'dark' ? 'rgba(17,26,51,0.78)' : 'rgba(255,255,255,0.82)'};
   backdrop-filter: blur(16px) saturate(180%);
   -webkit-backdrop-filter: blur(16px) saturate(180%);
-  border-bottom: 1px solid rgba(0,0,0,0.06);
-  box-shadow: 0 1px 0 rgba(0,0,0,0.03), 0 8px 24px rgba(0,0,0,0.04);
-  &::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,#6366f1 20%,#06b6d4 50%,#8b5cf6 80%,transparent);opacity:0.6}
+  border-bottom: 1px solid ${({ theme }) => theme.colors.border};
+  box-shadow: ${({ theme }) => theme.type === 'dark'
+    ? '0 1px 0 rgba(255,255,255,0.04), 0 8px 24px rgba(0,0,0,0.35)'
+    : '0 1px 0 rgba(0,0,0,0.03), 0 8px 24px rgba(0,0,0,0.04)'};
+  &::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,#6366f1 20%,#06b6d4 50%,#8b5cf6 80%,transparent);opacity:${({ theme }) => theme.type === 'dark' ? 0.45 : 0.6}}
   @media (max-width:640px){padding:8px 12px}
-  .dark &{background:rgba(15,15,35,0.85);border-bottom-color:rgba(255,255,255,0.06)}
 `;
 
 export const LeftSection = styled.div`display:flex;align-items:center;gap:12px;min-width:0`;
@@ -28,7 +29,7 @@ export const NavLink = styled(Link)`
 export const MenuButton = styled.button`
   display:none;align-items:center;justify-content:center;width:40px;height:40px;
   border:none;border-radius:10px;background:transparent;color:${({theme})=>theme.colors.primary};cursor:pointer;
-  &:hover{background:rgba(99,102,241,0.08)} @media(max-width:768px){display:flex}
+  &:hover{background:${({theme})=> theme.type === 'dark' ? 'rgba(99,102,241,0.12)' : 'rgba(99,102,241,0.08)'}} @media(max-width:768px){display:flex}
 `;
 
 export const Logo = styled(Link)`display:flex;align-items:center;gap:10px;text-decoration:none;flex-shrink:0`;
@@ -81,13 +82,13 @@ export const UserEmail = styled.span`font-size:11px;color:${({theme})=>theme.col
 export const LogoutButton = styled.button`
   width:32px;height:32px;display:flex;align-items:center;justify-content:center;
   border:none;border-radius:50%;background:transparent;color:${({theme})=>theme.colors.textSecondary};cursor:pointer;
-  &:hover{background:${({theme})=>theme.colors.error}14;color:${({theme})=>theme.colors.error}}
+  &:hover{background:${({theme})=>theme.type === 'dark' ? 'rgba(248,113,113,0.12)' : 'rgba(220,38,38,0.08)'};color:${({theme})=>theme.colors.error}}
 `;
 
 export const MobileOverlay = styled.div<{ $isOpen: boolean }>`
   display:none;@media(max-width:768px){
     display:${({$isOpen})=>($isOpen?'block':'none')};position:fixed;inset:0;
-    background:rgba(0,0,0,0.4);backdrop-filter:blur(8px);z-index:200;
+    background:rgba(2,6,23,0.45);backdrop-filter:blur(8px);z-index:200;
   }
 `;
 export const MobileMenu = styled.nav<{ $isOpen: boolean }>`
@@ -95,7 +96,7 @@ export const MobileMenu = styled.nav<{ $isOpen: boolean }>`
     display:flex;flex-direction:column;position:fixed;top:0;left:0;width:300px;max-width:85vw;height:100vh;height:100dvh;
     background:${({theme})=>theme.colors.surface};border-right:1px solid ${({theme})=>theme.colors.border};
     z-index:201;padding:16px;gap:4px;transform:translateX(${({$isOpen})=>($isOpen?'0':'-100%')});transition:transform 0.28s cubic-bezier(0.32,0.72,0,1);
-    box-shadow:16px 0 40px rgba(0,0,0,0.12);
+    box-shadow:${({theme})=> theme.type === 'dark' ? '16px 0 40px rgba(0,0,0,0.45)' : '16px 0 40px rgba(0,0,0,0.12)'};
   }
 `;
 export const MobileNavLink = styled(Link)`

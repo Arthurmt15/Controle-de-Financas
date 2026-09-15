@@ -246,7 +246,7 @@ const TransactionList: React.FC = () => {
                         <span className={`w-2 h-2 rounded-full shrink-0 ${transaction.type === 'expense' ? 'bg-red-500' : 'bg-emerald-500'}`} />
                         <span className="text-sm font-semibold truncate">{transaction.description}</span>
                       </div>
-                      <span className={`text-sm font-bold shrink-0 ${transaction.type === 'expense' ? 'text-red-600' : 'text-emerald-600'}`}>
+                      <span className={`text-sm font-bold shrink-0 ${transaction.type === 'expense' ? 'text-red-600 dark:text-red-400' : 'text-emerald-600 dark:text-emerald-400'}`}>
                         {transaction.type === 'expense' ? '-' : '+'} {formatCurrency(transaction.amount)}
                       </span>
                     </div>

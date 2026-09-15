@@ -14,6 +14,23 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap" rel="stylesheet">
     <title>Finanças</title>
+    <script>
+      (function() {
+        try {
+          var t = localStorage.getItem('financas_theme');
+          if (t) t = JSON.parse(t);
+          var isDark = t ? t === 'dark' : window.matchMedia('(prefers-color-scheme: dark)').matches;
+          var html = document.documentElement;
+          html.classList.add('theme-loading');
+          if (isDark) html.classList.add('dark');
+          html.style.colorScheme = isDark ? 'dark' : 'light';
+          document.addEventListener('DOMContentLoaded', function() {
+            var meta = document.querySelector('meta[name="theme-color"]');
+            if (meta) meta.setAttribute('content', isDark ? '#0a0f1e' : '#6366f1');
+          });
+        } catch(e) {}
+      })();
+    </script>
   </head>
   <body>
     <noscript>Você precisa habilitar JavaScript para usar este app.</noscript>

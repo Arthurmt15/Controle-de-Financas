@@ -71,10 +71,10 @@ const LoginPage: React.FC = () => {
     const isDark = themeType === 'dark';
     return {
       container: isDark
-        ? 'min-h-screen grid grid-cols-1 lg:grid-cols-2 bg-[#0f0f23]'
+        ? 'min-h-screen grid grid-cols-1 lg:grid-cols-2 bg-[#0a0f1e]'
         : 'min-h-screen grid grid-cols-1 lg:grid-cols-2 bg-[#f5f5f5]',
       hero: isDark
-        ? 'hidden lg:flex items-center p-20 bg-gradient-to-br from-[#0f0f23] to-[#080b16]'
+        ? 'hidden lg:flex items-center p-20 bg-gradient-to-br from-[#0a0f1e] to-[#0d1328]'
         : 'hidden lg:flex items-center p-20 bg-gradient-to-br from-[#f5f5f5] to-[#e8e8e8]',
       logo: isDark
         ? 'w-16 h-16 flex items-center justify-center rounded-2xl bg-gradient-to-br from-[#6366f1] to-[#8b5cf6] shadow-[0_0_35px_rgba(99,102,241,0.35)]'
@@ -88,13 +88,13 @@ const LoginPage: React.FC = () => {
       featureDesc: 'text-gray-400 text-xs',
       loginSection: 'flex items-center justify-center p-8 lg:p-16 relative overflow-hidden',
       loginCard: isDark
-        ? 'w-full max-w-[480px] p-8 lg:p-10 bg-[rgba(14,18,32,0.9)] backdrop-blur-xl border border-white/[0.08] rounded-[28px] shadow-[0_20px_80px_rgba(0,0,0,0.5),inset_0_1px_0_rgba(255,255,255,0.06)] relative'
+        ? 'w-full max-w-[480px] p-8 lg:p-10 bg-[rgba(17,26,51,0.92)] backdrop-blur-xl border border-white/[0.08] rounded-[28px] shadow-[0_20px_80px_rgba(0,0,0,0.55),inset_0_1px_0_rgba(255,255,255,0.06)] relative'
         : 'w-full max-w-[480px] p-8 lg:p-10 bg-white/80 backdrop-blur-xl border border-black/[0.06] rounded-[28px] shadow-[0_20px_80px_rgba(15,23,42,0.08),inset_0_1px_0_rgba(255,255,255,0.7)] relative',
       title: isDark ? 'text-white text-3xl font-bold' : 'text-gray-900 text-3xl font-bold',
       subtitle: 'text-gray-400 text-base',
       registerText: 'text-gray-500 text-xs',
-      registerLink: 'text-[#6366f1] text-xs hover:text-white',
-      themeButton: `absolute top-4 right-4 w-10 h-10 rounded-full border-none bg-white flex items-center justify-center cursor-pointer hover:scale-110 shadow-lg`,
+      registerLink: 'text-[#6366f1] text-xs hover:text-[#4f46e5] dark:hover:text-white font-medium transition-colors',
+      themeButton: `absolute top-4 right-4 w-10 h-10 rounded-full border bg-card flex items-center justify-center cursor-pointer hover:scale-110 shadow-lg hover:border-primary/30 transition-all`,
       googleButton: isDark
         ? 'w-full py-3 px-6 flex items-center justify-center gap-3 bg-white text-gray-900 font-medium rounded-xl hover:bg-gray-100 transition-colors cursor-pointer border-none text-base'
         : 'w-full py-3 px-6 flex items-center justify-center gap-3 bg-white text-gray-900 font-medium rounded-xl hover:bg-gray-100 transition-colors cursor-pointer border border-gray-300 text-base',
@@ -113,7 +113,7 @@ const LoginPage: React.FC = () => {
       <section className={`${classes.hero} relative overflow-hidden`}>
         <div className="absolute -top-24 -left-24 w-[520px] h-[520px] rounded-full blur-[90px] opacity-20 pointer-events-none" style={{ background: 'radial-gradient(circle, #6366f1 0%, transparent 70%)' }} />
         <div className="absolute -bottom-24 -right-24 w-[480px] h-[480px] rounded-full blur-[80px] opacity-15 pointer-events-none" style={{ background: 'radial-gradient(circle, #06b6d4 0%, transparent 70%)' }} />
-        <div className="absolute inset-0 opacity-[0.04]" style={{ backgroundImage: 'linear-gradient(rgba(255,255,255,0.6) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.6) 1px, transparent 1px)', backgroundSize: '32px 32px' }} />
+        <div className="absolute inset-0 opacity-[0.04]" style={{ backgroundImage: themeType === 'dark' ? 'linear-gradient(rgba(255,255,255,0.6) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.6) 1px, transparent 1px)' : 'linear-gradient(rgba(15,23,42,0.08) 1px, transparent 1px), linear-gradient(90deg, rgba(15,23,42,0.08) 1px, transparent 1px)', backgroundSize: '32px 32px' }} />
         <HeroVisual classes={classes} />
       </section>
 

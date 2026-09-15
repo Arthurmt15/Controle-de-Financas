@@ -4,50 +4,133 @@
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 224 71% 4%;
+    --background: 210 40% 98%;
+    --foreground: 222 47% 11%;
     --card: 0 0% 100%;
-    --card-foreground: 224 71% 4%;
+    --card-foreground: 222 47% 11%;
     --popover: 0 0% 100%;
-    --popover-foreground: 224 71% 4%;
+    --popover-foreground: 222 47% 11%;
     --primary: 239 84% 67%;
     --primary-foreground: 0 0% 98%;
     --secondary: 262 83% 58%;
     --secondary-foreground: 0 0% 98%;
-    --muted: 220 14% 96%;
-    --muted-foreground: 220 8% 46%;
-    --accent: 220 14% 96%;
-    --accent-foreground: 220 9% 46%;
+    --muted: 210 40% 96%;
+    --muted-foreground: 215 16% 47%;
+    --accent: 210 40% 96%;
+    --accent-foreground: 222 47% 11%;
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 98%;
-    --border: 220 13% 91%;
-    --input: 220 13% 91%;
+    --border: 214 32% 91%;
+    --input: 214 32% 91%;
     --ring: 239 84% 67%;
     --radius: 0.75rem;
   }
+
+  /* Dark premium — navy profundo com contraste AA+ */
   .dark {
-    --background: 224 71% 4%;
-    --foreground: 210 20% 98%;
-    --card: 224 71% 4%;
-    --card-foreground: 210 20% 98%;
-    --popover: 224 71% 4%;
-    --popover-foreground: 210 20% 98%;
+    --background: 224 50% 8%;
+    --foreground: 228 100% 96%;
+    --card: 227 49% 13%;
+    --card-foreground: 228 100% 96%;
+    --popover: 227 49% 13%;
+    --popover-foreground: 228 100% 96%;
     --primary: 239 84% 67%;
-    --primary-foreground: 210 20% 98%;
+    --primary-foreground: 228 100% 96%;
     --secondary: 262 83% 58%;
-    --secondary-foreground: 210 20% 98%;
-    --muted: 215 27% 17%;
-    --muted-foreground: 217 10% 64%;
-    --accent: 215 27% 17%;
-    --accent-foreground: 210 20% 98%;
-    --destructive: 0 62% 30%;
-    --destructive-foreground: 210 20% 98%;
-    --border: 215 27% 17%;
-    --input: 215 27% 17%;
+    --secondary-foreground: 228 100% 96%;
+    --muted: 222 30% 18%;
+    --muted-foreground: 218 20% 62%;
+    --accent: 222 30% 18%;
+    --accent-foreground: 228 100% 96%;
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 228 100% 96%;
+    --border: 222 28% 18%;
+    --input: 222 30% 18%;
     --ring: 239 84% 67%;
   }
+
+  /* Fallback para quem usa data-theme (compat) */
+  [data-theme='dark'] {
+    color-scheme: dark;
+  }
 }
+
 @layer base {
-  * { @apply border-border; }
-  body { @apply bg-background text-foreground antialiased; }
+  * {
+    @apply border-border;
+  }
+  html {
+    scrollbar-gutter: stable;
+    /* evita flash branco no dark */
+    color-scheme: light dark;
+  }
+  html.dark {
+    color-scheme: dark;
+  }
+  /* bloqueia transição no carregamento inicial para evitar flash */
+  html.theme-loading *,
+  html.theme-loading {
+    transition: none !important;
+  }
+  body {
+    @apply bg-background text-foreground antialiased;
+    font-feature-settings: 'cv02','cv03','cv04','cv11';
+    text-rendering: optimizeLegibility;
+    transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+  }
+
+  /* Seleção com tint indigo, legível nos dois temas */
+  ::selection {
+    background: hsl(239 84% 67% / 0.22);
+  }
+  .dark ::selection {
+    background: hsl(239 84% 67% / 0.35);
+  }
+
+  /* Scrollbar sutil e temática */
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: hsl(var(--border));
+    border-radius: 999px;
+    border: 2px solid hsl(var(--background));
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: hsl(var(--muted-foreground) / 0.35);
+  }
+  .dark ::-webkit-scrollbar-thumb {
+    background: hsl(222 28% 22%);
+    border-color: hsl(var(--background));
+  }
+  .dark ::-webkit-scrollbar-thumb:hover {
+    background: hsl(218 20% 32%);
+  }
+
+  /* Focus ring visível em dark */
+  :focus-visible {
+    outline: 2px solid hsl(var(--ring));
+    outline-offset: 2px;
+  }
+
+  h1, h2, h3 {
+    letter-spacing: -0.02em;
+  }
+}
+
+/* Utilitários de superfície elevada para dark — borda sempre visível */
+@layer utilities {
+  .dark .shadow-sm {
+    box-shadow: 0 1px 2px rgba(0,0,0,0.3), 0 4px 16px rgba(0,0,0,0.35);
+  }
+  .dark .shadow-md {
+    box-shadow: 0 8px 24px rgba(0,0,0,0.4), 0 4px 12px rgba(0,0,0,0.3);
+  }
+  .dark .border {
+    border-color: hsl(var(--border));
+  }
 }

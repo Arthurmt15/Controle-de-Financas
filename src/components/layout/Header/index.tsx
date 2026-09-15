@@ -89,7 +89,7 @@ const Header: React.FC = () => {
           onClick={() => setPaletteOpen(true)}
           aria-label="Buscar (⌘K)"
           title="Buscar (⌘K)"
-          className="hidden md:flex items-center gap-2 pl-3 pr-2 h-9 rounded-full border bg-white text-sm text-muted-foreground hover:bg-accent"
+          className="hidden md:flex items-center gap-2 pl-3 pr-2 h-9 rounded-full border bg-card text-sm text-muted-foreground hover:bg-accent hover:text-accent-foreground shadow-sm"
         >
           <Search size={14} /> <span className="text-xs">Buscar</span> <kbd className="ml-1 hidden lg:inline-flex h-5 items-center rounded border bg-muted px-1.5 text-[10px]">⌘K</kbd>
         </button>

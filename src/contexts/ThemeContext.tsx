@@ -1,7 +1,7 @@
 /**
  * @file contexts/ThemeContext.tsx
- * @description Contexto de tema para alternância claro/escuro e personalização de cores.
- * Gerencia e persiste a preferência visual do usuário.
+ * @description Sistema de tema premium — paleta fintech redesenhada para dark mode impecável.
+ * Light: slate limpo com contraste AA. Dark: navy profundo com hierarquia de superfícies e bordas visíveis.
  */
 
 import React, { createContext, useContext, useCallback, useEffect, useState } from 'react';
@@ -51,44 +51,74 @@ export interface Theme {
   colors: ThemeColors;
   borderRadius: string;
   shadows: { sm: string; md: string; lg: string };
-};
+}
 
 /**
  * Cria tema com cor de destaque personalizada
- * @param base - Cores base do tema (light ou dark)
- * @param accent - Cor de destaque selecionada
- * @returns Theme com cores atualizadas
+ * Paleta dark redesenhada: camadas distintas (bg < surface < hover), borda visível mas sutil,
+ * texto com contraste WCAG AA, sombras profundas com tint indigo para elegância fintech.
  */
 function createTheme(base: 'light' | 'dark', accent: AccentColor): Theme {
   const accentColors = ACCENT_COLORS[accent];
   const isLight = base === 'light';
-  // Paleta fintech distintiva: light com slate-50, dark deep navy com grid sutil
+  if (isLight) {
+    return {
+      type: base,
+      colors: {
+        background: '#f8fafc',
+        surface: '#ffffff',
+        surfaceHover: '#f1f5f9',
+        text: '#0f172a',
+        textSecondary: '#64748b',
+        primary: accentColors.primary,
+        primaryHover: accentColors.primaryHover,
+        secondary: accentColors.secondary,
+        success: '#059669',
+        error: '#dc2626',
+        warning: '#d97706',
+        info: '#2563eb',
+        border: '#e2e8f0',
+        shadow: 'rgba(15,23,42,0.06)',
+        overlay: 'rgba(15,23,42,0.45)',
+        inputBackground: '#ffffff',
+        placeholder: '#94a3b8',
+      },
+      borderRadius: '16px',
+      shadows: {
+        sm: '0 1px 2px rgba(15,23,42,0.04), 0 4px 12px rgba(15,23,42,0.05)',
+        md: '0 4px 16px rgba(15,23,42,0.06), 0 8px 24px rgba(15,23,42,0.07)',
+        lg: '0 12px 40px rgba(15,23,42,0.08)',
+      },
+    };
+  }
+  // ---- DARK: premium navy, não preto chapado ----
   return {
     type: base,
     colors: {
-      background: isLight ? '#fcfcfd' : '#06080f',
-      surface: isLight ? '#ffffff' : '#0e1220',
-      surfaceHover: isLight ? '#f1f5f9' : '#161a2e',
-      text: isLight ? '#0f172a' : '#f1f5f9',
-      textSecondary: isLight ? '#64748b' : '#94a3b8',
+      background: '#0a0f1e',
+      surface: '#111a33',
+      surfaceHover: '#1a2442',
+      text: '#eef2ff',
+      textSecondary: '#8b9bb5',
       primary: accentColors.primary,
       primaryHover: accentColors.primaryHover,
       secondary: accentColors.secondary,
-      success: isLight ? '#059669' : '#10b981',
-      error: isLight ? '#dc2626' : '#f87171',
-      warning: isLight ? '#d97706' : '#fbbf24',
-      info: isLight ? '#2563eb' : '#60a5fa',
-      border: isLight ? '#e2e8f0' : 'rgba(255,255,255,0.08)',
-      shadow: isLight ? 'rgba(15,23,42,0.06)' : 'rgba(0,0,0,0.4)',
-      overlay: isLight ? 'rgba(15,23,42,0.4)' : 'rgba(0,0,0,0.7)',
-      inputBackground: isLight ? '#ffffff' : '#0f1425',
-      placeholder: isLight ? '#94a3b8' : '#64748b',
+      success: '#10b981',
+      error: '#f87171',
+      warning: '#fbbf24',
+      info: '#60a5fa',
+      // borda visível: garante separação de cards em navy profundo
+      border: 'rgba(148,163,184,0.12)',
+      shadow: 'rgba(0,0,0,0.55)',
+      overlay: 'rgba(2,6,23,0.72)',
+      inputBackground: '#0f1a33',
+      placeholder: '#5b6b8a',
     },
     borderRadius: '16px',
     shadows: {
-      sm: isLight ? '0 1px 2px rgba(15,23,42,0.04), 0 4px 12px rgba(15,23,42,0.06)' : '0 1px 2px rgba(0,0,0,0.2), 0 8px 24px rgba(0,0,0,0.3)',
-      md: isLight ? '0 4px 16px rgba(15,23,42,0.06), 0 8px 32px rgba(15,23,42,0.08)' : '0 8px 24px rgba(0,0,0,0.3), 0 16px 48px rgba(0,0,0,0.4)',
-      lg: isLight ? '0 12px 40px rgba(15,23,42,0.08)' : '0 16px 48px rgba(0,0,0,0.5)',
+      sm: '0 1px 2px rgba(0,0,0,0.3), 0 4px 16px rgba(0,0,0,0.35)',
+      md: '0 8px 24px rgba(0,0,0,0.4), 0 4px 12px rgba(0,0,0,0.3)',
+      lg: '0 16px 48px rgba(0,0,0,0.55)',
     },
   };
 }
@@ -108,18 +138,27 @@ const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
 /**
  * Provider de tema
- * Aplica variáveis CSS no elemento raiz para estilização global
- * @param {object} props - Props do provider
- * @param {React.ReactNode} props.children - Componentes filhos
+ * - Sincroniza classe .dark no <html> para Tailwind
+ * - Aplica variáveis CSS para styled-components
+ * - Define color-scheme e meta theme-color
  */
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const [storedTheme, setStoredTheme] = useLocalStorage<ThemeType>('financas_theme', 'light');
   const [storedAccent, setStoredAccent] = useLocalStorage<AccentColor>('financas_accent', 'indigo');
-  const [themeType, setThemeType] = useState<ThemeType>(storedTheme);
+  const [themeType, setThemeType] = useState<ThemeType>(() => {
+    // Hidratação: respeita preferência do sistema se nada salvo
+    if (typeof window !== 'undefined') {
+      const saved = window.localStorage.getItem('financas_theme');
+      if (saved) {
+        try { return JSON.parse(saved) as ThemeType; } catch { /* fallback */ }
+      }
+      if (window.matchMedia('(prefers-color-scheme: dark)').matches) return 'dark';
+    }
+    return storedTheme;
+  });
   const [accentColor, setAccentColorState] = useState<AccentColor>(storedAccent);
   const theme = createTheme(themeType, accentColor);
 
-  /** Alterna entre tema claro e escuro */
   const toggleTheme = useCallback(() => {
     setThemeType((prev) => {
       const newType = prev === 'light' ? 'dark' : 'light';
@@ -128,7 +167,6 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     });
   }, [setStoredTheme]);
 
-  /** Define um tema específico */
   const setTheme = useCallback(
     (type: ThemeType) => {
       setThemeType(type);
@@ -137,7 +175,6 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     [setStoredTheme]
   );
 
-  /** Define a cor de destaque */
   const setAccentColor = useCallback(
     (color: AccentColor) => {
       setAccentColorState(color);
@@ -146,9 +183,18 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     [setStoredAccent]
   );
 
-  // Aplica cores como variáveis CSS no :root
+  // Aplica tema no DOM: classe .dark, color-scheme, CSS vars, meta theme-color
   useEffect(() => {
     const root = document.documentElement;
+    const body = document.body;
+
+    // Tailwind: classe .dark no <html>
+    root.classList.toggle('dark', themeType === 'dark');
+    // Suporte nativo do browser (scrollbar, inputs, etc)
+    root.style.colorScheme = themeType;
+    body.setAttribute('data-theme', themeType);
+
+    // Variáveis para styled-components
     Object.entries(theme.colors).forEach(([key, value]) => {
       const cssVar = `--color-${key.replace(/([A-Z])/g, '-$1').toLowerCase()}`;
       root.style.setProperty(cssVar, value);
@@ -157,7 +203,15 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     root.style.setProperty('--shadow-sm', theme.shadows.sm);
     root.style.setProperty('--shadow-md', theme.shadows.md);
     root.style.setProperty('--shadow-lg', theme.shadows.lg);
-    document.body.setAttribute('data-theme', themeType);
+
+    // Atualiza <meta name="theme-color"> para mobile browser chrome
+    const meta = document.querySelector('meta[name="theme-color"]');
+    if (meta) meta.setAttribute('content', themeType === 'dark' ? '#0a0f1e' : '#6366f1');
+
+    // Evita flash: remove classe de bloqueio de transição após primeira aplicação
+    if (root.classList.contains('theme-loading')) {
+      requestAnimationFrame(() => root.classList.remove('theme-loading'));
+    }
   }, [theme, themeType]);
 
   return (
@@ -167,11 +221,6 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   );
 }
 
-/**
- * Hook para acessar contexto de tema
- * @returns {ThemeContextType} Valores e funções do tema
- * @throws {Error} Se usado fora do ThemeProvider
- */
 export function useTheme(): ThemeContextType {
   const context = useContext(ThemeContext);
   if (!context) {
