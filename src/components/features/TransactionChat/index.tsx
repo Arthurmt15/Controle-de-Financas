@@ -291,7 +291,7 @@ const TransactionChat: React.FC = () => {
           `💰 R$ ${transactionData.amount.toFixed(2).replace('.', ',')}\n` +
           `📅 ${formatDateBR(transactionData.date)}\n` +
           `🏷️ ${matchCat.name}` +
-          (installmentCount > 0 ? `\n📋 Total: R$ ${parsed.valor.toFixed(2).replace('.', ',')} (${installmentCount}x)` + `\n📌 Parcelado criado em "Parcelados" (${installmentCount}x de R$ ${perInstallment.toFixed(2).replace('.', ',')})` : ''),
+          (installmentCount > 0 ? `\n📋 Total: R$ ${parsed.valor.toFixed(2).replace('.', ',')} (${installmentCount}x)\n📌 Parcelado criado em "Parcelados" (${installmentCount}x de R$ ${perInstallment.toFixed(2).replace('.', ',')})` : ''),
           false
         );
         setIsProcessing(false);
