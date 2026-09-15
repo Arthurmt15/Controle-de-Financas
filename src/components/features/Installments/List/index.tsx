@@ -14,9 +14,14 @@ import InstallmentForm from '../Form';
 import * as C from './styles';
 import type { Installment } from '../../../../types';
 
-/** Lista de compras parceladas */
-const InstallmentList: React.FC = () => {
-  const { installments, isLoading, deleteInstallment, advanceInstallment } = useInstallments();
+interface InstallmentListProps {
+  installments?: Installment[];
+}
+
+ /** Lista de compras parceladas */
+const InstallmentList: React.FC<InstallmentListProps> = ({ installments: propInstallments }) => {
+  const { installments: ctxInstallments, isLoading, deleteInstallment, advanceInstallment } = useInstallments();
+  const installments = propInstallments ?? ctxInstallments;
   const { categories } = useTransactions();
 
   const [editingInstallment, setEditingInstallment] = useState<Installment | null>(null);
@@ -65,11 +70,20 @@ const InstallmentList: React.FC = () => {
     return <C.LoadingContainer>Carregando parcelados...</C.LoadingContainer>;
   }
 
-  if (installments.length === 0) {
+  if (ctxInstallments.length === 0) {
     return (
       <C.EmptyState>
         <p>Nenhuma compra parcelada encontrada</p>
-        <p>Crie um parcelado para controlar suas prestações.</p>
+        <p>Crie um parcelado para controlar suas prestações ou lance uma transação parcelada.</p>
+      </C.EmptyState>
+    );
+  }
+
+  if (installments.length === 0) {
+    return (
+      <C.EmptyState>
+        <p>Nenhum parcelado encontrado para o filtro atual.</p>
+        <p>Tente ajustar a busca ou o status.</p>
       </C.EmptyState>
     );
   }
@@ -77,7 +91,7 @@ const InstallmentList: React.FC = () => {
   return (
     <C.Container>
       <C.Header>
-        <C.Title>Compras Parceladas</C.Title>
+        <C.Title>Todos os parcelados • {installments.length} {installments.length === 1 ? 'item' : 'itens'}</C.Title>
       </C.Header>
 
       <C.CardsGrid>
