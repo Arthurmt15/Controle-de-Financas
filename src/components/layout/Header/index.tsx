@@ -10,8 +10,6 @@ import { useTheme } from '../../../contexts/ThemeContext';
 import { useInstallPrompt } from '../../../hooks/useInstallPrompt';
 import Icon from '../../common/Icon';
 import ColorPicker from '../../common/ColorPicker';
-import { CommandPalette } from '../../common/CommandPalette';
-import { Search } from 'lucide-react';
 import * as C from './styles';
 
 /** Itens de navegação do menu mobile */
@@ -34,7 +32,6 @@ const Header: React.FC = () => {
   const { themeType, toggleTheme } = useTheme();
   const { isInstallable, install } = useInstallPrompt();
   const [menuOpen, setMenuOpen] = useState(false);
-  const [paletteOpen, setPaletteOpen] = useState(false);
 
   /** Alterna o menu mobile */
   const toggleMenu = useCallback(() => setMenuOpen((prev) => !prev), []);
@@ -85,14 +82,6 @@ const Header: React.FC = () => {
       </C.LeftSection>
 
       <C.RightSection>
-        <button
-          onClick={() => setPaletteOpen(true)}
-          aria-label="Buscar (⌘K)"
-          title="Buscar (⌘K)"
-          className="hidden md:flex items-center gap-2 pl-3 pr-2 h-9 rounded-full border bg-card text-sm text-muted-foreground hover:bg-accent hover:text-accent-foreground shadow-sm"
-        >
-          <Search size={14} /> <span className="text-xs">Buscar</span> <kbd className="ml-1 hidden lg:inline-flex h-5 items-center rounded border bg-muted px-1.5 text-[10px]">⌘K</kbd>
-        </button>
         {isInstallable && (
           <C.InstallButton onClick={install} title="Instalar app no celular">
             <Icon size={16}>
@@ -144,7 +133,6 @@ const Header: React.FC = () => {
         )}
       </C.RightSection>
 
-      <CommandPalette open={paletteOpen} onOpenChange={setPaletteOpen} />
       <C.MobileOverlay $isOpen={menuOpen} onClick={closeMenu} />
       <C.MobileMenu $isOpen={menuOpen}>
         <C.CloseButton onClick={closeMenu} aria-label="Fechar menu">
