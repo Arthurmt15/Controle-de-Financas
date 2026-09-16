@@ -206,9 +206,10 @@ const FloatingChat: React.FC = () => {
       || /\b(o que posso fazer|como navego|me ajuda a usar)\b/i.test(lowerGuide);
     // isGuideQuestion também vai para IA, mas com contexto extra abaixo
 
-    // 1c. Dúvida/pergunta clara → não tenta parsear como transação
+    // 1c. Dúvida/pergunta clara → não tenta parsear como transação (inclui planejamento de investimento)
     const lowerForDoubt = text.toLowerCase();
-    const isDoubtLike = /d[uú]vida|\?|posso\b|vale a pena|como\b.*\?|quanto posso|me ajuda|me explica|estou com uma d/.test(lowerForDoubt) && !/\b(comprei|paguei|gastei|mercado|supermercado|recebi|parcelado)\b/.test(lowerForDoubt);
+    const isPlanningDoubt = /\b(pretendo|planejo|quero)\s+(investir|aplicar|guardar)\b/i.test(lowerForDoubt) || /\bquanto.*ganho\b/i.test(lowerForDoubt) || /\blucro\b.*%.*ao ano\b/i.test(lowerForDoubt);
+    const isDoubtLike = isPlanningDoubt || (/d[uú]vida|\?|posso\b|vale a pena|como\b.*\?|quanto posso|quanto ganho|me ajuda|me explica|estou com uma d|pretendo/.test(lowerForDoubt) && !/\b(comprei|paguei|gastei|mercado|supermercado|recebi|parcelado|investi|apliquei)\b/.test(lowerForDoubt));
     if (isDoubtLike && !isGuideQuestion) {
       // vai direto para IA
     } else if (!isGuideQuestion || /\b(R\$|reais|mercado|comprei|paguei|gastei|recebi)\b/i.test(lowerGuide)) {
