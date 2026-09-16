@@ -17,8 +17,7 @@ const NAV_ITEMS = [
   { path: '/dashboard', label: 'Dashboard' },
   { path: '/transactions', label: 'Transações' },
   { path: '/analysis', label: 'Análise' },
-  { path: '/installments', label: 'Parcelados' },
-  { path: '/debts', label: 'Dívidas' },
+  { path: '/installments', label: 'Parcelados & Dívidas' },
   { path: '/future-expenses', label: 'Gastos Futuros' },
   { path: '/settings', label: 'Configurações' },
 ];
