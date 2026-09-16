@@ -1,2 +1,0 @@
-export * from './styles_a';
-export * from './styles_b';

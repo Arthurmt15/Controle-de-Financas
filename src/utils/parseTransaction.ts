@@ -6,9 +6,7 @@ export interface ParsedTransaction {
   descricao: string; valor: number; tipo: 'despesa' | 'receita';
   categoria: string; data: string; parcelas?: number;
 }
-export interface ImageParseResult {
-  amount: number | null; description: string | null; date: string | null; rawText: string;
-}
+
 
 /**
  * Parseia mensagem em transação. Suporta valores, datas, tipos em qualquer ordem.
@@ -26,21 +24,6 @@ export function parseTransactionFromMessage(message: string): ParsedTransaction 
   const parcelas = parcelasMatch ? parseInt(parcelasMatch[1]) : undefined;
   const descricao = extractDescription(amountResult.clean) || catResult.category;
   return { descricao, valor, tipo, categoria: catResult.category, data, parcelas };
-}
-
-/** Parseia texto OCR em amount/date/description (primeira linha não numérica) */
-export function parseImageText(text: string): ImageParseResult {
-  const result: ImageParseResult = { amount: null, description: null, date: null, rawText: text };
-  const amountResult = extractAmount(text);
-  if (amountResult) result.amount = amountResult.value;
-  const dateResult = extractDate(text);
-  if (dateResult) result.date = dateResult.value;
-  const lines = text.split('\n').filter(l => l.trim().length > 3);
-  for (const line of lines) {
-    const cleaned = line.trim();
-    if (cleaned.length > 3 && !/^\d+[.,]?\d*$/.test(cleaned)) { result.description = cleaned.substring(0, 50); break; }
-  }
-  return result;
 }
 
 /** Exemplos de input para o chat (usado como chips) */

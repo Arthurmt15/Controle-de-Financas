@@ -24,7 +24,7 @@ export const HeroVisual: React.FC<{ classes: Record<string, string> }> = ({ clas
     <div className="flex flex-col gap-4">
       {[
         { icon: LayoutDashboard, color: '#a855f7', title: 'Bento & dashboards vivos', desc: 'KPIs com sparklines e drill-down' },
-        { icon: PiggyBank, color: '#3b82f6', title: 'Fluxo sem fricção', desc: 'Chat, OCR e importação automática' },
+        { icon: PiggyBank, color: '#3b82f6', title: 'Fluxo sem fricção', desc: 'Chat e importação automática' },
         { icon: LineChart, color: '#00d9b5', title: 'Previsão com IA', desc: 'Análise que antecipa, não só relata' },
       ].map(({ icon: IconCmp, color, title, desc }, i) => (
         <motion.div key={title} initial={{ opacity: 0, x: -8 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.35 + i * 0.08 }} className="flex items-center gap-4 group">

@@ -1,28 +1,23 @@
 /**
  * @file components/features/TransactionChat/index.tsx
  * @description Chat rápido redesenhado com shadcn + tailwind + framer-motion + lucide.
- * Card com mensagens, Input + Button, Badge e motion. Preserva toda lógica de chat,
- * comandos, OCR, comprovantes e integração com IA advisor.
+ * Card com mensagens, Input + Button, Badge e motion. Preserva lógica de chat,
+ * comandos e integração com IA advisor.
  */
 
 import React, { useState, useRef, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Send, Bot, User, Sparkles, Image as ImageIcon, Trash2, Lightbulb, Loader2, TrendingUp } from 'lucide-react';
-import { extractTextFromImage } from '../../../services/ocrService';
+import { motion } from 'framer-motion';
+import { Send, Bot, User, Sparkles, Trash2, Lightbulb, Loader2 } from 'lucide-react';
 import { useTransactions } from '../../../hooks/useTransactions';
 import { useInstallments } from '../../../contexts/InstallmentsContext';
 import { getExampleMessages, parseTransactionFromMessage } from '../../../utils/parseTransaction';
 import { detectCommand, executeCommand } from '../../../utils/chatCommands';
 import { generateSummary, generateAnalysis } from '../../../utils/analysisEngine';
-import { parseReceiptText, getReceiptResponse } from '../../../utils/receiptParser';
 import { buildFinancialContext, streamAdvisor } from '../../../services/financialAdvisorService';
 import { CardHeader, CardTitle } from '../../ui/card';
-import { Button, buttonVariants } from '../../ui/button';
+import { Button } from '../../ui/button';
 import { Input } from '../../ui/input';
 import { Badge } from '../../ui/badge';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../ui/select';
-import { Label } from '../../ui/label';
-import { cn } from '../../../lib/utils';
 import type { Transaction } from '../../../types';
 
 /** Interface para mensagens do chat */
@@ -66,12 +61,6 @@ const TransactionChat: React.FC = () => {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [inputValue, setInputValue] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
-  const [pendingReceiptType, setPendingReceiptType] = useState<{
-    description: string;
-    amount: string;
-    date: string;
-    categoryId: string;
-  } | null>(null);
 
   // Refs para scroll e foco
   const inputRef = useRef<HTMLInputElement>(null);
@@ -160,7 +149,7 @@ const TransactionChat: React.FC = () => {
     return newMessage;
   };
 
-  /** Processa mensagem do usuário - comandos, OCR e IA */
+  /** Processa mensagem do usuário - comandos e IA */
   const processMessage = async (text: string) => {
     setIsProcessing(true);
     addMessage(text, true);
@@ -186,48 +175,7 @@ const TransactionChat: React.FC = () => {
       return;
     }
 
-    // 2. Texto colado de comprovante (2+ linhas)
-    const lines = text.split('\n').filter((l) => l.trim().length > 0);
-    if (lines.length >= 2) {
-      const receipt = parseReceiptText(text);
-      if (receipt.amount) {
-        const searchTerms = [receipt.description, receipt.store].filter(Boolean).join(' ').toLowerCase();
-        let matchCat = categories.find((c) => {
-          const catName = c.name.toLowerCase();
-          return searchTerms.includes(catName) || catName.includes(searchTerms.split(' ')[0]);
-        });
-        if (!matchCat) {
-          matchCat = categories.find((c) => c.name.toLowerCase() === 'outros') || categories[0];
-        }
-        if (matchCat) {
-          const responseMsg = getReceiptResponse(receipt);
-          addMessage(responseMsg, false);
-          const transactionData: Omit<Transaction, 'id'> = {
-            description: receipt.description || receipt.store || 'Compra',
-            amount: receipt.amount,
-            type: 'expense',
-            date: receipt.date ? new Date(receipt.date + 'T12:00:00').toISOString() : new Date().toISOString(),
-            categoryId: matchCat.id,
-            notes: '',
-          };
-          await addTransaction(transactionData);
-          addMessage(
-            ` Transação criada!\n` +
-              ` ${transactionData.description}\n` +
-              ` R$ ${transactionData.amount.toFixed(2).replace('.', ',')}\n` +
-              ` ${formatDateBR(transactionData.date)}\n` +
-              ` ${matchCat.name}`,
-            false
-          );
-        } else {
-          addMessage(` Texto reconhecido mas sem categoria.\nCrie uma com "criar categoria [nome]"`, false);
-        }
-        setIsProcessing(false);
-        return;
-      }
-    }
-
-    // 3. Tentar parsear como transação simples
+    // 2. Tentar parsear como transação simples
     const parsed = parseTransactionFromMessage(text);
     if (parsed) {
       let matchCat = categories.find((c) => c.name.toLowerCase() === parsed.categoria.toLowerCase());
@@ -281,7 +229,7 @@ const TransactionChat: React.FC = () => {
       }
     }
 
-    // 4. Tudo o resto vai para a IA advisor (streaming)
+    // 3. Tudo o resto vai para a IA advisor (streaming)
     const aiMsg: ChatMessage = {
       id: generateMessageId(),
       text: '',
@@ -310,37 +258,6 @@ const TransactionChat: React.FC = () => {
     setIsProcessing(false);
   };
 
-  /** Confirma comprovante como entrada ou saída */
-  const handleReceiptConfirm = async (type: 'income' | 'expense') => {
-    if (!pendingReceiptType) return;
-    const { description, amount, date, categoryId } = pendingReceiptType;
-    const parsedAmount = parseFloat(amount.replace(',', '.'));
-    if (isNaN(parsedAmount) || parsedAmount <= 0) {
-      addMessage(' Valor inválido. Verifique o valor digitado.', false);
-      return;
-    }
-    setPendingReceiptType(null);
-    const transactionData: Omit<Transaction, 'id'> = {
-      description,
-      amount: parsedAmount,
-      type,
-      date: date ? new Date(date + 'T12:00:00').toISOString() : new Date().toISOString(),
-      categoryId,
-      notes: '',
-    };
-    try {
-      await addTransaction(transactionData);
-      const label = type === 'income' ? ' Entrada' : ' Saída';
-      addMessage(
-        ` Transação criada!\n${label}: ${description}\n R$ ${parsedAmount.toFixed(2).replace('.', ',')}\n ${formatDateBR(transactionData.date)}\n ${categories.find((c) => c.id === categoryId)?.name || ''}`,
-        false
-      );
-    } catch (error: unknown) {
-      const msg = error instanceof Error ? error.message : 'desconhecido';
-      addMessage(`Erro ao criar transação: ${msg}`, false);
-    }
-  };
-
   /** Envia mensagem */
   const handleSend = () => {
     const text = inputValue.trim();
@@ -353,75 +270,6 @@ const TransactionChat: React.FC = () => {
   const handleExampleClick = (example: string) => {
     setInputValue(example);
     inputRef.current?.focus();
-  };
-
-  /** Trata upload de imagem (comprovante/nota fiscal) */
-  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    if (!file.type.startsWith('image/')) {
-      addMessage('Por favor, selecione uma imagem válida.', false);
-      return;
-    }
-    setIsProcessing(true);
-    addMessage(' Analisando comprovante...', false);
-    try {
-      const ocrResult = await extractTextFromImage(file, 'por');
-      const text = ocrResult.text;
-      if (!text) {
-        addMessage('Não consegui ler texto na imagem. Por favor, digite os dados manualmente.\nEx: "Mercado 150,50"', false);
-        setIsProcessing(false);
-        return;
-      }
-      const receipt = parseReceiptText(text);
-      if (!receipt.amount) {
-        const aiMsg: ChatMessage = { id: generateMessageId(), text: '', isUser: false, timestamp: new Date() };
-        setMessages((prev) => [...prev, aiMsg]);
-        try {
-          const context = buildFinancialContext(transactions, categories);
-          const prompt = `Texto de comprovante/nota fiscal extraído por OCR:\n\n${text}\n\nInterprete este texto e me diga: valor, data, descrição e categoria sugerida. Se for uma transação, crie ela.`;
-          let accumulated = '';
-          const chunks = streamAdvisor(prompt, context, []);
-          const updateAiMessage = (t: string) => {
-            setMessages((prev) => prev.map((m) => (m.id === aiMsg.id ? { ...m, text: t } : m)));
-          };
-          for await (const chunk of chunks) {
-            accumulated += chunk;
-            updateAiMessage(accumulated);
-          }
-        } catch {
-          setMessages((prev) => prev.map((m) => (m.id === aiMsg.id ? { ...m, text: ' Não consegui interpretar o comprovante. Por favor, digite manualmente.\nEx: "Mercado 150,50"' } : m)));
-        }
-        setIsProcessing(false);
-        e.target.value = '';
-        return;
-      }
-      const searchTerms = [receipt.description, receipt.store].filter(Boolean).join(' ').toLowerCase();
-      let matchCat = categories.find((c) => {
-        const catName = c.name.toLowerCase();
-        return searchTerms.includes(catName) || catName.includes(searchTerms.split(' ')[0]);
-      });
-      if (!matchCat) {
-        matchCat = categories.find((c) => c.name.toLowerCase() === 'outros') || categories[0];
-      }
-      if (matchCat) {
-        const description = receipt.description || receipt.store || 'Comprovante';
-        const receiptDate = receipt.date || '';
-        const amountStr = receipt.amount.toFixed(2).replace('.', ',');
-        setPendingReceiptType({ description, amount: amountStr, date: receiptDate, categoryId: matchCat.id });
-        addMessage(
-          ` Dados identificados (edite antes de confirmar):\n\n Valor: R$ ${amountStr}\n Data: ${receiptDate ? formatDateBR(receiptDate + 'T12:00:00') : 'Hoje'}\n Categoria: ${matchCat.name}\n Descrição: ${description}\n\nEscolha uma opção:`,
-          false
-        );
-      } else {
-        addMessage(` Valor identificado: R$ ${receipt.amount.toFixed(2).replace('.', ',')}\n\n Não consegui criar a transação automaticamente.\nPor favor, crie uma categoria primeiro:\n• "criar categoria [nome]"`, false);
-      }
-    } catch (err) {
-      console.error('Erro no OCR:', err);
-      addMessage('Erro ao analisar a imagem. Por favor, digite os dados manualmente.', false);
-    }
-    setIsProcessing(false);
-    e.target.value = '';
   };
 
   /** Formata data no padrão brasileiro */
@@ -513,74 +361,8 @@ const TransactionChat: React.FC = () => {
         <div ref={messagesEndRef} />
       </div>
 
-      {/* Formulário de comprovante pendente */}
-      <AnimatePresence>
-        {pendingReceiptType && (
-          <motion.div
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: 'auto' }}
-            exit={{ opacity: 0, height: 0 }}
-            className="border-t bg-amber-50/60 dark:bg-amber-500/10 p-3 space-y-2.5 overflow-hidden"
-          >
-            <p className="text-xs font-semibold text-amber-800 dark:text-amber-300 flex items-center gap-1.5">
-              <Lightbulb className="h-3.5 w-3.5" />
-              Dados identificados (edite antes de confirmar)
-            </p>
-            <div className="grid grid-cols-2 gap-2">
-              <div className="space-y-1">
-                <Label className="text-xs">Valor</Label>
-                <Input value={pendingReceiptType.amount} onChange={(e) => setPendingReceiptType({ ...pendingReceiptType!, amount: e.target.value })} placeholder="0,00" className="h-8 rounded-lg text-sm bg-background" />
-              </div>
-              <div className="space-y-1">
-                <Label className="text-xs">Data</Label>
-                <Input type="date" value={pendingReceiptType.date} onChange={(e) => setPendingReceiptType({ ...pendingReceiptType!, date: e.target.value })} className="h-8 rounded-lg text-sm bg-background" />
-              </div>
-            </div>
-            <div className="space-y-1">
-              <Label className="text-xs">Categoria</Label>
-              <Select value={pendingReceiptType.categoryId} onValueChange={(v) => setPendingReceiptType({ ...pendingReceiptType!, categoryId: v })}>
-                <SelectTrigger className="h-8 rounded-lg text-sm bg-background">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {categories.map((cat) => (
-                    <SelectItem key={cat.id} value={cat.id}>
-                      {cat.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-1">
-              <Label className="text-xs">Descrição</Label>
-              <Input value={pendingReceiptType.description} onChange={(e) => setPendingReceiptType({ ...pendingReceiptType!, description: e.target.value })} placeholder="Descrição" className="h-8 rounded-lg text-sm bg-background" />
-            </div>
-            <div className="grid grid-cols-2 gap-2 pt-1">
-              <Button onClick={() => handleReceiptConfirm('income')} className="rounded-xl gap-1.5 bg-emerald-600 hover:bg-emerald-700 h-9 text-sm">
-                <TrendingUp className="h-4 w-4" />
-                Entrada
-              </Button>
-              <Button onClick={() => handleReceiptConfirm('expense')} variant="destructive" className="rounded-xl gap-1.5 h-9 text-sm">
-                <TrendingUp className="h-4 w-4 rotate-180" />
-                Saída
-              </Button>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
       {/* Input de mensagem */}
       <div className="p-3 border-t bg-background flex items-center gap-2">
-        {/* Botão upload de imagem */}
-        <label
-          htmlFor="chat-image-upload"
-          className={cn(buttonVariants({ variant: 'outline', size: 'icon' }), 'h-9 w-9 rounded-xl shrink-0 cursor-pointer')}
-          title="Enviar foto de comprovante"
-        >
-          <ImageIcon className="h-4 w-4" />
-        </label>
-        <input type="file" id="chat-image-upload" accept="image/*" onChange={handleImageUpload} className="hidden" />
-
         <Input
           ref={inputRef}
           type="text"
@@ -592,13 +374,13 @@ const TransactionChat: React.FC = () => {
               handleSend();
             }
           }}
-          placeholder={pendingReceiptType ? 'Escolha uma opção acima' : 'Pergunte sobre suas finanças...'}
-          disabled={isProcessing || !!pendingReceiptType}
+          placeholder="Digite &quot;almoço 25&quot; ou pergunte à IA..."
+          disabled={isProcessing}
           aria-label="Digite sua mensagem"
           className="flex-1 h-9 rounded-xl"
         />
 
-        <Button onClick={handleSend} disabled={!inputValue.trim() || isProcessing || !!pendingReceiptType} size="icon" className="h-9 w-9 rounded-xl shrink-0" aria-label="Enviar mensagem">
+        <Button onClick={handleSend} disabled={!inputValue.trim() || isProcessing} size="icon" className="h-9 w-9 rounded-xl shrink-0" aria-label="Enviar mensagem">
           <Send className="h-4 w-4" />
         </Button>
       </div>

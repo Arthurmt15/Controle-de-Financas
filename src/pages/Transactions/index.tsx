@@ -9,7 +9,6 @@ import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { MessageCircle, FileText, Wallet, Info, Sparkles } from 'lucide-react';
 import TransactionChat from '../../components/features/TransactionChat';
-import ImageUploader from '../../components/features/ImageUploader';
 import TransactionForm from '../../components/features/TransactionForm';
 import TransactionList from '../../components/features/TransactionList';
 import { Card, CardContent } from '../../components/ui/card';
@@ -38,7 +37,7 @@ const TransactionsPage: React.FC = () => {
               Transações
             </h1>
             <p className="mt-2 text-[13.5px] text-muted-foreground max-w-[560px] leading-relaxed">
-              Registre gastos por chat, foto de comprovante ou formulário e acompanhe tudo na lista
+              Registre gastos por chat ou formulário e acompanhe tudo na lista
             </p>
           </div>
           {/* Badge indicativo da aba ativa */}
@@ -55,7 +54,7 @@ const TransactionsPage: React.FC = () => {
               <Info className="h-3.5 w-3.5" />
             </span>
             <p className="text-[13px] leading-relaxed text-muted-foreground">
-              Digite &quot;almoço 25&quot; no chat, envie foto do comprovante ou use o formulário. Transações parceladas criam automaticamente um item em Parcelados.
+              Digite &quot;almoço 25&quot; no chat ou use o formulário. Transações parceladas criam automaticamente um item em Parcelados.
             </p>
           </CardContent>
         </Card>
@@ -103,21 +102,9 @@ const TransactionsPage: React.FC = () => {
           className="mt-5"
         >
           {activeTab === 'chat' ? (
-            // Layout grid ChatLayout com tailwind: 2 colunas no desktop, 1 no mobile
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-              {/* Coluna do chat - Card wrapper */}
-              <div className="min-w-0">
-                <Card className="rounded-2xl border shadow-sm overflow-hidden h-full">
-                  <TransactionChat />
-                </Card>
-              </div>
-              {/* Coluna do upload - Card wrapper */}
-              <div className="min-w-0">
-                <Card className="rounded-2xl border shadow-sm overflow-hidden h-full">
-                  <ImageUploader />
-                </Card>
-              </div>
-            </div>
+            <Card className="rounded-2xl border shadow-sm overflow-hidden">
+              <TransactionChat />
+            </Card>
           ) : (
             // Formulário em Card bento
             <Card className="rounded-2xl border shadow-sm">
