@@ -51,5 +51,23 @@ export function extractDate(text: string): { value: string; clean: string } | nu
       return { value: formatDate(d), clean: text.replace(slashMatch[0], ' ').trim() };
     }
   }
+
+  // "dia 20 desse mês" / "20 desse mês" → dia 20 do mês atual
+  const desseMesComDia = /(?:dia\s+)?(\d{1,2})\s+(?:desse|deste)\s+m[eê]s/i;
+  const desseMesComDiaMatch = lower.match(desseMesComDia);
+  if (desseMesComDiaMatch) {
+    const day = parseInt(desseMesComDiaMatch[1]);
+    if (day >= 1 && day <= 31) {
+      const d = new Date(today.getFullYear(), today.getMonth(), day, 12, 0, 0, 0);
+      return { value: formatDate(d), clean: text.replace(desseMesComDiaMatch[0], ' ').trim() };
+    }
+  }
+  // "dia desse mês" sem dia → hoje
+  const desseMesSemDia = /\bdia\s+(?:desse|deste)\s+m[eê]s\b/i;
+  const desseMesSemDiaMatch = lower.match(desseMesSemDia);
+  if (desseMesSemDiaMatch) {
+    return { value: formatDate(today), clean: text.replace(desseMesSemDiaMatch[0], ' ').trim() };
+  }
+
   return null;
 }

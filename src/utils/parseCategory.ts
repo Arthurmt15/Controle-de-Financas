@@ -1,6 +1,6 @@
 import { CATEGORY_MAP } from './categories';
 
-const INCOME_KEYWORDS = ['entrada','recebi','recebido','ganhei','ganho','salário','salario','pagamento','ordenha','depósito','deposito','transferência recebida','rendimento','cashback','estorno','reembolso','prêmio','premio','dividendos','caiu','entrou','crédito','credito'];
+const INCOME_KEYWORDS = ['entrada','entra','entrou','recebi','recebido','ganhei','ganho','salário','salario','pagamento','ordenha','depósito','deposito','transferência recebida','rendimento','cashback','estorno','reembolso','prêmio','premio','dividendos','caiu','entrou','crédito','credito','investimento','investimentos','renda fixa','rendimento'];
 const EXPENSE_KEYWORDS = ['saída','saida','gastei','paguei','comprei','saiu','perdi','compra','despesa','conta','mercado','supermercado','restaurante','almoço','almoco','jantar','café','cafe','farmácia','farmacia','posto','combustível','combustivel','transporte','uber','taxi','ônibus','onibus','aluguel','condomínio','condominio','luz','água','agua','internet','telefone','iptu'];
 
 /** Detecta tipo despesa/receita por palavras-chave no texto */
@@ -31,13 +31,19 @@ export function detectCategory(text: string, tipo: 'despesa' | 'receita'): { cat
 /** Extrai descrição limpa removendo keywords de tipo, números e parcelado — agora limpa também 'de' pendente de 'divida de' */
 export function extractDescription(remainingText: string): string {
   let desc = remainingText;
-  const typeKeywords = ['gastei','paguei','comprei','saiu','perdi','despesa','recebi','recebido','ganhei','ganho','pagamento','entrada','salário','salario','rendimento','cashback','estorno','reembolso'];
-  for (const k of typeKeywords) desc = desc.replace(new RegExp(`\\b${k}\\b`, 'gi'), ' ');
+  const typeKeywords = ['gastei','paguei','comprei','saiu','perdi','despesa','recebi','recebido','ganhei','ganho','pagamento','entrada','entra','entrou','salário','salario','rendimento','cashback','estorno','reembolso'];
+  for (const k of typeKeywords) {
+    desc = desc.replace(new RegExp(`\\\\b${k}\\\\b`, 'gi'), ' ');
+  }
   // Remove prefixo solto
   desc = desc.replace(/^\s*(de|da|do|das|dos|no|na|nas|nos|em|e|a|o|as|os|um|uma|uns|umas)\s+/gi, '');
   desc = desc.replace(/\b\d{1,6}(?:\.\d{3})*(?:,\d{1,2})?\b/g, '');
   desc = desc.replace(/\b\d{2,6}\b/g, '');
   desc = desc.replace(/\b(parcelado?|vezes|prestação|prestacao|plt|taxa)\b/gi, ' ');
+  // Remove "dia desse mês" / "dia 20 desse mês" que sobrou do clean
+  desc = desc.replace(/\b(?:dia\s+)?\d{1,2}\s+(?:desse|deste)\s+m[eê]s\b/gi, ' ');
+  desc = desc.replace(/\bdia\s+(?:desse|deste)\s+m[eê]s\b/gi, ' ');
+  desc = desc.replace(/\bdesse\s+m[eê]s\b/gi, ' ');
   // Limpa pontuação e espaços duplos
   desc = desc.replace(/[,.\s]+/g, ' ').trim();
   // Remove 'de/da/do' pendente no final — corrige "Divida de " → "Divida"
