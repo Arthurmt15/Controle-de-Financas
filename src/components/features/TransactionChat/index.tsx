@@ -5,7 +5,7 @@
  * comandos e integração com IA advisor.
  */
 
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { Send, Bot, User, Sparkles, Trash2, Lightbulb, Loader2 } from 'lucide-react';
 import { useTransactions } from '../../../hooks/useTransactions';
@@ -72,6 +72,26 @@ const TransactionChat: React.FC = () => {
   // Exemplos de mensagens
   const examples = getExampleMessages();
   const STORAGE_KEY = 'financas_chat_messages';
+
+  // Sugestões dinâmicas — aparecem após resposta da IA para manter conversa fluida
+  const dynamicFollowUps = useMemo(() => {
+    if (isProcessing) return [];
+    const last = messages[messages.length - 1];
+    if (!last || last.isUser) return [];
+    const txt = last.text.toLowerCase();
+    // Se a última resposta foi sobre dúvida/valor/plano, sugere ações contextuais
+    if (/d[uú]vida|2000|quanto posso|plano|parcel|dívida|investir|gastos|saldo/.test(txt)) {
+      return [
+        'Quero registrar como despesa',
+        'Quanto posso gastar este mês?',
+        'Me dê um plano em 3 passos',
+      ];
+    }
+    if (/transa[çc][aã]o registrada/.test(txt)) {
+      return ['Ver meu saldo', 'Quanto gastei este mês?', 'Planejar próxima compra'];
+    }
+    return ['Explique melhor', 'Quanto posso gastar?', 'Criar transação disso'];
+  }, [messages, isProcessing]);
 
   /** Rola apenas a área de mensagens para baixo (sem rolar a página) */
   useEffect(() => {
@@ -151,7 +171,7 @@ const TransactionChat: React.FC = () => {
     return newMessage;
   };
 
-  /** Processa mensagem do usuário - comandos e IA */
+  /** Processa mensagem do usuário - comandos, transação ou IA (prioriza dúvida/pergunta) */
   const processMessage = async (text: string) => {
     setIsProcessing(true);
     addMessage(text, true);
@@ -177,6 +197,12 @@ const TransactionChat: React.FC = () => {
       return;
     }
 
+    // 1b. Se for dúvida/pergunta clara, não tenta parsear como transação (evita "duvida de 2000" virar compra)
+    const lowerForDoubt = text.toLowerCase();
+    const isDoubtLike = /d[uú]vida|\?|posso\b|vale a pena|como\b.*\?|quanto posso|me ajuda|me explica|estou com uma d/.test(lowerForDoubt) && !/\b(comprei|paguei|gastei|mercado|supermercado|recebi|parcelado)\b/.test(lowerForDoubt);
+    if (isDoubtLike) {
+      // vai direto para IA (pula parse de transação)
+    } else {
     // 2. Tentar parsear como transação simples
     const parsed = parseTransactionFromMessage(text);
     if (parsed) {
@@ -251,8 +277,9 @@ const TransactionChat: React.FC = () => {
         return;
       }
     }
+    } // fecha else do isDoubtLike — dúvida vai direto para IA abaixo
 
-    // 3. Tudo o resto vai para a IA advisor (streaming)
+    // 3. Tudo o resto vai para a IA advisor (streaming) — agora dinâmico, com contexto e follow-ups
     const aiMsg: ChatMessage = {
       id: generateMessageId(),
       text: '',
@@ -374,11 +401,18 @@ const TransactionChat: React.FC = () => {
             <span className="text-[11px] text-muted-foreground px-1">{formatTime(message.timestamp)}</span>
           </motion.div>
         ))}
-        {/* Indicador de processamento */}
+        {/* Indicador de processamento — mais dinâmico */}
         {isProcessing && (
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex items-center gap-2 text-sm text-muted-foreground">
-            <Loader2 className="h-4 w-4 animate-spin" />
-            Processando...
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex items-center gap-2 text-sm text-muted-foreground bg-card border rounded-2xl px-3 py-2 shadow-sm max-w-fit">
+            <Loader2 className="h-4 w-4 animate-spin text-violet-500" />
+            <span className="flex items-center gap-1">
+              Consultor analisando seus dados
+              <span className="inline-flex gap-0.5 ml-1">
+                <span className="w-1 h-1 bg-muted-foreground rounded-full animate-bounce [animation-delay:-0.3s]" />
+                <span className="w-1 h-1 bg-muted-foreground rounded-full animate-bounce [animation-delay:-0.15s]" />
+                <span className="w-1 h-1 bg-muted-foreground rounded-full animate-bounce" />
+              </span>
+            </span>
           </motion.div>
         )}
         <div ref={messagesEndRef} />
@@ -407,6 +441,27 @@ const TransactionChat: React.FC = () => {
           <Send className="h-4 w-4" />
         </Button>
       </div>
+
+      {/* Sugestões dinâmicas — aparecem após resposta da IA para manter conversa fluida */}
+      {dynamicFollowUps.length > 0 && (
+        <div className="px-3 py-2.5 bg-violet-50/50 dark:bg-violet-500/5 border-t border-violet-100 dark:border-violet-500/10">
+          <p className="text-[11px] font-semibold tracking-widest uppercase text-violet-700 dark:text-violet-300 mb-1.5 flex items-center gap-1">
+            <Sparkles className="h-3 w-3" /> Continue a conversa
+          </p>
+          <div className="flex flex-wrap gap-1.5">
+            {dynamicFollowUps.map((s) => (
+              <Badge
+                key={s}
+                variant="outline"
+                className="rounded-full px-2.5 py-1 text-xs font-medium cursor-pointer bg-card hover:bg-violet-600 hover:text-white hover:border-violet-600 transition-colors"
+                onClick={() => handleExampleClick(s)}
+              >
+                {s}
+              </Badge>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Dicas / exemplos - chips */}
       <div className="px-3 pb-3 bg-background">

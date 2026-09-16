@@ -9,20 +9,55 @@ export interface ParsedTransaction {
 
 
 /**
+ * Detecta se a mensagem é uma dúvida/pergunta e não uma transação clara.
+ * Evita que "estou com uma dúvida de 2000" vire transação.
+ */
+function isQuestionLike(message: string): boolean {
+  const lower = message.toLowerCase();
+  const hasQuestionMark = message.includes('?');
+  const hasDoubt = /d[uú]vida/.test(lower);
+  const hasHelpIntent = /\b(como|posso|vale a pena|devo|ser[aá]|quanto posso|me ajuda|me explica|explica|ajuda|conselho|opini[aã]o|sugest[aã]o)\b/.test(lower);
+  const hasDoubtPrefix = /^(estou com|tenho|posso|vale|devo|como|quanto|ser[aá]|qual|onde|quando|por que|porque)\b/.test(lower.trim());
+  return hasQuestionMark || hasDoubt || hasHelpIntent || hasDoubtPrefix;
+}
+
+/**
+ * Sinais fortes de intenção de transação (verbo ou contexto financeiro claro).
+ */
+function hasTransactionIntent(message: string): boolean {
+  const lower = message.toLowerCase();
+  return /\b(comprei|paguei|gastei|mercado|supermercado|restaurante|almo[cç]o|jantar|caf[eé]|farm[aá]cia|posto|combust[ií]vel|transporte|uber|aluguel|condom[ií]nio|luz|[aá]gua|internet|recebi|recebido|ganhei|sal[aá]rio|entrada|sa[ií]da|reembolso|estorno|parcelado|vezes|x\b|R\$|reais?|conto|pila)\b/i.test(lower);
+}
+
+/**
  * Parseia mensagem em transação. Suporta valores, datas, tipos em qualquer ordem.
+ * Agora com proteção contra dúvidas/perguntas virarem transação acidental.
  */
 export function parseTransactionFromMessage(message: string): ParsedTransaction | null {
+  // Se parece pergunta/dúvida e não tem sinal forte de transação, não parseia
+  if (isQuestionLike(message) && !hasTransactionIntent(message)) return null;
+
   const dateResult = extractDate(message);
   const textWithoutDate = dateResult?.clean || message;
   const data = dateResult?.value || formatDate(new Date());
   const amountResult = extractAmount(textWithoutDate);
   if (!amountResult) return null;
   const valor = amountResult.value;
+
+  // Validação extra: valor inteiro solto (ex: "2000") sem contexto de transação → ignora se for pergunta
+  // Exige pelo menos R$, reais, k, ou verbo de transação para aceitar bare integer
+  if (!/R\$|reais?|conto|k\b|parcelad|vezes/i.test(message) && !hasTransactionIntent(message)) {
+    // Se o valor veio só do integerPattern (ex: "dúvida de 2000"), rejeita
+    if (/^\s*\d+\s*$/.test(String(valor)) || /\bd[uú]vida\b/i.test(message)) return null;
+  }
+
   const tipo = detectType(message);
   const catResult = detectCategory(message, tipo);
   const parcelasMatch = message.match(/(\d+)\s*(?:x|vezes)\b/i);
   const parcelas = parcelasMatch ? parseInt(parcelasMatch[1]) : undefined;
   const descricao = extractDescription(amountResult.clean) || catResult.category;
+  // Descrição muito genérica tipo "Estou com uma duvida de" não deve virar transação
+  if (/^(estou com|tenho|d[uú]vida|posso|vale|devo)/i.test(descricao)) return null;
   return { descricao, valor, tipo, categoria: catResult.category, data, parcelas };
 }
 
