@@ -11,7 +11,7 @@ import * as legacyRecurring from './supabase/recurringBills';
 import * as legacyBudget from './supabase/budgets';
 import * as legacyFuture from './supabase/futureExpenses';
 import * as legacyAuth from './supabase/auth';
-import type { Transaction, Category, RecurringBill, Installment, Debt, FutureExpense } from '../types';
+import type { Transaction, Category, RecurringBill, Installment, Debt, EmergencyReserve, FutureExpense } from '../types';
 import type { Budget } from '../types/dashboard';
 
 // Re-exporta OOP para novos fluxos (parcelado)
@@ -66,6 +66,16 @@ export const debtService = {
   update: (debt: Debt) => financeService.updateDebt(debt),
   delete: (id: string) => financeService.deleteDebt(id),
   advance: (id: string) => financeService.advanceDebt(id),
+};
+
+export const emergencyReserveService = {
+  get: () => financeService.getEmergencyReserve(),
+  getAll: () => financeService.listEmergencyReserves(),
+  create: (dto: Omit<EmergencyReserve, 'id'>) => financeService.createEmergencyReserve(dto),
+  update: (entity: EmergencyReserve) => financeService.updateEmergencyReserve(entity),
+  delete: (id: string) => financeService.deleteEmergencyReserve(id),
+  deposit: (amount: number) => financeService.depositEmergencyReserve(amount),
+  withdraw: (amount: number) => financeService.withdrawEmergencyReserve(amount),
 };
 
 export const futureExpenseService = {

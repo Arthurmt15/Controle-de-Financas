@@ -12,6 +12,7 @@ import { TransactionsProvider } from './contexts/TransactionsContext';
 import { InstallmentsProvider } from './contexts/InstallmentsContext';
 import { DebtsProvider } from './contexts/DebtsContext';
 import { FutureExpensesProvider } from './contexts/FutureExpensesContext';
+import { EmergencyReserveProvider } from './contexts/EmergencyReserveContext';
 import { ThemeProvider as StyledThemeProvider } from 'styled-components';
 import styled from 'styled-components';
 import Header from './components/layout/Header';
@@ -38,6 +39,7 @@ const AnalysisPage = lazy(() => import('./pages/Analysis'));
 const SettingsPage = lazy(() => import('./pages/Settings'));
 const InstallmentsPage = lazy(() => import('./pages/Installments'));
 const DebtsPage = lazy(() => import('./pages/Debts'));
+const EmergencyReservePage = lazy(() => import('./pages/EmergencyReserve'));
 const FutureExpensesPage = lazy(() => import('./pages/FutureExpenses'));
 
 /**
@@ -91,22 +93,25 @@ const AuthenticatedRoutes: React.FC = () => (
   <TransactionsProvider>
     <InstallmentsProvider>
       <DebtsProvider>
-        <FutureExpensesProvider>
-          <MainLayout>
-            <Suspense fallback={<LoadingFallback />}>
-              <Routes>
-                <Route path="/dashboard" element={<DashboardPage />} />
-                <Route path="/transactions" element={<TransactionsPage />} />
-                <Route path="/analysis" element={<AnalysisPage />} />
-                <Route path="/settings" element={<SettingsPage />} />
-                <Route path="/installments" element={<InstallmentsPage />} />
-                <Route path="/debts" element={<DebtsPage />} />
-                <Route path="/future-expenses" element={<FutureExpensesPage />} />
-                <Route path="*" element={<Navigate to="/dashboard" replace />} />
-              </Routes>
-            </Suspense>
-          </MainLayout>
-        </FutureExpensesProvider>
+        <EmergencyReserveProvider>
+          <FutureExpensesProvider>
+            <MainLayout>
+              <Suspense fallback={<LoadingFallback />}>
+                <Routes>
+                  <Route path="/dashboard" element={<DashboardPage />} />
+                  <Route path="/transactions" element={<TransactionsPage />} />
+                  <Route path="/analysis" element={<AnalysisPage />} />
+                  <Route path="/settings" element={<SettingsPage />} />
+                  <Route path="/installments" element={<InstallmentsPage />} />
+                  <Route path="/debts" element={<DebtsPage />} />
+                  <Route path="/emergency-reserve" element={<EmergencyReservePage />} />
+                  <Route path="/future-expenses" element={<FutureExpensesPage />} />
+                  <Route path="*" element={<Navigate to="/dashboard" replace />} />
+                </Routes>
+              </Suspense>
+            </MainLayout>
+          </FutureExpensesProvider>
+        </EmergencyReserveProvider>
       </DebtsProvider>
     </InstallmentsProvider>
   </TransactionsProvider>
@@ -150,8 +155,8 @@ const App: React.FC = () => {
         <StyledThemeWrapper>
           <AuthProvider>
             <AppRoutes />
-            <GlobalStyle />
           </AuthProvider>
+          <GlobalStyle />
         </StyledThemeWrapper>
       </ThemeProvider>
     </BrowserRouter>

@@ -290,6 +290,23 @@ CREATE TABLE IF NOT EXISTS future_expenses (
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
+-- Tabela de reserva de emergência (única por usuário)
+CREATE TABLE IF NOT EXISTS emergency_reserves (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE UNIQUE,
+  goal_amount DECIMAL(12,2) NOT NULL CHECK (goal_amount >= 0),
+  current_amount DECIMAL(12,2) NOT NULL DEFAULT 0 CHECK (current_amount >= 0),
+  notes TEXT,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+ALTER TABLE emergency_reserves ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Users can view own emergency_reserve" ON emergency_reserves FOR SELECT USING (auth.uid() = user_id);
+CREATE POLICY "Users can insert own emergency_reserve" ON emergency_reserves FOR INSERT WITH CHECK (auth.uid() = user_id);
+CREATE POLICY "Users can update own emergency_reserve" ON emergency_reserves FOR UPDATE USING (auth.uid() = user_id);
+CREATE POLICY "Users can delete own emergency_reserve" ON emergency_reserves FOR DELETE USING (auth.uid() = user_id);
+
 -- ============================================
 -- ÍNDICES PARA PERFORMANCE
 -- ============================================
@@ -306,6 +323,7 @@ CREATE INDEX IF NOT EXISTS idx_installments_user_id ON installments(user_id);
 CREATE INDEX IF NOT EXISTS idx_installments_start_date ON installments(start_date);
 CREATE INDEX IF NOT EXISTS idx_debts_user_id ON debts(user_id);
 CREATE INDEX IF NOT EXISTS idx_debts_start_date ON debts(start_date);
+CREATE INDEX IF NOT EXISTS idx_emergency_reserves_user_id ON emergency_reserves(user_id);
 CREATE INDEX IF NOT EXISTS idx_future_expenses_user_id ON future_expenses(user_id);
 CREATE INDEX IF NOT EXISTS idx_future_expenses_expected_date ON future_expenses(expected_date);
 CREATE INDEX IF NOT EXISTS idx_future_expenses_status ON future_expenses(status);

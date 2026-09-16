@@ -138,6 +138,19 @@ export async function createTables(): Promise<void> {
       );
     `);
 
+    // Tabela de reserva de emergência (única por usuário)
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS emergency_reserves (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        user_id UUID NOT NULL UNIQUE,
+        goal_amount DECIMAL(12,2) NOT NULL CHECK (goal_amount >= 0),
+        current_amount DECIMAL(12,2) NOT NULL DEFAULT 0 CHECK (current_amount >= 0),
+        notes TEXT,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      );
+    `);
+
     // Tabela de despesas futuras
     await client.query(`
       CREATE TABLE IF NOT EXISTS future_expenses (
@@ -166,6 +179,7 @@ export async function createTables(): Promise<void> {
       CREATE INDEX IF NOT EXISTS idx_recurring_bills_active ON recurring_bills(active);
       CREATE INDEX IF NOT EXISTS idx_installments_user_id ON installments(user_id);
       CREATE INDEX IF NOT EXISTS idx_debts_user_id ON debts(user_id);
+      CREATE INDEX IF NOT EXISTS idx_emergency_reserves_user_id ON emergency_reserves(user_id);
       CREATE INDEX IF NOT EXISTS idx_future_expenses_user_id ON future_expenses(user_id);
       CREATE INDEX IF NOT EXISTS idx_future_expenses_status ON future_expenses(status);
     `);

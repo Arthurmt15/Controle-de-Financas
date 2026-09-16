@@ -176,6 +176,25 @@ export interface Debt {
 }
 
 /**
+ * Interface que representa a reserva de emergência.
+ * Meta financeira para cobrir 6 meses de despesas.
+ */
+export interface EmergencyReserve {
+  /** Identificador único */
+  id: string;
+  /** Valor meta da reserva (ex: 6 * despesas mensais) */
+  goalAmount: number;
+  /** Valor já guardado */
+  currentAmount: number;
+  /** Observações */
+  notes?: string;
+  /** Data de criação */
+  createdAt?: string;
+  /** Data de atualização */
+  updatedAt?: string;
+}
+
+/**
  * Interface que representa uma despesa futura prevista.
  * Gastos que ainda vão acontecer mas já podem ser planejados.
  */

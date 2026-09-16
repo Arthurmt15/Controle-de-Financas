@@ -1,7 +1,8 @@
-import type { Transaction, Installment, Debt } from '../../types';
+import type { Transaction, Installment, Debt, EmergencyReserve } from '../../types';
 import { SupabaseTransactionRepository } from '../../infrastructure/repositories/SupabaseTransactionRepository';
 import { SupabaseInstallmentRepository } from '../../infrastructure/repositories/SupabaseInstallmentRepository';
 import { SupabaseDebtRepository } from '../../infrastructure/repositories/SupabaseDebtRepository';
+import { SupabaseEmergencyReserveRepository } from '../../infrastructure/repositories/SupabaseEmergencyReserveRepository';
 import { CreateTransactionWithInstallment } from '../use-cases/CreateTransactionWithInstallment';
 import { CreateTransactionWithDebt } from '../use-cases/CreateTransactionWithDebt';
 
@@ -14,6 +15,7 @@ export class FinanceService {
   private readonly txRepo = new SupabaseTransactionRepository();
   private readonly instRepo = new SupabaseInstallmentRepository();
   private readonly debtRepo = new SupabaseDebtRepository();
+  private readonly reserveRepo = new SupabaseEmergencyReserveRepository();
   private readonly createTxWithInstallment = new CreateTransactionWithInstallment(this.txRepo, this.instRepo);
   private readonly createTxWithDebt = new CreateTransactionWithDebt(this.txRepo, this.debtRepo);
 
@@ -58,6 +60,15 @@ export class FinanceService {
   createDividedTransaction(tx: Omit<Transaction, 'id'>, totalInstallments: number) {
     return this.createTxWithDebt.execute(tx, { totalInstallments });
   }
+
+  /** Reserva de emergência */
+  getEmergencyReserve() { return this.reserveRepo.getByUser(); }
+  listEmergencyReserves() { return this.reserveRepo.getAll(); }
+  createEmergencyReserve(dto: Omit<EmergencyReserve, 'id'>) { return this.reserveRepo.create(dto); }
+  updateEmergencyReserve(entity: EmergencyReserve) { return this.reserveRepo.update(entity); }
+  deleteEmergencyReserve(id: string) { return this.reserveRepo.delete(id); }
+  depositEmergencyReserve(amount: number) { return this.reserveRepo.deposit(amount); }
+  withdrawEmergencyReserve(amount: number) { return this.reserveRepo.withdraw(amount); }
 }
 
 /** Singleton para uso em hooks/contexts */

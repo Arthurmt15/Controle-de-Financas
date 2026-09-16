@@ -18,6 +18,7 @@ const NAV_ITEMS = [
   { path: '/transactions', label: 'Transações' },
   { path: '/analysis', label: 'Análise' },
   { path: '/installments', label: 'Parcelados & Dívidas' },
+  { path: '/emergency-reserve', label: 'Reserva' },
   { path: '/future-expenses', label: 'Gastos Futuros' },
   { path: '/settings', label: 'Configurações' },
 ];

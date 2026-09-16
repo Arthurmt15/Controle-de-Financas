@@ -132,10 +132,11 @@ const FloatingChat: React.FC = () => {
         text:
           'Olá! Sou seu **Guia Inteligente** — faço tudo que os chats faziam, num só lugar. \n\n' +
           '**Posso te guiar no site:**\n' +
-          '• Dashboard, Transações, Parcelados & Dívidas, Análise, Gastos Futuros\n' +
+          '• Dashboard, Transações, Parcelados & Dívidas, Reserva, Análise, Gastos Futuros\n' +
           '• Como lançar: `"Mercado ontem 150,50"` ou `"Recebi 4k de salário"`\n' +
           '• Parcelado: `"Compra 1000 reais 10x"` → vai para Parcelados\n' +
           '• Dívida dividida: `"jantar 200 dividido"` ou `"divida 500 em 5x"`\n' +
+          '• Reserva: vá em **Reserva** para definir meta (6x despesas) e depositar\n' +
           '• Recorrente: `"conta recorrente cartão 1500 dia 10"`\n\n' +
           '**E sou seu Consultor IA:** pergunte `"Como estão meus gastos?"` ou `"Posso viajar este mês?"`\n\n' +
           'Me pergunte qualquer coisa — respondo com seus dados reais!',
@@ -279,9 +280,10 @@ const FloatingChat: React.FC = () => {
       const financialContext = buildFinancialContext(transactions, categories);
       const siteGuide = `
 GUIA DO SITE:
-- Dashboard: visão geral, saldo, gráficos
+- Dashboard: visão geral, saldo, gráficos e atalho para Reserva
 - Transações: lançar por chat ("almoço 25") ou formulário; parcelado/divida via chat ou formulário unificado
 - Parcelados & Dívidas (/installments): lista unificada, métricas, próximo pagamento, avançar parcela; dívidas também aparecem aqui quando transação marcada como dividida
+- Reserva de Emergência (/emergency-reserve): defina meta (sugestão 6x despesas), deposite/saque e acompanhe progresso
 - Análise (/analysis): evolução mensal, insights, consultor
 - Gastos Futuros: planejar despesas futuras
 - Configurações: categorias, orçamentos

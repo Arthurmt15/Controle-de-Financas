@@ -24,3 +24,10 @@ export interface IInstallmentRepository extends IRepository<import('../../types'
 export interface IDebtRepository extends IRepository<import('../../types').Debt> {
   advance(id: string): Promise<import('../../types').Debt>;
 }
+
+/** Repositório de reserva de emergência (único por usuário) */
+export interface IEmergencyReserveRepository extends IRepository<import('../../types').EmergencyReserve> {
+  getByUser(): Promise<import('../../types').EmergencyReserve | null>;
+  deposit(amount: number): Promise<import('../../types').EmergencyReserve>;
+  withdraw(amount: number): Promise<import('../../types').EmergencyReserve>;
+}

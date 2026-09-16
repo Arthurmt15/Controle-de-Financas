@@ -5,6 +5,7 @@
  */
 
 import React, { useEffect, useRef } from 'react';
+import { Navigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { useTheme } from '../../contexts/ThemeContext';
 import { isSupabase } from '../../services/data';
@@ -104,8 +105,7 @@ const LoginPage: React.FC = () => {
   const classes = getThemeClasses();
 
   if (isAuthenticated) {
-    window.location.href = '/dashboard';
-    return null;
+    return <Navigate to="/dashboard" replace />;
   }
 
   return (
