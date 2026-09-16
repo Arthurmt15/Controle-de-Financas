@@ -8,13 +8,14 @@
 import React, { useState, useMemo } from 'react';
 import { useTheme } from '../../../contexts/ThemeContext';
 import {
-  BarChart,
+  ComposedChart,
   Bar,
+  Line,
+  Area,
   XAxis,
   YAxis,
   CartesianGrid,
   Tooltip,
-  Legend,
   ResponsiveContainer,
   PieChart,
   Pie,
@@ -29,6 +30,33 @@ import { BarChart3, PieChart as PieChartIcon, Inbox } from 'lucide-react';
 
 /** Paleta para pizza */
 const PIE_COLORS = ['#6366f1', '#8b5cf6', '#a78bfa', '#c4b5fd', '#ddd6fe'];
+
+/** Tooltip premium para Evolução Mensal — glass + saldo */
+const EvolutionTooltip = ({ active, payload, label }: any, formatCurrency: (n: number) => string) => {
+  if (!active || !payload?.length) return null;
+  const row = payload[0]?.payload;
+  if (!row) return null;
+  return (
+    <div className="rounded-2xl border bg-card/95 backdrop-blur-xl shadow-xl p-3 min-w-[190px]">
+      <p className="text-[11px] font-semibold tracking-widest uppercase text-muted-foreground mb-2">{label}</p>
+      <div className="space-y-1.5">
+        <div className="flex items-center justify-between gap-4">
+          <span className="flex items-center gap-1.5 text-xs font-medium"><span className="h-2 w-2 rounded-full bg-emerald-500" /> Entradas</span>
+          <span className="text-xs font-bold text-emerald-600 dark:text-emerald-400">{formatCurrency(row.entradas)}</span>
+        </div>
+        <div className="flex items-center justify-between gap-4">
+          <span className="flex items-center gap-1.5 text-xs font-medium"><span className="h-2 w-2 rounded-full bg-red-500" /> Saídas</span>
+          <span className="text-xs font-bold text-red-600 dark:text-red-400">{formatCurrency(row.saidas)}</span>
+        </div>
+        <div className="h-px bg-border my-1" />
+        <div className="flex items-center justify-between gap-4">
+          <span className="flex items-center gap-1.5 text-xs font-semibold"><span className="h-2 w-2 rounded-full bg-violet-500" /> Saldo</span>
+          <span className={`text-xs font-bold ${row.saldo >= 0 ? 'text-violet-600 dark:text-violet-400' : 'text-red-600'}`}>{formatCurrency(row.saldo)}</span>
+        </div>
+      </div>
+    </div>
+  );
+};
 
 /** Legenda customizada da pizza — tailwind puro */
 const PieLegend: React.FC<{ data: Array<{ name: string; value: number; color: string }> }> = ({ data }) => {
@@ -72,7 +100,7 @@ const Charts: React.FC = () => {
   const gridColor = theme.colors.border;
   const axisColor = theme.colors.textSecondary;
 
-  /** Dados mensais por período */
+  /** Dados mensais por período — agora com saldo */
   const monthlyData = useMemo(() => {
     const monthsToUse = monthlyPeriod === '12' ? getCurrentYearMonths() : getLastNMonths(Number(monthlyPeriod));
     return monthsToUse.map(({ month, year }) => {
@@ -80,13 +108,23 @@ const Charts: React.FC = () => {
         const d = new Date(t.date);
         return d.getMonth() === month && d.getFullYear() === year;
       });
+      const entradas = monthTx.filter((t) => t.type === 'income').reduce((s, t) => s + t.amount, 0);
+      const saidas = monthTx.filter((t) => t.type === 'expense').reduce((s, t) => s + t.amount, 0);
       return {
         name: getMonthAbbreviation(month),
-        entradas: monthTx.filter((t) => t.type === 'income').reduce((s, t) => s + t.amount, 0),
-        saidas: monthTx.filter((t) => t.type === 'expense').reduce((s, t) => s + t.amount, 0),
+        entradas,
+        saidas,
+        saldo: entradas - saidas,
       };
     });
   }, [transactions, monthlyPeriod]);
+
+  const monthlyStats = useMemo(() => {
+    const saldoMax = Math.max(...monthlyData.map((m) => m.saldo), 0);
+    const best = monthlyData.reduce((a, b) => (b.saldo > a.saldo ? b : a), monthlyData[0] || { name: '-', saldo: 0 });
+    const saldoMedio = monthlyData.length ? monthlyData.reduce((s, m) => s + m.saldo, 0) / monthlyData.length : 0;
+    return { saldoMax, best, saldoMedio };
+  }, [monthlyData]);
 
   /** Dados de categorias do mês atual */
   const categoryData = useMemo(() => {
@@ -134,35 +172,65 @@ const Charts: React.FC = () => {
             </SelectContent>
           </Select>
         </CardHeader>
-        <CardContent className="p-0 pt-2">
+        <CardContent className="p-0">
           {hasBarData ? (
             <>
-              <ResponsiveContainer width="100%" height={isMobile ? 250 : 285}>
-                <BarChart data={monthlyData} layout="vertical" margin={{ left: 10, right: 20 }}>
-                  <CartesianGrid strokeDasharray="3 3" stroke={gridColor} horizontal={false} />
-                  <XAxis
-                    type="number"
-                    stroke={axisColor}
-                    fontSize={isMobile ? 11 : 10}
-                    tickFormatter={(v) => (v >= 1000 ? `${(v / 1000).toFixed(0)}k` : String(v))}
-                  />
-                  <YAxis type="category" dataKey="name" stroke={axisColor} fontSize={isMobile ? 12 : 10} width={isMobile ? 40 : 30} />
-                  <Tooltip formatter={(value) => formatCurrency(Number(value))} contentStyle={tooltipStyle} />
-                  <Legend wrapperStyle={{ fontSize: isMobile ? '12px' : '11px' }} />
-                  <Bar dataKey="entradas" fill={theme.colors.success} radius={[0, 4, 4, 0]} barSize={isMobile ? 14 : 12} />
-                  <Bar dataKey="saidas" fill={theme.colors.error} radius={[0, 4, 4, 0]} barSize={isMobile ? 14 : 12} />
-                </BarChart>
-              </ResponsiveContainer>
-              {/* Legenda manual discreta */}
-              <div className="flex justify-center gap-6 py-3 text-xs text-muted-foreground border-t">
-                <span className="inline-flex items-center gap-1.5">
-                  <span className="w-2.5 h-2.5 rounded-full" style={{ background: theme.colors.success }} />
-                  Entradas
-                </span>
-                <span className="inline-flex items-center gap-1.5">
-                  <span className="w-2.5 h-2.5 rounded-full" style={{ background: theme.colors.error }} />
-                  Saídas
-                </span>
+              {/* Micro-stats acima do gráfico */}
+              <div className="grid grid-cols-3 divide-x border-b bg-muted/20">
+                <div className="px-3 py-2.5 text-center">
+                  <p className="text-[10px] font-semibold tracking-widest uppercase text-muted-foreground">Saldo médio</p>
+                  <p className={`text-xs font-bold mt-0.5 ${monthlyStats.saldoMedio >= 0 ? 'text-violet-600 dark:text-violet-400' : 'text-red-600'}`}>{formatCurrency(monthlyStats.saldoMedio)}</p>
+                </div>
+                <div className="px-3 py-2.5 text-center">
+                  <p className="text-[10px] font-semibold tracking-widest uppercase text-muted-foreground">Melhor mês</p>
+                  <p className="text-xs font-bold mt-0.5">{monthlyStats.best.name} • {formatCurrency(monthlyStats.best.saldo)}</p>
+                </div>
+                <div className="px-3 py-2.5 text-center">
+                  <p className="text-[10px] font-semibold tracking-widest uppercase text-muted-foreground">Período</p>
+                  <p className="text-xs font-bold mt-0.5">{monthlyPeriod === '12' ? 'Jan–Dez' : '6 meses'}</p>
+                </div>
+              </div>
+
+              <div className="p-2 sm:p-3">
+                <ResponsiveContainer width="100%" height={isMobile ? 260 : 300}>
+                  <ComposedChart data={monthlyData} margin={{ top: 8, right: 12, left: 0, bottom: 0 }} barGap={6} barCategoryGap="22%">
+                    <defs>
+                      <linearGradient id="dashBarEntradas" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stopColor={theme.colors.success} stopOpacity={0.95} />
+                        <stop offset="100%" stopColor={theme.colors.success} stopOpacity={0.65} />
+                      </linearGradient>
+                      <linearGradient id="dashBarSaidas" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stopColor={theme.colors.error} stopOpacity={0.95} />
+                        <stop offset="100%" stopColor={theme.colors.error} stopOpacity={0.65} />
+                      </linearGradient>
+                    </defs>
+                    <CartesianGrid stroke={gridColor} strokeDasharray="3 6" opacity={0.5} vertical={false} />
+                    <XAxis dataKey="name" stroke={axisColor} fontSize={11} axisLine={false} tickLine={false} dy={6} />
+                    <YAxis stroke={axisColor} fontSize={11} axisLine={false} tickLine={false} dx={-2} width={48} tickFormatter={(v) => (v >= 1000 ? `${(v / 1000).toFixed(0)}k` : String(v))} />
+                    <Tooltip content={(props: any) => EvolutionTooltip(props, formatCurrency) as any} cursor={{ fill: 'hsl(var(--muted) / 0.3)' }} />
+                    {/* Saldo em área sutil atrás */}
+                    <Area type="monotone" dataKey="saldo" fill="#8b5cf6" fillOpacity={0.08} stroke="none" />
+                    <Bar dataKey="entradas" name="Entradas" fill="url(#dashBarEntradas)" radius={[8, 8, 0, 0]} maxBarSize={22} />
+                    <Bar dataKey="saidas" name="Saídas" fill="url(#dashBarSaidas)" radius={[8, 8, 0, 0]} maxBarSize={22} />
+                    <Line type="monotone" dataKey="saldo" name="Saldo" stroke="#8b5cf6" strokeWidth={2.2} dot={{ r: 3, fill: '#8b5cf6', stroke: 'white', strokeWidth: 1.8 }} activeDot={{ r: 5, fill: '#8b5cf6', stroke: 'white', strokeWidth: 2 }} />
+                  </ComposedChart>
+                </ResponsiveContainer>
+              </div>
+
+              {/* Legenda + dica */}
+              <div className="flex flex-wrap items-center justify-between gap-3 px-4 py-3 text-xs border-t bg-muted/10">
+                <div className="flex items-center gap-4">
+                  <span className="inline-flex items-center gap-1.5">
+                    <span className="w-2.5 h-2.5 rounded-full" style={{ background: theme.colors.success }} /> Entradas (barra)
+                  </span>
+                  <span className="inline-flex items-center gap-1.5">
+                    <span className="w-2.5 h-2.5 rounded-full" style={{ background: theme.colors.error }} /> Saídas (barra)
+                  </span>
+                  <span className="inline-flex items-center gap-1.5">
+                    <span className="w-2.5 h-0.5 rounded-full bg-violet-500" /> Saldo (linha)
+                  </span>
+                </div>
+                <span className="text-[11px] text-muted-foreground hidden sm:inline">Passe o mouse para detalhes • linha violeta = saldo do mês</span>
               </div>
             </>
           ) : (
