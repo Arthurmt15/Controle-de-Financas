@@ -2,10 +2,11 @@ import styled from 'styled-components';
 import { Link } from 'react-router-dom';
 
 export const Container = styled.header`
-  position: sticky; top: 0; z-index: 50;
+  position: fixed; top: 0; left: 0; right: 0; z-index: 50;
   display: flex; align-items: center; justify-content: space-between;
+  width: 100%; max-width: 100vw;
   padding: 10px 20px;
-  background: ${({ theme }) => theme.type === 'dark' ? 'rgba(17,26,51,0.78)' : 'rgba(255,255,255,0.82)'};
+  background: ${({ theme }) => theme.type === 'dark' ? 'rgba(17,26,51,0.85)' : 'rgba(255,255,255,0.88)'};
   backdrop-filter: blur(16px) saturate(180%);
   -webkit-backdrop-filter: blur(16px) saturate(180%);
   border-bottom: 1px solid ${({ theme }) => theme.colors.border};

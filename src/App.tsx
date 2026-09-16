@@ -22,12 +22,15 @@ import GlobalStyle from './Styles/global';
 
 const Main = styled.main`
   padding: 24px;
+  padding-top: 72px;
   max-width: 1400px;
   margin: 0 auto;
   overflow: hidden;
+  min-height: calc(100vh - 72px);
 
   @media (max-width: 640px) {
     padding: 16px;
+    padding-top: 64px;
   }
 `;
 
