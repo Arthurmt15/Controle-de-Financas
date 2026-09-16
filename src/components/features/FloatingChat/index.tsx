@@ -8,11 +8,11 @@
 
 import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Bot, Sparkles, Send, X, MessageCircle, Trash2, Lightbulb, Loader2, User } from 'lucide-react';
+import { Bot, Sparkles, Send, X, Trash2, Loader2, User } from 'lucide-react';
 import { useTransactions } from '../../../hooks/useTransactions';
 import { useInstallments } from '../../../contexts/InstallmentsContext';
 import { useDebts } from '../../../contexts/DebtsContext';
-import { getExampleMessages, parseTransactionFromMessage } from '../../../utils/parseTransaction';
+import { parseTransactionFromMessage } from '../../../utils/parseTransaction';
 import { detectCommand, executeCommand } from '../../../utils/chatCommands';
 import { generateSummary, generateAnalysis } from '../../../utils/analysisEngine';
 import { buildFinancialContext, streamAdvisor } from '../../../services/financialAdvisorService';
@@ -40,11 +40,9 @@ function renderMarkdown(text: string): string {
 }
 
 const SUGGESTIONS_GUIDE = [
-  'Como lançar uma despesa?',
-  'Onde vejo parcelados e dívidas?',
-  'Como estão meus gastos este mês?',
-  'Posso planejar uma viagem?',
-  'O que faz o Consultor IA?',
+  'Como lançar despesa?',
+  'Ver parcelados e dívidas',
+  'Meu saldo este mês',
 ];
 
 const FloatingChat: React.FC = () => {
@@ -73,7 +71,6 @@ const FloatingChat: React.FC = () => {
   const scrollRef = useRef<HTMLDivElement>(null);
   const endRef = useRef<HTMLDivElement>(null);
 
-  const examples = getExampleMessages();
   const STORAGE_KEY = 'financas_floating_chat';
   const LEGACY_KEY = 'financas_chat_messages';
 
@@ -98,9 +95,21 @@ const FloatingChat: React.FC = () => {
     return () => window.removeEventListener('open-floating-chat', handler);
   }, []);
 
-  // Foca input ao abrir
+  // Foca input e começa no final (parte de baixo) ao abrir
   useEffect(() => {
-    if (isOpen) setTimeout(() => inputRef.current?.focus(), 100);
+    if (isOpen) {
+      setTimeout(() => inputRef.current?.focus(), 100);
+      // garante que o chat comece na parte de baixo (última mensagem visível sem scroll da página)
+      requestAnimationFrame(() => {
+        const el = scrollRef.current;
+        if (el) el.scrollTop = el.scrollHeight;
+      });
+      setTimeout(() => {
+        const el = scrollRef.current;
+        if (el) el.scrollTo({ top: el.scrollHeight, behavior: 'auto' });
+        endRef.current?.scrollIntoView({ block: 'end' });
+      }, 150);
+    }
   }, [isOpen]);
 
   // Carrega histórico (migra legado) ou welcome
@@ -145,12 +154,18 @@ const FloatingChat: React.FC = () => {
     const last = messages[messages.length - 1];
     if (!last || last.isUser) return [];
     const txt = last.text.toLowerCase();
+    if (/transa[çc][aã]o registrada/.test(txt)) return ['Ver saldo', 'Gastos do mês'];
     if (/d[uú]vida|2000|quanto posso|plano|parcel|dívida|investir|gastos|saldo/.test(txt)) {
-      return ['Quero registrar como despesa', 'Quanto posso gastar este mês?', 'Me dê um plano em 3 passos'];
+      return ['Registrar despesa', 'Quanto posso gastar?'];
     }
-    if (/transa[çc][aã]o registrada/.test(txt)) return ['Ver meu saldo', 'Quanto gastei este mês?', 'Planejar próxima compra'];
-    return ['Explique melhor', 'Onde vejo parcelados?', 'Como estão meus gastos?'];
+    return [];
   }, [messages, isProcessing]);
+
+  // Atalhos resumidos: mostra follow-ups se houver, senão 2-3 guias essenciais
+  const visibleShortcuts = useMemo(() => {
+    if (dynamicFollowUps.length > 0) return dynamicFollowUps.slice(0, 2);
+    return SUGGESTIONS_GUIDE.slice(0, 3);
+  }, [dynamicFollowUps]);
 
   const generateMessageId = () => `msg_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
 
@@ -374,29 +389,19 @@ Responda como guia quando pergunta for sobre navegação.`;
                 <Button onClick={handleSend} disabled={!inputValue.trim() || isProcessing} size="icon" className="h-9 w-9 rounded-full shrink-0 bg-violet-600 hover:bg-violet-700" aria-label="Enviar"><Send className="h-4 w-4" /></Button>
               </div>
 
-              {/* Follow-ups dinâmicos */}
-              {dynamicFollowUps.length > 0 && (
-                <div className="px-3 py-2 bg-violet-50/50 dark:bg-violet-500/5 border-t border-violet-100 dark:border-violet-500/10">
-                  <div className="flex flex-wrap gap-1.5">
-                    {dynamicFollowUps.map((s) => (
-                      <Badge key={s} variant="outline" className="rounded-full px-2.5 py-1 text-[11px] font-medium cursor-pointer bg-card hover:bg-violet-600 hover:text-white hover:border-violet-600 transition-colors" onClick={() => handleExampleClick(s)}>{s}</Badge>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* Exemplos guia */}
-              <div className="px-3 pb-3 pt-2 bg-card border-t">
-                <p className="text-[10px] font-semibold tracking-widest uppercase text-muted-foreground mb-1.5 flex items-center gap-1"><Lightbulb className="h-3 w-3" /> Atalhos do guia</p>
+              {/* Atalhos resumidos — 2 a 3 chips apenas */}
+              <div className="px-3 py-2 bg-card border-t">
                 <div className="flex flex-wrap gap-1.5">
-                  {SUGGESTIONS_GUIDE.map((s) => (
-                    <Badge key={s} variant="outline" className="rounded-full px-2 py-0.5 text-[11px] font-medium cursor-pointer hover:bg-primary hover:text-white hover:border-primary transition-colors" onClick={() => handleExampleClick(s)}>{s}</Badge>
+                  {visibleShortcuts.map((s) => (
+                    <Badge
+                      key={s}
+                      variant="outline"
+                      className="rounded-full px-2.5 py-1 text-[11px] font-medium cursor-pointer bg-card hover:bg-violet-600 hover:text-white hover:border-violet-600 transition-colors"
+                      onClick={() => handleExampleClick(s)}
+                    >
+                      {s}
+                    </Badge>
                   ))}
-                  <div className="w-full flex flex-wrap gap-1.5 mt-1">
-                    {examples.slice(0, 3).map((ex) => (
-                      <Badge key={ex} variant="secondary" className="rounded-full px-2 py-0.5 text-[11px] font-medium cursor-pointer hover:bg-violet-600 hover:text-white transition-colors gap-1" onClick={() => handleExampleClick(ex)}><MessageCircle className="h-3 w-3" />{ex}</Badge>
-                    ))}
-                  </div>
                 </div>
               </div>
             </Card>
