@@ -70,6 +70,8 @@ const FloatingChat: React.FC = () => {
   const inputRef = useRef<HTMLInputElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const endRef = useRef<HTMLDivElement>(null);
+  const fabRef = useRef<HTMLButtonElement>(null);
+  const chatRef = useRef<HTMLDivElement>(null);
 
   const STORAGE_KEY = 'financas_floating_chat';
   const LEGACY_KEY = 'financas_chat_messages';
@@ -110,6 +112,25 @@ const FloatingChat: React.FC = () => {
         endRef.current?.scrollIntoView({ block: 'end' });
       }, 150);
     }
+  }, [isOpen]);
+
+  // Fecha ao clicar fora
+  useEffect(() => {
+    if (!isOpen) return;
+    const handleClickOutside = (e: MouseEvent) => {
+      const target = e.target as Node;
+      if (chatRef.current?.contains(target) || fabRef.current?.contains(target)) return;
+      setIsOpen(false);
+    };
+    const handleEsc = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setIsOpen(false);
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    document.addEventListener('keydown', handleEsc);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('keydown', handleEsc);
+    };
   }, [isOpen]);
 
   // Carrega histórico (migra legado) ou welcome
@@ -323,6 +344,7 @@ Responda como guia quando pergunta for sobre navegação.`;
     <>
       {/* FAB */}
       <motion.button
+        ref={fabRef}
         onClick={() => setIsOpen(!isOpen)}
         className={`fixed bottom-4 right-4 sm:bottom-6 sm:right-6 z-[60] w-14 h-14 rounded-full shadow-lg flex items-center justify-center transition-colors ${isOpen ? 'bg-slate-900 text-white hover:bg-slate-800' : 'bg-violet-600 text-white hover:bg-violet-700'}`}
         whileHover={{ scale: 1.05 }}
@@ -339,6 +361,7 @@ Responda como guia quando pergunta for sobre navegação.`;
       <AnimatePresence>
         {isOpen && (
           <motion.div
+            ref={chatRef}
             initial={{ opacity: 0, y: 16, scale: 0.98 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 16, scale: 0.98 }}
