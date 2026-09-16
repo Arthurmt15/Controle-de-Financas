@@ -6,7 +6,7 @@ import { CreateTransactionWithInstallment } from '../use-cases/CreateTransaction
 /**
  * Facade OOP para a camada de aplicação.
  * Injeção de dependências e composição de UseCases.
- * Pode ser estendido para outros fluxos (ex: chat, importação Open Finance).
+ * Pode ser estendido para outros fluxos (ex: chat, importação).
  */
 export class FinanceService {
   private readonly txRepo = new SupabaseTransactionRepository();

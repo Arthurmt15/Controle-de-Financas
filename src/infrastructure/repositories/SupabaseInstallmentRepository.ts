@@ -7,7 +7,7 @@ import { InstallmentPlan } from '../../domain/value-objects/InstallmentPlan';
 interface InstallmentRow {
   id: string; user_id: string; description: string; total_amount: number | string;
   installment_amount: number | string; total_installments: number; current_installment: number;
-  start_date: string; category_id: string; notes: string | null; source: 'manual' | 'openfinance';
+  start_date: string; category_id: string; notes: string | null; source: 'manual';
   created_at: string; updated_at: string;
 }
 

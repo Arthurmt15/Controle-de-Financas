@@ -381,11 +381,6 @@ inspector_port = 8083
 # The Deno major version to use.
 deno_version = 2
 
-[functions.pluggy-proxy]
-enabled = true
-verify_jwt = false
-entrypoint = "./functions/pluggy-proxy/index.ts"
-
 [functions.ai-chat]
 enabled = true
 verify_jwt = false

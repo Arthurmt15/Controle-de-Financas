@@ -2,7 +2,7 @@
  * @file components/features/Dashboard/index.tsx
  * @description Dashboard principal com métricas e gráficos financeiros.
  * Redesenhado em shadcn + tailwind + framer-motion (referência: Installments bento).
- * Sub-componentes: SummaryCards, Charts, TransactionsList e OpenFinanceSummary.
+ * Sub-componentes: SummaryCards, Charts e TransactionsList.
  */
 
 import React from 'react';
@@ -11,7 +11,6 @@ import { Calendar, Sparkles } from 'lucide-react';
 import SummaryCards from './SummaryCards';
 import Charts from './Charts';
 import TransactionsList from './TransactionsList';
-import OpenFinanceSummary from './OpenFinanceSummary';
 
 /** Dashboard bento moderno com heading em gradiente e stagger suave */
 const Dashboard: React.FC = () => {
@@ -54,18 +53,15 @@ const Dashboard: React.FC = () => {
         <SummaryCards />
       </motion.div>
 
-      {/* Linha gráficos + resumo Open Finance */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mt-5">
+      {/* Gráficos */}
+      <div className="mt-5">
         <motion.div
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.16 }}
-          className="lg:col-span-2 min-w-0"
+          className="min-w-0"
         >
           <Charts />
-        </motion.div>
-        <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="min-w-0">
-          <OpenFinanceSummary />
         </motion.div>
       </div>
 

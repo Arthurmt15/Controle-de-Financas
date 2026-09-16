@@ -58,18 +58,6 @@ CREATE TABLE IF NOT EXISTS recurring_bills (
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- Itens Open Finance (conexões com instituições via Pluggy)
-CREATE TABLE IF NOT EXISTS openfinance_items (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
-  pluggy_item_id VARCHAR(255) UNIQUE NOT NULL,
-  connector_id INTEGER NOT NULL,
-  institution_name VARCHAR(255) NOT NULL,
-  status VARCHAR(50) DEFAULT 'CREATED',
-  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
-
 -- Compras parceladas
 CREATE TABLE IF NOT EXISTS installments (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -82,7 +70,7 @@ CREATE TABLE IF NOT EXISTS installments (
   start_date DATE NOT NULL,
   category_id UUID NOT NULL REFERENCES categories(id) ON DELETE RESTRICT,
   notes TEXT,
-  source VARCHAR(20) NOT NULL DEFAULT 'manual' CHECK (source IN ('manual', 'openfinance')),
+  source VARCHAR(20) NOT NULL DEFAULT 'manual' CHECK (source IN ('manual')),
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
@@ -109,7 +97,6 @@ ALTER TABLE categories ENABLE ROW LEVEL SECURITY;
 ALTER TABLE transactions ENABLE ROW LEVEL SECURITY;
 ALTER TABLE budgets ENABLE ROW LEVEL SECURITY;
 ALTER TABLE recurring_bills ENABLE ROW LEVEL SECURITY;
-ALTER TABLE openfinance_items ENABLE ROW LEVEL SECURITY;
 ALTER TABLE installments ENABLE ROW LEVEL SECURITY;
 ALTER TABLE future_expenses ENABLE ROW LEVEL SECURITY;
 
@@ -137,11 +124,6 @@ CREATE POLICY "Users can insert own recurring_bills" ON recurring_bills FOR INSE
 CREATE POLICY "Users can update own recurring_bills" ON recurring_bills FOR UPDATE USING (auth.uid() = user_id);
 CREATE POLICY "Users can delete own recurring_bills" ON recurring_bills FOR DELETE USING (auth.uid() = user_id);
 
--- OPENFINANCE_ITEMS
-CREATE POLICY "Users can view own openfinance_items" ON openfinance_items FOR SELECT USING (auth.uid() = user_id);
-CREATE POLICY "Users can insert own openfinance_items" ON openfinance_items FOR INSERT WITH CHECK (auth.uid() = user_id);
-CREATE POLICY "Users can delete own openfinance_items" ON openfinance_items FOR DELETE USING (auth.uid() = user_id);
-
 -- INSTALLMENTS
 CREATE POLICY "Users can view own installments" ON installments FOR SELECT USING (auth.uid() = user_id);
 CREATE POLICY "Users can insert own installments" ON installments FOR INSERT WITH CHECK (auth.uid() = user_id);
@@ -166,7 +148,6 @@ CREATE INDEX IF NOT EXISTS idx_budgets_user_id ON budgets(user_id);
 CREATE INDEX IF NOT EXISTS idx_budgets_month ON budgets(month);
 CREATE INDEX IF NOT EXISTS idx_recurring_bills_user_id ON recurring_bills(user_id);
 CREATE INDEX IF NOT EXISTS idx_recurring_bills_active ON recurring_bills(active);
-CREATE INDEX IF NOT EXISTS idx_openfinance_items_user_id ON openfinance_items(user_id);
 CREATE INDEX IF NOT EXISTS idx_installments_user_id ON installments(user_id);
 CREATE INDEX IF NOT EXISTS idx_installments_start_date ON installments(start_date);
 CREATE INDEX IF NOT EXISTS idx_future_expenses_user_id ON future_expenses(user_id);

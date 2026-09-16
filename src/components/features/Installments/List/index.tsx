@@ -7,14 +7,13 @@
 
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Pencil, Trash2, ChevronRight, ExternalLink, Inbox, Loader2 } from 'lucide-react';
+import { Pencil, Trash2, ChevronRight, Inbox, Loader2 } from 'lucide-react';
 import { useInstallments } from '../../../../contexts/InstallmentsContext';
 import { useTransactions } from '../../../../hooks/useTransactions';
 import { formatCurrency, formatDate } from '../../../../utils/formatters';
 import InstallmentForm from '../Form';
 import { Card, CardContent, CardHeader, CardTitle } from '../../../ui/card';
 import { Button } from '../../../ui/button';
-import { Badge } from '../../../ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '../../../ui/dialog';
 import type { Installment } from '../../../../types';
 
@@ -221,12 +220,7 @@ const InstallmentList: React.FC<InstallmentListProps> = ({ installments: propIns
                       {getCategoryName(installment.categoryId)}
                     </span>
                     <span className="text-xs text-muted-foreground">{formatDate(installment.startDate)}</span>
-                    {installment.source === 'openfinance' && (
-                      <Badge variant="outline" className="gap-1 text-[11px] py-0 px-2">
-                        <ExternalLink className="h-3 w-3" />
-                        Open Finance
-                      </Badge>
-                    )}
+
                   </div>
 
                   {/* Barra de progresso */}

@@ -13,7 +13,7 @@ export class InstallmentEntity extends BaseEntity {
   public readonly startDate: string;
   public readonly categoryId: string;
   public readonly notes?: string;
-  public readonly source: 'manual' | 'openfinance';
+  public readonly source: 'manual';
 
   constructor(props: Installment) {
     super({ id: props.id, createdAt: props.createdAt, updatedAt: props.updatedAt });

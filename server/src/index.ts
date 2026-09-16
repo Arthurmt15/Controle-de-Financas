@@ -18,7 +18,6 @@ import recurringBillsRouter from './routes/recurringBills';
 import installmentsRouter from './routes/installments';
 import futureExpensesRouter from './routes/futureExpenses';
 import aiRouter from './routes/ai';
-import pluggyRouter from './routes/pluggy';
 
 dotenv.config();
 
@@ -150,7 +149,6 @@ app.use('/api/recurring-bills', recurringBillsRouter);
 app.use('/api/installments', installmentsRouter);
 app.use('/api/future-expenses', futureExpensesRouter);
 app.use('/api/ai', aiLimiter, aiRouter);
-app.use('/api/pluggy', pluggyRouter);
 
 /**
  * Middleware de tratamento de erros globais

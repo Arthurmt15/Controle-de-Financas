@@ -94,7 +94,6 @@ Aplicação web completa para controle financeiro pessoal, desenvolvida com Reac
 │   │   │   └── Select/
 │   │   ├── features/             # Componentes de funcionalidades
 │   │   │   ├── Dashboard/        # Dashboard com gráficos
-│   │   │   ├── OpenFinance/      # Integração Open Finance Brasil
 │   │   │   ├── TransactionForm/
 │   │   │   ├── TransactionList/
 │   │   │   ├── Analysis/         # Análise financeira
@@ -106,8 +105,7 @@ Aplicação web completa para controle financeiro pessoal, desenvolvida com Reac
 │   ├── contexts/                 # Contextos React
 │   │   ├── AuthContext.tsx
 │   │   ├── ThemeContext.tsx
-│   │   ├── TransactionsContext.tsx
-│   │   └── OpenFinanceContext.tsx
+│   │   └── TransactionsContext.tsx
 │   ├── hooks/                    # Hooks customizados
 │   ├── pages/
 │   │   ├── Login/
@@ -115,10 +113,8 @@ Aplicação web completa para controle financeiro pessoal, desenvolvida com Reac
 │   │   ├── Transactions/
 │   │   ├── Analysis/
 │   │   ├── Settings/
-│   │   └── OpenFinance/
 │   ├── services/                 # Serviços de API
 │   │   ├── api.ts
-│   │   ├── openFinanceService.ts
 │   │   ├── financialAdvisorService.ts
 │   │   └── ocrService.ts
 │   ├── types/                    # Definições TypeScript
@@ -128,7 +124,6 @@ Aplicação web completa para controle financeiro pessoal, desenvolvida com Reac
 │   └── src/
 │       ├── routes/               # Rotas da API
 │       ├── middleware/           # Middlewares (auth)
-│       ├── services/             # Serviços (Pluggy API)
 │       ├── types/                # Tipos TypeScript
 │       └── database.ts           # Conexão PostgreSQL
 │
@@ -175,7 +170,6 @@ Aplicação web completa para controle financeiro pessoal, desenvolvida com Reac
 - npm >= 10.0.0
 - Supabase (conta gratuita)
 - Conta Google Cloud Platform (para OAuth)
-- Conta Pluggy (para Open Finance, opcional)
 
 ---
 
@@ -207,8 +201,6 @@ REACT_APP_API_URL=http://localhost:5000/api
 DATABASE_URL=sua_url_do_banco
 JWT_SECRET=sua_chave_secreta_aqui
 GROQ_API_KEY=sua_chave_groq_aqui
-PLUGGY_CLIENT_ID=seu_client_id_pluggy
-PLUGGY_CLIENT_SECRET=seu_client_secret_pluggy
 FRONTEND_URL=http://localhost:3000
 ```
 

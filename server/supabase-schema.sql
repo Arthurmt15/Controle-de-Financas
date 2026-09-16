@@ -229,7 +229,7 @@ CREATE TABLE IF NOT EXISTS installments (
   start_date DATE NOT NULL,
   category_id UUID NOT NULL REFERENCES categories(id) ON DELETE RESTRICT,
   notes TEXT,
-  source VARCHAR(20) NOT NULL DEFAULT 'manual' CHECK (source IN ('manual', 'openfinance')),
+  source VARCHAR(20) NOT NULL DEFAULT 'manual' CHECK (source IN ('manual')),
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );

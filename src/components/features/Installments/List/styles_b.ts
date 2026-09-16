@@ -108,14 +108,3 @@ export const NextDueDays = styled.span<{ $overdue?: boolean }>`
   color: ${({ theme }) => theme.colors?.textSecondary || '#6b7280'};
 `;
 
-/** Badge do Open Finance */
-export const OpenFinanceBadge = styled.div`
-  display: inline-block;
-  margin-top: 8px;
-  padding: 4px 8px;
-  font-size: 11px;
-  font-weight: 500;
-  color: ${({ theme }) => theme.colors?.primary || '#6366f1'};
-  background-color: ${({ theme }) => theme.colors?.primaryLight || '#eef2ff'};
-  border-radius: 6px;
-`;

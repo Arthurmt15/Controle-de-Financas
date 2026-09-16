@@ -18,7 +18,7 @@ export const HeroVisual: React.FC<{ classes: Record<string, string> }> = ({ clas
     </motion.h1>
 
     <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.3 }} className={classes.heroDesc}>
-      Bento financeiro com automação, Open Finance e IA. Menos planilha, mais decisão.
+      Bento financeiro com automação e IA. Menos planilha, mais decisão.
     </motion.p>
 
     <div className="flex flex-col gap-4">

@@ -100,20 +100,6 @@ export async function createTables(): Promise<void> {
       );
     `);
 
-    // Tabela de itens Open Finance
-    await client.query(`
-      CREATE TABLE IF NOT EXISTS openfinance_items (
-        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-        user_id UUID NOT NULL,
-        pluggy_item_id VARCHAR(255) UNIQUE NOT NULL,
-        connector_id INTEGER NOT NULL,
-        institution_name VARCHAR(255) NOT NULL,
-        status VARCHAR(50) DEFAULT 'CREATED',
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-      );
-    `);
-
     // Tabela de compras parceladas
     await client.query(`
       CREATE TABLE IF NOT EXISTS installments (
@@ -127,7 +113,7 @@ export async function createTables(): Promise<void> {
         start_date DATE NOT NULL,
         category_id UUID NOT NULL REFERENCES categories(id) ON DELETE RESTRICT,
         notes TEXT,
-        source VARCHAR(20) NOT NULL DEFAULT 'manual' CHECK (source IN ('manual', 'openfinance')),
+        source VARCHAR(20) NOT NULL DEFAULT 'manual' CHECK (source IN ('manual')),
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       );
@@ -159,7 +145,6 @@ export async function createTables(): Promise<void> {
       CREATE INDEX IF NOT EXISTS idx_budgets_month ON budgets(month);
       CREATE INDEX IF NOT EXISTS idx_recurring_bills_user_id ON recurring_bills(user_id);
       CREATE INDEX IF NOT EXISTS idx_recurring_bills_active ON recurring_bills(active);
-      CREATE INDEX IF NOT EXISTS idx_openfinance_items_user_id ON openfinance_items(user_id);
       CREATE INDEX IF NOT EXISTS idx_installments_user_id ON installments(user_id);
       CREATE INDEX IF NOT EXISTS idx_future_expenses_user_id ON future_expenses(user_id);
       CREATE INDEX IF NOT EXISTS idx_future_expenses_status ON future_expenses(status);

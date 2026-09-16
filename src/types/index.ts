@@ -135,8 +135,8 @@ export interface Installment {
   categoryId: string;
   /** Observações adicionais */
   notes?: string;
-  /** Origem: manual ou openfinance */
-  source: 'manual' | 'openfinance';
+  /** Origem da transação */
+  source: 'manual';
   /** Data de criação */
   createdAt?: string;
   /** Data de atualização */

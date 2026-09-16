@@ -19,7 +19,7 @@ interface InstallmentRow {
   start_date: string;
   category_id: string;
   notes: string | null;
-  source: 'manual' | 'openfinance';
+  source: 'manual';
   created_at: string;
   updated_at: string;
 }
