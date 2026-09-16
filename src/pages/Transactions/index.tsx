@@ -5,10 +5,9 @@
  * e wrappers Card. Mantém toda lógica de tabs existente (chat/form).
  */
 
-import React, { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { MessageCircle, FileText, Wallet, Info, Sparkles } from 'lucide-react';
-import TransactionChat from '../../components/features/TransactionChat';
+import React from 'react';
+import { motion } from 'framer-motion';
+import { Wallet, Info, Sparkles, Bot, ArrowUpRight } from 'lucide-react';
 import TransactionForm from '../../components/features/TransactionForm';
 import TransactionList from '../../components/features/TransactionList';
 import { Card, CardContent } from '../../components/ui/card';
@@ -20,8 +19,6 @@ import { Badge } from '../../components/ui/badge';
  * Alterna entre Chat Rápido e Formulário, exibe lista abaixo.
  */
 const TransactionsPage: React.FC = () => {
-  // Controla aba ativa: chat (assistente + upload) ou form (formulário manual)
-  const [activeTab, setActiveTab] = useState<'chat' | 'form'>('chat');
 
   return (
     <div className="w-full max-w-[1200px] mx-auto px-4 sm:px-6 py-6">
@@ -40,10 +37,9 @@ const TransactionsPage: React.FC = () => {
               Registre gastos por chat ou formulário e acompanhe tudo na lista
             </p>
           </div>
-          {/* Badge indicativo da aba ativa */}
           <Badge variant="outline" className="w-fit rounded-full px-3 py-1.5 gap-1.5 text-xs font-medium shrink-0">
             <Sparkles className="h-3.5 w-3.5 text-primary" />
-            {activeTab === 'chat' ? 'Chat Rápido ativo' : 'Formulário ativo'}
+            Guia flutuante ativo
           </Badge>
         </div>
 
@@ -60,61 +56,30 @@ const TransactionsPage: React.FC = () => {
         </Card>
       </motion.div>
 
-      {/* Tabs shadcn - Button group dentro de Card */}
-      <motion.div
-        initial={{ opacity: 0, y: 8 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.08, duration: 0.4 }}
-        className="mt-5"
-      >
-        <Card className="rounded-2xl p-1.5 bg-muted/40 border shadow-sm">
-          <div className="grid grid-cols-2 gap-1.5">
-            {/* Botão Chat Rápido */}
-            <Button
-              variant={activeTab === 'chat' ? 'default' : 'ghost'}
-              onClick={() => setActiveTab('chat')}
-              className={`rounded-xl h-10 font-semibold gap-2 ${activeTab === 'chat' ? 'shadow-sm' : 'hover:bg-background'}`}
-            >
-              <MessageCircle className="h-4 w-4" />
-              Chat Rápido
-            </Button>
-            {/* Botão Formulário */}
-            <Button
-              variant={activeTab === 'form' ? 'default' : 'ghost'}
-              onClick={() => setActiveTab('form')}
-              className={`rounded-xl h-10 font-semibold gap-2 ${activeTab === 'form' ? 'shadow-sm' : 'hover:bg-background'}`}
-            >
-              <FileText className="h-4 w-4" />
-              Formulário
-            </Button>
-          </div>
+      {/* Formulário direto — chat foi para o flutuante */}
+      <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.08, duration: 0.4 }} className="mt-5">
+        <Card className="rounded-2xl border shadow-sm">
+          <CardContent className="p-6">
+            <TransactionForm />
+          </CardContent>
         </Card>
       </motion.div>
 
-      {/* Conteúdo baseado na aba ativa - com animação AnimatePresence */}
-      <AnimatePresence mode="wait">
-        <motion.div
-          key={activeTab}
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: -10 }}
-          transition={{ duration: 0.3 }}
-          className="mt-5"
-        >
-          {activeTab === 'chat' ? (
-            <Card className="rounded-2xl border shadow-sm overflow-hidden">
-              <TransactionChat />
-            </Card>
-          ) : (
-            // Formulário em Card bento
-            <Card className="rounded-2xl border shadow-sm">
-              <CardContent className="p-6">
-                <TransactionForm />
-              </CardContent>
-            </Card>
-          )}
-        </motion.div>
-      </AnimatePresence>
+      {/* Chamada para o chat flutuante */}
+      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.12 }} className="mt-4">
+        <Card className="rounded-2xl border-dashed bg-gradient-to-r from-violet-500/5 via-primary/5 to-transparent">
+          <CardContent className="p-4 flex items-center gap-3">
+            <span className="w-9 h-9 rounded-xl bg-violet-600 text-white flex items-center justify-center shrink-0"><Bot className="h-5 w-5" /></span>
+            <div className="min-w-0 flex-1">
+              <p className="text-sm font-semibold">Prefere digitar no chat?</p>
+              <p className="text-xs text-muted-foreground">Use o guia flutuante no canto inferior direito — faz tudo que o Chat Rápido fazia.</p>
+            </div>
+            <Button size="sm" className="rounded-full shrink-0 gap-1.5 bg-violet-600 hover:bg-violet-700" onClick={() => window.dispatchEvent(new CustomEvent('open-floating-chat'))}>
+              Abrir guia <ArrowUpRight className="h-3.5 w-3.5" />
+            </Button>
+          </CardContent>
+        </Card>
+      </motion.div>
 
       {/* Seção da lista - com animação suave */}
       <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.18 }} className="mt-6">

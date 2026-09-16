@@ -16,6 +16,7 @@ import { ThemeProvider as StyledThemeProvider } from 'styled-components';
 import styled from 'styled-components';
 import Header from './components/layout/Header';
 import SkipLink from './components/common/SkipLink';
+import FloatingChat from './components/features/FloatingChat';
 import GlobalStyle from './Styles/global';
 
 const Main = styled.main`
@@ -79,6 +80,7 @@ const MainLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => (
     <Main id="main-content" tabIndex={-1}>
       {children}
     </Main>
+    <FloatingChat />
   </>
 );
 

@@ -14,9 +14,10 @@ import MonthlyComparison from '../../components/features/Analysis/components/Mon
 import SpendingInsights from '../../components/features/Analysis/components/SpendingInsights';
 import CategoryBreakdown from '../../components/features/Analysis/components/CategoryBreakdown';
 import MonthlyChart from '../../components/features/Analysis/components/MonthlyChart';
-import FinancialAdvisor from '../../components/features/FinancialAdvisor';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../../components/ui/card';
 import { Badge } from '../../components/ui/badge';
+import { Button } from '../../components/ui/button';
+import { Bot } from 'lucide-react';
 
 const AnalysisPage: React.FC = () => {
   const { transactions, categories } = useTransactions();
@@ -84,9 +85,8 @@ const AnalysisPage: React.FC = () => {
         </div>
       </motion.div>
 
-      {/* ================= DESKTOP LAYOUT (lg+) — bento premium ================= */}
-      <div className="hidden lg:grid grid-cols-[1fr_400px] gap-6 items-start mt-7">
-        <div className="flex flex-col gap-5 min-w-0">
+      {/* ================= DESKTOP LAYOUT (lg+) — bento premium (chat agora flutuante) ================= */}
+      <div className="hidden lg:flex flex-col gap-5 mt-7">
           {/* Summary 2x2 desktop — 2 em cima / 2 embaixo */}
           <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.08 }} className="grid grid-cols-2 gap-4">
             {summaryCards.map((card, idx) => (
@@ -146,21 +146,18 @@ const AnalysisPage: React.FC = () => {
           <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.22 }}>
             <SpendingInsights transactions={transactions} categories={categories} />
           </motion.div>
-        </div>
 
-        {/* Advisor desktop — sticky + altura dinâmica, chat com scroll interno (não empurra a página) */}
-        <div className="hidden lg:block sticky top-6 self-start h-fit max-h-[calc(100vh-3rem)]">
-          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.18 }} className="flex flex-col">
-            <div className="flex items-center gap-2 mb-3 text-muted-foreground">
-              <Sparkles className="h-3.5 w-3.5 text-violet-500" />
-              <span className="text-[11px] font-semibold tracking-widest uppercase">Assistente IA</span>
-              <span className="ml-auto h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
-              <span className="text-[11px] text-muted-foreground">online</span>
-            </div>
-            <FinancialAdvisor />
-          </motion.div>
+          <Card className="rounded-2xl border-dashed bg-gradient-to-r from-violet-500/5 via-primary/5 to-transparent">
+            <CardContent className="p-4 flex items-center gap-3">
+              <span className="w-9 h-9 rounded-xl bg-violet-600 text-white flex items-center justify-center shrink-0"><Bot className="h-5 w-5" /></span>
+              <div className="min-w-0 flex-1">
+                <p className="text-sm font-semibold">Consultor no chat flutuante</p>
+                <p className="text-xs text-muted-foreground">Clique no botão no canto inferior direito — o guia faz tudo que o consultor fazia.</p>
+              </div>
+              <Button size="sm" className="rounded-full shrink-0 bg-violet-600 hover:bg-violet-700" onClick={() => window.dispatchEvent(new CustomEvent('open-floating-chat'))}>Abrir guia</Button>
+            </CardContent>
+          </Card>
         </div>
-      </div>
 
       {/* ================= MOBILE LAYOUT (base→lg) — stack compacto ================= */}
       <div className="lg:hidden flex flex-col gap-4 mt-6">
@@ -226,15 +223,16 @@ const AnalysisPage: React.FC = () => {
           <SpendingInsights transactions={transactions} categories={categories} />
         </motion.div>
 
-        {/* Advisor mobile — full width, altura fixa menor, sem sticky */}
-        <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.22 }}>
-          <div className="flex items-center gap-2 mb-2 px-1">
-            <Sparkles className="h-3.5 w-3.5 text-violet-500" />
-            <span className="text-[11px] font-semibold tracking-widest uppercase text-muted-foreground">Assistente IA</span>
-            <Badge variant="secondary" className="ml-auto rounded-full text-[10px] px-2 py-0">mobile</Badge>
-          </div>
-          <FinancialAdvisor />
-        </motion.div>
+        <Card className="rounded-2xl border-dashed bg-gradient-to-r from-violet-500/5 via-primary/5 to-transparent">
+          <CardContent className="p-4 flex items-center gap-3">
+            <span className="w-9 h-9 rounded-xl bg-violet-600 text-white flex items-center justify-center shrink-0"><Bot className="h-5 w-5" /></span>
+            <div className="min-w-0 flex-1">
+              <p className="text-sm font-semibold">Guia no canto da tela</p>
+              <p className="text-xs text-muted-foreground">Toque no botão flutuante para falar com o guia — mesmo consultor, agora sempre visível.</p>
+            </div>
+            <Button size="sm" className="rounded-full shrink-0 bg-violet-600 hover:bg-violet-700" onClick={() => window.dispatchEvent(new CustomEvent('open-floating-chat'))}>Abrir</Button>
+          </CardContent>
+        </Card>
       </div>
     </div>
   );
