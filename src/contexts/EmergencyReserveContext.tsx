@@ -41,6 +41,13 @@ export function EmergencyReserveProvider({ children }: { children: React.ReactNo
         logout();
         return;
       }
+      // Tabela ainda não existe (migration pendente) — trata como sem reserva, sem erro bloqueante
+      if (e instanceof Error && (e.message.includes('Tabela') || e.message.toLowerCase().includes('does not exist') || e.message.toLowerCase().includes('could not find the table'))) {
+        console.warn('Reserva: tabela não existe ainda. Execute supabase/migrations/004_add_emergency_reserve.sql no SQL Editor.');
+        setReserve(null);
+        setError(null);
+        return;
+      }
       setError('Erro ao carregar reserva');
     } finally {
       setIsLoading(false);

@@ -24,6 +24,13 @@ function mapRow(row: ReserveRow): EmergencyReserve {
   };
 }
 
+function isTableNotFound(error: any): boolean {
+  if (!error) return false;
+  const code = error.code || '';
+  const msg = (error.message || '').toLowerCase();
+  return code === 'PGRST205' || code === '42P01' || code === 'PGRST301' || msg.includes('does not exist') || msg.includes('could not find the table') || msg.includes('schema cache');
+}
+
 export class SupabaseEmergencyReserveRepository implements IEmergencyReserveRepository {
   async getAll(): Promise<EmergencyReserve[]> {
     const r = await this.getByUser();
@@ -31,14 +38,27 @@ export class SupabaseEmergencyReserveRepository implements IEmergencyReserveRepo
   }
 
   async getById(id: string): Promise<EmergencyReserve | null> {
-    const { data } = await supabase.from('emergency_reserves').select('*').eq('id', id).single();
+    const { data, error } = await supabase.from('emergency_reserves').select('*').eq('id', id).single();
+    if (error) {
+      if (isTableNotFound(error)) {
+        console.warn('Tabela emergency_reserves não existe ainda. Execute a migration 004 em Supabase SQL Editor.');
+        return null;
+      }
+      throw error;
+    }
     if (!data) return null;
     return mapRow(data as ReserveRow);
   }
 
   async getByUser(): Promise<EmergencyReserve | null> {
     const { data, error } = await supabase.from('emergency_reserves').select('*').limit(1).maybeSingle();
-    if (error) throw error;
+    if (error) {
+      if (isTableNotFound(error)) {
+        console.warn('Tabela emergency_reserves não existe ainda. Execute a migration 004 em Supabase SQL Editor.');
+        return null;
+      }
+      throw error;
+    }
     if (!data) return null;
     return mapRow(data as ReserveRow);
   }
@@ -54,7 +74,10 @@ export class SupabaseEmergencyReserveRepository implements IEmergencyReserveRepo
       current_amount: dto.currentAmount,
       notes: dto.notes || null,
     }).select().single();
-    if (error) throw error;
+    if (error) {
+      if (isTableNotFound(error)) throw new Error('Tabela emergency_reserves não existe. Execute a migration 004_add_emergency_reserve.sql no Supabase SQL Editor.');
+      throw error;
+    }
     return mapRow(data as ReserveRow);
   }
 
@@ -66,13 +89,22 @@ export class SupabaseEmergencyReserveRepository implements IEmergencyReserveRepo
       notes: entity.notes || null,
       updated_at: new Date().toISOString(),
     }).eq('id', entity.id).select().single();
-    if (error) throw error;
+    if (error) {
+      if (isTableNotFound(error)) throw new Error('Tabela emergency_reserves não existe. Execute a migration 004.');
+      throw error;
+    }
     return mapRow(data as ReserveRow);
   }
 
   async delete(id: string): Promise<void> {
     const { error } = await supabase.from('emergency_reserves').delete().eq('id', id);
-    if (error) throw error;
+    if (error) {
+      if (isTableNotFound(error)) {
+        console.warn('Tabela emergency_reserves não existe.');
+        return;
+      }
+      throw error;
+    }
   }
 
   async deposit(amount: number): Promise<EmergencyReserve> {

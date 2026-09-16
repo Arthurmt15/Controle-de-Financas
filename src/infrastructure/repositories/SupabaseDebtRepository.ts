@@ -20,14 +20,31 @@ function mapRow(row: DebtRow): Debt {
   };
 }
 
+function isTableNotFoundDebt(error: any): boolean {
+  if (!error) return false;
+  const code = error.code || '';
+  const msg = (error.message || '').toLowerCase();
+  return code === 'PGRST205' || code === '42P01' || code === 'PGRST301' || msg.includes('does not exist') || msg.includes('could not find the table') || msg.includes('schema cache');
+}
+
 export class SupabaseDebtRepository implements IDebtRepository {
   async getAll(): Promise<Debt[]> {
     const { data, error } = await supabase.from('debts').select('*').order('start_date', { ascending: false });
-    if (error) throw error;
+    if (error) {
+      if (isTableNotFoundDebt(error)) {
+        console.warn('Tabela debts não existe ainda. Execute a migration 002 em Supabase SQL Editor.');
+        return [];
+      }
+      throw error;
+    }
     return (data as DebtRow[]).map(mapRow);
   }
   async getById(id: string): Promise<Debt | null> {
-    const { data } = await supabase.from('debts').select('*').eq('id', id).single();
+    const { data, error } = await supabase.from('debts').select('*').eq('id', id).single();
+    if (error) {
+      if (isTableNotFoundDebt(error)) return null;
+      return null;
+    }
     if (!data) return null;
     return mapRow(data as DebtRow);
   }
@@ -43,7 +60,10 @@ export class SupabaseDebtRepository implements IDebtRepository {
       current_installment: dto.currentInstallment, start_date: dto.startDate, category_id: dto.categoryId,
       notes: dto.notes || null, source: dto.source,
     }).select().single();
-    if (error) throw error;
+    if (error) {
+      if (isTableNotFoundDebt(error)) throw new Error('Tabela debts não existe. Execute a migration 002_add_debts.sql no Supabase SQL Editor.');
+      throw error;
+    }
     return mapRow(data as DebtRow);
   }
   async update(entity: Debt): Promise<Debt> {
@@ -54,12 +74,21 @@ export class SupabaseDebtRepository implements IDebtRepository {
       start_date: entity.startDate, category_id: entity.categoryId, notes: entity.notes || null,
       source: entity.source, updated_at: new Date().toISOString(),
     }).eq('id', entity.id).select().single();
-    if (error) throw error;
+    if (error) {
+      if (isTableNotFoundDebt(error)) throw new Error('Tabela debts não existe. Execute a migration 002.');
+      throw error;
+    }
     return mapRow(data as DebtRow);
   }
   async delete(id: string): Promise<void> {
     const { error } = await supabase.from('debts').delete().eq('id', id);
-    if (error) throw error;
+    if (error) {
+      if (isTableNotFoundDebt(error)) {
+        console.warn('Tabela debts não existe.');
+        return;
+      }
+      throw error;
+    }
   }
   async advance(id: string): Promise<Debt> {
     const current = await this.getById(id);

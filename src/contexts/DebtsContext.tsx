@@ -73,6 +73,12 @@ export function DebtsProvider({ children }: { children: React.ReactNode }) {
             logout();
             return;
           }
+          // Tabela debts ainda não existe (migration 002 pendente) — não bloqueia app
+          if (error instanceof Error && (error.message.includes('Tabela') || error.message.toLowerCase().includes('does not exist') || error.message.toLowerCase().includes('could not find the table'))) {
+            console.warn('Dívidas: tabela debts não existe ainda. Execute supabase/migrations/002_add_debts.sql no SQL Editor.');
+            dispatch({ type: 'SET_DEBTS', payload: [] });
+            return;
+          }
           dispatch({ type: 'SET_ERROR', payload: 'Erro ao carregar dívidas' });
         }
       }
