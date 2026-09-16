@@ -135,14 +135,22 @@ const InstallmentsPage: React.FC = () => {
       tone: 'emerald' as const,
       icon: CalendarCheck,
       label: 'Próximo pagamento',
-      value: nextDueInfo
-        ? `${nextDueInfo.dueDateStr} • ${nextDueInfo.installment.description.slice(0, 18)}${nextDueInfo.installment.description.length > 18 ? '…' : ''}`
-        : 'Nenhum pendente',
-      sub: nextDueInfo
-        ? `${nextDueInfo.installment.currentInstallment + 1}/${nextDueInfo.installment.totalInstallments} • ${formatCurrency(Number(nextDueInfo.installment.installmentAmount))} • ${nextDueInfo.daysUntil === 0 ? 'vence hoje' : nextDueInfo.daysUntil > 0 ? `em ${nextDueInfo.daysUntil}d` : `vencido há ${Math.abs(nextDueInfo.daysUntil)}d`}`
-        : 'Tudo em dia',
+      // valor principal agora é só a data — descrição vai em linha própria com truncate/tooltip, sem slice manual
+      value: nextDueInfo ? nextDueInfo.dueDateStr : 'Nenhum pendente',
+      description: nextDueInfo?.installment.description ?? null,
+      parcelLabel: nextDueInfo ? `${nextDueInfo.installment.currentInstallment + 1}/${nextDueInfo.installment.totalInstallments}` : null,
+      amountLabel: nextDueInfo ? formatCurrency(Number(nextDueInfo.installment.installmentAmount)) : null,
+      daysUntil: nextDueInfo?.daysUntil ?? null,
+      daysLabel: nextDueInfo
+        ? nextDueInfo.daysUntil === 0
+          ? 'vence hoje'
+          : nextDueInfo.daysUntil > 0
+            ? `em ${nextDueInfo.daysUntil}d`
+            : `vencido há ${Math.abs(nextDueInfo.daysUntil)}d`
+        : null,
+      sub: nextDueInfo ? `${nextDueInfo.installment.currentInstallment + 1}/${nextDueInfo.installment.totalInstallments} • ${formatCurrency(Number(nextDueInfo.installment.installmentAmount))}` : 'Tudo em dia',
       accent: 'bg-emerald-500',
-    },
+    } as any,
   ];
 
   return (
@@ -213,7 +221,7 @@ const InstallmentsPage: React.FC = () => {
                           : 'linear-gradient(180deg,#64748b,#475569)',
                 }}
               />
-              <CardContent className="p-[18px] flex items-center gap-3.5">
+              <CardContent className={`p-[18px] flex gap-3.5 ${card.label === 'Próximo pagamento' && (card as any).description ? 'items-start' : 'items-center'}`}>
                 {/* Ícone com fundo tonalizado */}
                 <span
                   className={`w-[42px] h-[42px] shrink-0 flex items-center justify-center rounded-xl border text-sm ${
@@ -228,17 +236,49 @@ const InstallmentsPage: React.FC = () => {
                 >
                   <card.icon size={16} />
                 </span>
-                <div className="min-w-0 flex-1">
-                  <span className="block text-[11px] font-semibold tracking-widest uppercase text-muted-foreground">
-                    {card.label}
-                  </span>
-                  <strong className="block mt-1.5 text-[18px] font-bold tracking-tight leading-none truncate">
-                    {card.value}
-                  </strong>
-                  <span className="mt-1.5 inline-block text-[11px] font-medium text-muted-foreground bg-muted px-2 py-0.5 rounded-full">
-                    {card.sub}
-                  </span>
-                </div>
+                {(card.label === 'Próximo pagamento' && (card as any).description) ? (
+                  <div className="min-w-0 flex-1 flex flex-col gap-1">
+                    <span className="block text-[11px] font-semibold tracking-widest uppercase text-muted-foreground">
+                      {card.label}
+                    </span>
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <strong className="text-[16px] font-bold tracking-tight leading-none">{card.value}</strong>
+                      <span
+                        className={`inline-flex items-center text-[10px] font-bold px-2 py-0.5 rounded-full border leading-none ${
+                          (card as any).daysUntil !== null && (card as any).daysUntil < 0
+                            ? 'bg-red-50 text-red-700 border-red-200 dark:bg-red-500/10 dark:text-red-300 dark:border-red-500/20'
+                            : (card as any).daysUntil === 0
+                              ? 'bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-500/20'
+                              : (card as any).daysUntil !== null && (card as any).daysUntil <= 7
+                                ? 'bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-500/10 dark:text-blue-300 dark:border-blue-500/20'
+                                : 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/20'
+                        }`}
+                      >
+                        {(card as any).daysLabel}
+                      </span>
+                    </div>
+                    <p className="text-[12.5px] font-medium leading-tight truncate text-foreground" title={(card as any).description}>
+                      {(card as any).description}
+                    </p>
+                    <div className="flex items-center gap-1.5 flex-wrap">
+                      <span className="inline-flex items-center gap-1 text-[11px] font-medium text-muted-foreground bg-muted px-2 py-0.5 rounded-full">
+                        {(card as any).parcelLabel} • {(card as any).amountLabel}
+                      </span>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="min-w-0 flex-1">
+                    <span className="block text-[11px] font-semibold tracking-widest uppercase text-muted-foreground">
+                      {card.label}
+                    </span>
+                    <strong className="block mt-1.5 text-[18px] font-bold tracking-tight leading-none truncate" title={String(card.value)}>
+                      {card.value}
+                    </strong>
+                    <span className="mt-1.5 inline-block text-[11px] font-medium text-muted-foreground bg-muted px-2 py-0.5 rounded-full truncate max-w-full">
+                      {card.sub}
+                    </span>
+                  </div>
+                )}
               </CardContent>
             </Card>
           </motion.div>

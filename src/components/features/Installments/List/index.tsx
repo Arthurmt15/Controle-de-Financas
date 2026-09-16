@@ -252,33 +252,50 @@ const InstallmentList: React.FC<InstallmentListProps> = ({ installments: propIns
                     </div>
                   </div>
 
-                  {/* Próximo vencimento com cor condicional */}
+                  {/* Próximo vencimento — redesenhado: header com ícone + badge, data e parcela separados, sem truncar descrição */}
                   {nextDue ? (
                     <div
-                      className={`mt-1 rounded-xl border p-3 flex flex-col gap-0.5 ${
+                      className={`mt-1 rounded-xl border p-3 flex flex-col gap-2 ${
                         daysUntil !== null && daysUntil < 0
                           ? 'bg-red-50 border-red-200 dark:bg-red-500/10 dark:border-red-500/20'
                           : daysUntil === 0
                             ? 'bg-amber-50 border-amber-200 dark:bg-amber-500/10 dark:border-amber-500/20'
                             : daysUntil !== null && daysUntil <= 7
                               ? 'bg-blue-50 border-blue-200 dark:bg-blue-500/10 dark:border-blue-500/20'
-                              : 'bg-muted/50 border-border'
+                              : 'bg-muted/40 border-border'
                       }`}
                     >
-                      <span className="text-[10px] font-semibold tracking-widest uppercase text-muted-foreground">
-                        Próximo pagamento
-                      </span>
-                      <span className="text-[13px] font-semibold">
-                        {formatDate(nextDue.toISOString().split('T')[0])} • {installment.currentInstallment + 1}/
-                        {installment.totalInstallments}
-                      </span>
-                      <span className="text-[11px] font-medium text-muted-foreground">
-                        {daysUntil === 0
-                          ? 'Vence hoje'
-                          : daysUntil! > 0
-                            ? `Em ${daysUntil} dia${daysUntil! > 1 ? 's' : ''}`
-                            : `Vencido há ${Math.abs(daysUntil!)} dia${Math.abs(daysUntil!) > 1 ? 's' : ''}`}
-                      </span>
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="text-[10px] font-semibold tracking-widest uppercase text-muted-foreground flex items-center gap-1">
+                          <span className="w-1.5 h-1.5 rounded-full bg-current opacity-60" />
+                          Próximo pagamento
+                        </span>
+                        <span
+                          className={`shrink-0 inline-flex items-center text-[10px] font-bold px-2 py-0.5 rounded-full border leading-none ${
+                            daysUntil !== null && daysUntil < 0
+                              ? 'bg-white/70 text-red-700 border-red-200 dark:bg-red-500/15 dark:text-red-300 dark:border-red-500/20'
+                              : daysUntil === 0
+                                ? 'bg-white/70 text-amber-700 border-amber-200 dark:bg-amber-500/15 dark:text-amber-300 dark:border-amber-500/20'
+                                : daysUntil !== null && daysUntil <= 7
+                                  ? 'bg-white/70 text-blue-700 border-blue-200 dark:bg-blue-500/15 dark:text-blue-300 dark:border-blue-500/20'
+                                  : 'bg-white/70 text-muted-foreground border-border'
+                          }`}
+                        >
+                          {daysUntil === 0
+                            ? 'Vence hoje'
+                            : daysUntil! > 0
+                              ? `Em ${daysUntil} dia${daysUntil! > 1 ? 's' : ''}`
+                              : `Vencido há ${Math.abs(daysUntil!)} dia${Math.abs(daysUntil!) > 1 ? 's' : ''}`}
+                        </span>
+                      </div>
+                      <div className="flex items-baseline justify-between gap-2 flex-wrap">
+                        <span className="text-[14px] font-bold tracking-tight leading-none">
+                          {formatDate(nextDue.toISOString().split('T')[0])}
+                        </span>
+                        <span className="text-[12px] font-medium text-muted-foreground bg-background/60 border px-2 py-0.5 rounded-full">
+                          {installment.currentInstallment + 1}/{installment.totalInstallments} • {formatCurrency(installment.installmentAmount)}
+                        </span>
+                      </div>
                     </div>
                   ) : (
                     <div className="mt-1 rounded-xl border bg-emerald-50 border-emerald-200 dark:bg-emerald-500/10 dark:border-emerald-500/20 p-3">
