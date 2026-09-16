@@ -144,6 +144,38 @@ export interface Installment {
 }
 
 /**
+ * Interface que representa uma dívida dividida.
+ * Mesma lógica de parcelados: controla prestações e vencimentos.
+ * Ao criar uma transação com dívida, o registro aparece em Dívidas.
+ */
+export interface Debt {
+  /** Identificador único da dívida */
+  id: string;
+  /** Descrição da dívida (ex: "Jantar dividido com João") */
+  description: string;
+  /** Valor total da dívida */
+  totalAmount: number;
+  /** Valor de cada prestação */
+  installmentAmount: number;
+  /** Número total de parcelas */
+  totalInstallments: number;
+  /** Parcela atual (quantas já foram pagas) */
+  currentInstallment: number;
+  /** Data da primeira parcela (YYYY-MM-DD) */
+  startDate: string;
+  /** ID da categoria associada */
+  categoryId: string;
+  /** Observações adicionais */
+  notes?: string;
+  /** Origem */
+  source: 'manual';
+  /** Data de criação */
+  createdAt?: string;
+  /** Data de atualização */
+  updatedAt?: string;
+}
+
+/**
  * Interface que representa uma despesa futura prevista.
  * Gastos que ainda vão acontecer mas já podem ser planejados.
  */
@@ -181,6 +213,8 @@ export interface TransactionState {
   recurringBills: RecurringBill[];
   /** Lista de compras parceladas */
   installments: Installment[];
+  /** Lista de dívidas divididas */
+  debts: Debt[];
   /** Lista de despesas futuras */
   futureExpenses: FutureExpense[];
   /** Filtros aplicados */
@@ -233,6 +267,10 @@ export type TransactionAction =
   | { type: 'ADD_INSTALLMENT'; payload: Installment }
   | { type: 'UPDATE_INSTALLMENT'; payload: Installment }
   | { type: 'DELETE_INSTALLMENT'; payload: string }
+  | { type: 'SET_DEBTS'; payload: Debt[] }
+  | { type: 'ADD_DEBT'; payload: Debt }
+  | { type: 'UPDATE_DEBT'; payload: Debt }
+  | { type: 'DELETE_DEBT'; payload: string }
   | { type: 'SET_FUTURE_EXPENSES'; payload: FutureExpense[] }
   | { type: 'ADD_FUTURE_EXPENSE'; payload: FutureExpense }
   | { type: 'UPDATE_FUTURE_EXPENSE'; payload: FutureExpense }

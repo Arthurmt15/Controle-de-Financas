@@ -180,6 +180,24 @@ export function transactionReducer(
         installments: state.installments.filter((i) => i.id !== action.payload),
       };
 
+    case 'SET_DEBTS':
+      return { ...state, debts: action.payload };
+
+    case 'ADD_DEBT':
+      return { ...state, debts: [...state.debts, action.payload] };
+
+    case 'UPDATE_DEBT':
+      return {
+        ...state,
+        debts: state.debts.map((d) => (d.id === action.payload.id ? action.payload : d)),
+      };
+
+    case 'DELETE_DEBT':
+      return {
+        ...state,
+        debts: state.debts.filter((d) => d.id !== action.payload),
+      };
+
     // ============================================
     // AÇÕES DE DESPESAS FUTURAS
     // ============================================

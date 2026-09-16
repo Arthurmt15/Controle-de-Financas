@@ -1,7 +1,9 @@
-import type { Transaction, Installment } from '../../types';
+import type { Transaction, Installment, Debt } from '../../types';
 import { SupabaseTransactionRepository } from '../../infrastructure/repositories/SupabaseTransactionRepository';
 import { SupabaseInstallmentRepository } from '../../infrastructure/repositories/SupabaseInstallmentRepository';
+import { SupabaseDebtRepository } from '../../infrastructure/repositories/SupabaseDebtRepository';
 import { CreateTransactionWithInstallment } from '../use-cases/CreateTransactionWithInstallment';
+import { CreateTransactionWithDebt } from '../use-cases/CreateTransactionWithDebt';
 
 /**
  * Facade OOP para a camada de aplicação.
@@ -11,7 +13,9 @@ import { CreateTransactionWithInstallment } from '../use-cases/CreateTransaction
 export class FinanceService {
   private readonly txRepo = new SupabaseTransactionRepository();
   private readonly instRepo = new SupabaseInstallmentRepository();
+  private readonly debtRepo = new SupabaseDebtRepository();
   private readonly createTxWithInstallment = new CreateTransactionWithInstallment(this.txRepo, this.instRepo);
+  private readonly createTxWithDebt = new CreateTransactionWithDebt(this.txRepo, this.debtRepo);
 
   /** Lista transações com paginação */
   listTransactions(page?: number, limit?: number) { return this.txRepo.getAll(page, limit); }
@@ -44,6 +48,16 @@ export class FinanceService {
 
   /** Avança parcela */
   advanceInstallment(id: string) { return this.instRepo.advance(id); }
+
+  /** Dívidas divididas */
+  listDebts() { return this.debtRepo.getAll(); }
+  createDebt(dto: Omit<Debt, 'id'>) { return this.debtRepo.create(dto); }
+  updateDebt(entity: Debt) { return this.debtRepo.update(entity); }
+  deleteDebt(id: string) { return this.debtRepo.delete(id); }
+  advanceDebt(id: string) { return this.debtRepo.advance(id); }
+  createDividedTransaction(tx: Omit<Transaction, 'id'>, totalInstallments: number) {
+    return this.createTxWithDebt.execute(tx, { totalInstallments });
+  }
 }
 
 /** Singleton para uso em hooks/contexts */

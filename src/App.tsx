@@ -10,6 +10,7 @@ import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { ThemeProvider, useTheme } from './contexts/ThemeContext';
 import { TransactionsProvider } from './contexts/TransactionsContext';
 import { InstallmentsProvider } from './contexts/InstallmentsContext';
+import { DebtsProvider } from './contexts/DebtsContext';
 import { FutureExpensesProvider } from './contexts/FutureExpensesContext';
 import { ThemeProvider as StyledThemeProvider } from 'styled-components';
 import styled from 'styled-components';
@@ -35,6 +36,7 @@ const TransactionsPage = lazy(() => import('./pages/Transactions'));
 const AnalysisPage = lazy(() => import('./pages/Analysis'));
 const SettingsPage = lazy(() => import('./pages/Settings'));
 const InstallmentsPage = lazy(() => import('./pages/Installments'));
+const DebtsPage = lazy(() => import('./pages/Debts'));
 const FutureExpensesPage = lazy(() => import('./pages/FutureExpenses'));
 
 /**
@@ -86,6 +88,7 @@ const MainLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => (
 const AuthenticatedRoutes: React.FC = () => (
   <TransactionsProvider>
     <InstallmentsProvider>
+      <DebtsProvider>
         <FutureExpensesProvider>
           <MainLayout>
             <Suspense fallback={<LoadingFallback />}>
@@ -95,13 +98,15 @@ const AuthenticatedRoutes: React.FC = () => (
                 <Route path="/analysis" element={<AnalysisPage />} />
                 <Route path="/settings" element={<SettingsPage />} />
                 <Route path="/installments" element={<InstallmentsPage />} />
+                <Route path="/debts" element={<DebtsPage />} />
                 <Route path="/future-expenses" element={<FutureExpensesPage />} />
                 <Route path="*" element={<Navigate to="/dashboard" replace />} />
               </Routes>
             </Suspense>
           </MainLayout>
         </FutureExpensesProvider>
-      </InstallmentsProvider>
+      </DebtsProvider>
+    </InstallmentsProvider>
   </TransactionsProvider>
 );
 

@@ -10,6 +10,7 @@ import { motion } from 'framer-motion';
 import { Send, Bot, User, Sparkles, Trash2, Lightbulb, Loader2 } from 'lucide-react';
 import { useTransactions } from '../../../hooks/useTransactions';
 import { useInstallments } from '../../../contexts/InstallmentsContext';
+import { useDebts } from '../../../contexts/DebtsContext';
 import { getExampleMessages, parseTransactionFromMessage } from '../../../utils/parseTransaction';
 import { detectCommand, executeCommand } from '../../../utils/chatCommands';
 import { generateSummary, generateAnalysis } from '../../../utils/analysisEngine';
@@ -56,6 +57,7 @@ const TransactionChat: React.FC = () => {
     generateRecurringTransactions,
   } = useTransactions();
   const { addInstallment } = useInstallments();
+  const { addDebt } = useDebts();
 
   // Estado do chat
   const [messages, setMessages] = useState<ChatMessage[]>([]);
@@ -184,11 +186,12 @@ const TransactionChat: React.FC = () => {
       }
       if (matchCat) {
         const installmentCount = parsed.parcelas || 0;
+        const isDivided = /\b(dividid[ao]|d[ií]vida|racha|compartilhad[ao])\b/i.test(text);
         const perInstallment = installmentCount > 0 ? parsed.valor / installmentCount : parsed.valor;
         const installmentLabel = installmentCount > 0 ? `1/${installmentCount}` : '';
         const descriptionWithInstallment = installmentLabel ? `${parsed.descricao} ${installmentLabel}` : parsed.descricao;
         const transactionData: Omit<Transaction, 'id'> = {
-          description: descriptionWithInstallment,
+          description: descriptionWithInstallment + (isDivided ? ' [Dividida]' : ''),
           amount: perInstallment,
           type: parsed.tipo === 'despesa' ? 'expense' : 'income',
           date: new Date(parsed.data + 'T12:00:00').toISOString(),
@@ -213,6 +216,25 @@ const TransactionChat: React.FC = () => {
             console.error('Transação criada, mas falhou ao criar parcelado:', installmentError);
           }
         }
+        // Se mencionar dívida/dividida no chat, cria também em Dívidas (mesma lógica de parcelados)
+        if (isDivided) {
+          try {
+            const parcels = installmentCount > 1 ? installmentCount : 1;
+            await addDebt({
+              description: parsed.descricao,
+              totalAmount: parsed.valor,
+              installmentAmount: parsed.valor / parcels,
+              totalInstallments: parcels,
+              currentInstallment: parcels > 1 ? 1 : 0,
+              startDate: parsed.data,
+              categoryId: matchCat.id,
+              notes: `Criado via chat (dívida dividida) - Total R$ ${parsed.valor.toFixed(2).replace('.', ',')} ${parcels > 1 ? `em ${parcels}x` : 'à vista'}`,
+              source: 'manual',
+            });
+          } catch (debtError) {
+            console.error('Transação criada, mas falhou ao criar dívida:', debtError);
+          }
+        }
         addMessage(
           ` Transação registrada!\n` +
             ` ${transactionData.description}\n` +
@@ -221,7 +243,8 @@ const TransactionChat: React.FC = () => {
             ` ${matchCat.name}` +
             (installmentCount > 0
               ? `\n Total: R$ ${parsed.valor.toFixed(2).replace('.', ',')} (${installmentCount}x)\n Parcelado criado em "Parcelados" (${installmentCount}x de R$ ${perInstallment.toFixed(2).replace('.', ',')})`
-              : ''),
+              : '') +
+            (isDivided ? `\n Dívida criada em "Dívidas" (${installmentCount > 1 ? `${installmentCount}x` : 'à vista'})` : ''),
           false
         );
         setIsProcessing(false);

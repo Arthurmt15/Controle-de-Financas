@@ -119,6 +119,25 @@ export async function createTables(): Promise<void> {
       );
     `);
 
+    // Tabela de dívidas divididas (mesma lógica de parcelados)
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS debts (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        user_id UUID NOT NULL,
+        description VARCHAR(500) NOT NULL,
+        total_amount DECIMAL(12, 2) NOT NULL,
+        installment_amount DECIMAL(12, 2) NOT NULL,
+        total_installments INTEGER NOT NULL CHECK (total_installments > 0),
+        current_installment INTEGER NOT NULL DEFAULT 0 CHECK (current_installment >= 0),
+        start_date DATE NOT NULL,
+        category_id UUID NOT NULL REFERENCES categories(id) ON DELETE RESTRICT,
+        notes TEXT,
+        source VARCHAR(20) NOT NULL DEFAULT 'manual' CHECK (source IN ('manual')),
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      );
+    `);
+
     // Tabela de despesas futuras
     await client.query(`
       CREATE TABLE IF NOT EXISTS future_expenses (
@@ -146,6 +165,7 @@ export async function createTables(): Promise<void> {
       CREATE INDEX IF NOT EXISTS idx_recurring_bills_user_id ON recurring_bills(user_id);
       CREATE INDEX IF NOT EXISTS idx_recurring_bills_active ON recurring_bills(active);
       CREATE INDEX IF NOT EXISTS idx_installments_user_id ON installments(user_id);
+      CREATE INDEX IF NOT EXISTS idx_debts_user_id ON debts(user_id);
       CREATE INDEX IF NOT EXISTS idx_future_expenses_user_id ON future_expenses(user_id);
       CREATE INDEX IF NOT EXISTS idx_future_expenses_status ON future_expenses(status);
     `);

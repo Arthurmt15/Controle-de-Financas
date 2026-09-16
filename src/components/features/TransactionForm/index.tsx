@@ -7,9 +7,10 @@
 
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Wallet, TrendingUp, TrendingDown, Calendar, Tag, FileText, Layers } from 'lucide-react';
+import { Wallet, TrendingUp, TrendingDown, Calendar, Tag, FileText, Layers, HandCoins } from 'lucide-react';
 import { useTransactions } from '../../../hooks/useTransactions';
 import { useInstallments } from '../../../contexts/InstallmentsContext';
+import { useDebts } from '../../../contexts/DebtsContext';
 import { validateTransactionForm } from '../../../utils/validators';
 import { toInputDate } from '../../../utils/formatters';
 import { Card, CardContent } from '../../ui/card';
@@ -36,6 +37,7 @@ const TransactionForm: React.FC<TransactionFormProps> = ({ editingTransaction = 
   // Hooks de dados
   const { addTransaction, updateTransaction, categories } = useTransactions();
   const { addInstallment } = useInstallments();
+  const { addDebt } = useDebts();
 
   // Estado do formulário
   const [formData, setFormData] = useState({
@@ -47,6 +49,8 @@ const TransactionForm: React.FC<TransactionFormProps> = ({ editingTransaction = 
     notes: '',
     isInstallment: false,
     totalInstallments: '10',
+    isDividedDebt: false,
+    debtInstallments: '10',
   });
 
   // Estado de erros
@@ -66,6 +70,8 @@ const TransactionForm: React.FC<TransactionFormProps> = ({ editingTransaction = 
         notes: editingTransaction.notes || '',
         isInstallment: false,
         totalInstallments: '10',
+        isDividedDebt: false,
+        debtInstallments: '10',
       });
     }
   }, [editingTransaction]);
@@ -91,6 +97,8 @@ const TransactionForm: React.FC<TransactionFormProps> = ({ editingTransaction = 
   const parsedInstallments = parseInt(formData.totalInstallments, 10);
   const previewInstallmentAmount =
     formData.isInstallment && parsedAmount > 0 && parsedInstallments > 1 ? parsedAmount / parsedInstallments : 0;
+  const parsedDebtInstallments = parseInt(formData.debtInstallments, 10);
+  const previewDebtAmount = formData.isDividedDebt && parsedAmount > 0 && parsedDebtInstallments > 1 ? parsedAmount / parsedDebtInstallments : 0;
 
   /** Valida e envia o formulário */
   const handleSubmit = async (e: React.FormEvent) => {
@@ -108,6 +116,12 @@ const TransactionForm: React.FC<TransactionFormProps> = ({ editingTransaction = 
       const n = parseInt(formData.totalInstallments, 10);
       if (!n || n < 2 || n > 60) {
         validationErrors.totalInstallments = 'Parcelas deve ser entre 2 e 60';
+      }
+    }
+    if (formData.isDividedDebt) {
+      const n = parseInt(formData.debtInstallments, 10);
+      if (!n || n < 1 || n > 60) {
+        validationErrors.debtInstallments = 'Parcelas deve ser entre 1 e 60';
       }
     }
 
@@ -154,6 +168,26 @@ const TransactionForm: React.FC<TransactionFormProps> = ({ editingTransaction = 
             console.error('Transação criada, mas falhou ao criar parcelado:', installmentError);
           }
         }
+
+        // Se marcado como dívida dividida, cria automaticamente em Dívidas (mesma lógica)
+        if (formData.isDividedDebt && parsedAmount > 0) {
+          try {
+            const parcels = parsedDebtInstallments > 1 ? parsedDebtInstallments : 1;
+            await addDebt({
+              description: formData.description.trim(),
+              totalAmount: parsedAmount,
+              installmentAmount: parsedAmount / parcels,
+              totalInstallments: parcels,
+              currentInstallment: parcels > 1 ? 1 : 0,
+              startDate: formData.date,
+              categoryId: formData.categoryId,
+              notes: formData.notes.trim() || undefined,
+              source: 'manual',
+            });
+          } catch (debtError) {
+            console.error('Transação criada, mas falhou ao criar dívida:', debtError);
+          }
+        }
       }
 
       // Reseta formulário
@@ -166,6 +200,8 @@ const TransactionForm: React.FC<TransactionFormProps> = ({ editingTransaction = 
         notes: '',
         isInstallment: false,
         totalInstallments: '10',
+        isDividedDebt: false,
+        debtInstallments: '10',
       });
       setErrors({});
       onClose?.();
@@ -324,54 +360,105 @@ const TransactionForm: React.FC<TransactionFormProps> = ({ editingTransaction = 
           />
         </div>
 
-        {/* Parcelado automático - só para nova transação */}
+        {/* Parcelado / Dívida automática - só para nova transação */}
         {!editingTransaction && (
-          <Card className="rounded-2xl border-dashed bg-muted/20">
-            <CardContent className="p-4 space-y-3">
-              <label className="flex items-center gap-2.5 cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={formData.isInstallment}
-                  onChange={(e) => {
-                    setFormData((prev) => ({ ...prev, isInstallment: e.target.checked }));
-                    if (errors.totalInstallments) setErrors((prev) => ({ ...prev, totalInstallments: '' }));
-                  }}
-                  className="h-4 w-4 rounded border-input accent-primary"
-                />
-                <span className="text-sm font-medium flex items-center gap-1.5">
-                  <Layers className="h-3.5 w-3.5 text-muted-foreground" />
-                  Compra parcelada? Criar automaticamente em Parcelados
-                </span>
-              </label>
-
-              {formData.isInstallment && (
-                <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} className="space-y-2 pt-1">
-                  <Label htmlFor="totalInstallments" className="text-sm">
-                    Número de Parcelas
-                  </Label>
-                  <Input
-                    id="totalInstallments"
-                    name="totalInstallments"
-                    type="number"
-                    value={formData.totalInstallments}
-                    onChange={handleChange}
-                    placeholder="10"
-                    error={errors.totalInstallments}
-                    required
-                    className="rounded-xl h-10"
-                    min={2}
-                    max={60}
+          <>
+            <Card className="rounded-2xl border-dashed bg-muted/20">
+              <CardContent className="p-4 space-y-3">
+                <label className="flex items-center gap-2.5 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={formData.isInstallment}
+                    onChange={(e) => {
+                      setFormData((prev) => ({ ...prev, isInstallment: e.target.checked }));
+                      if (errors.totalInstallments) setErrors((prev) => ({ ...prev, totalInstallments: '' }));
+                    }}
+                    className="h-4 w-4 rounded border-input accent-primary"
                   />
-                  {previewInstallmentAmount > 0 && (
-                    <Badge variant="outline" className="rounded-full px-3 py-1 text-xs font-medium gap-1">
-                      <Layers className="h-3 w-3" />
-                      {`${parsedInstallments}x de R$ ${previewInstallmentAmount.toFixed(2).replace('.', ',')} • Total R$ ${parsedAmount.toFixed(2).replace('.', ',')}`}
-                    </Badge>
-                  )}
-                </motion.div>
-              )}
-            </CardContent>
-          </Card>
+                  <span className="text-sm font-medium flex items-center gap-1.5">
+                    <Layers className="h-3.5 w-3.5 text-muted-foreground" />
+                    Compra parcelada? Criar automaticamente em Parcelados
+                  </span>
+                </label>
+
+                {formData.isInstallment && (
+                  <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} className="space-y-2 pt-1">
+                    <Label htmlFor="totalInstallments" className="text-sm">
+                      Número de Parcelas
+                    </Label>
+                    <Input
+                      id="totalInstallments"
+                      name="totalInstallments"
+                      type="number"
+                      value={formData.totalInstallments}
+                      onChange={handleChange}
+                      placeholder="10"
+                      error={errors.totalInstallments}
+                      required
+                      className="rounded-xl h-10"
+                      min={2}
+                      max={60}
+                    />
+                    {previewInstallmentAmount > 0 && (
+                      <Badge variant="outline" className="rounded-full px-3 py-1 text-xs font-medium gap-1">
+                        <Layers className="h-3 w-3" />
+                        {`${parsedInstallments}x de R$ ${previewInstallmentAmount.toFixed(2).replace('.', ',')} • Total R$ ${parsedAmount.toFixed(2).replace('.', ',')}`}
+                      </Badge>
+                    )}
+                  </motion.div>
+                )}
+              </CardContent>
+            </Card>
+
+            <Card className="rounded-2xl border-dashed bg-amber-500/10 border-amber-200 dark:border-amber-500/20">
+              <CardContent className="p-4 space-y-3">
+                <label className="flex items-center gap-2.5 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={formData.isDividedDebt}
+                    onChange={(e) => {
+                      setFormData((prev) => ({ ...prev, isDividedDebt: e.target.checked }));
+                      if (errors.debtInstallments) setErrors((prev) => ({ ...prev, debtInstallments: '' }));
+                    }}
+                    className="h-4 w-4 rounded border-input accent-amber-600"
+                  />
+                  <span className="text-sm font-medium flex items-center gap-1.5">
+                    <HandCoins className="h-3.5 w-3.5 text-amber-600" />
+                    Dívida dividida? Criar automaticamente em Dívidas
+                  </span>
+                </label>
+
+                {formData.isDividedDebt && (
+                  <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} className="space-y-2 pt-1">
+                    <Label htmlFor="debtInstallments" className="text-sm">
+                      Número de Parcelas (1 = à vista)
+                    </Label>
+                    <Input
+                      id="debtInstallments"
+                      name="debtInstallments"
+                      type="number"
+                      value={formData.debtInstallments}
+                      onChange={handleChange}
+                      placeholder="10"
+                      error={errors.debtInstallments}
+                      required
+                      className="rounded-xl h-10"
+                      min={1}
+                      max={60}
+                    />
+                    {parsedAmount > 0 && (
+                      <Badge variant="outline" className="rounded-full px-3 py-1 text-xs font-medium gap-1 border-amber-200 text-amber-700 dark:border-amber-500/20 dark:text-amber-400">
+                        <HandCoins className="h-3 w-3" />
+                        {parsedDebtInstallments > 1
+                          ? `${parsedDebtInstallments}x de R$ ${previewDebtAmount.toFixed(2).replace('.', ',')} • Total R$ ${parsedAmount.toFixed(2).replace('.', ',')}`
+                          : `À vista • Total R$ ${parsedAmount.toFixed(2).replace('.', ',')}`}
+                      </Badge>
+                    )}
+                  </motion.div>
+                )}
+              </CardContent>
+            </Card>
+          </>
         )}
       </div>
 
