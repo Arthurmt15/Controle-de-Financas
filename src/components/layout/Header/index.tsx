@@ -4,7 +4,7 @@
  * Exibe logo, navegação, seletor de tema, seletor de cor e informações do usuário.
  */
 
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useState, useCallback, useEffect, useRef } from 'react';
 import { useAuth } from '../../../contexts/AuthContext';
 import { useTheme } from '../../../contexts/ThemeContext';
 import { useInstallPrompt } from '../../../hooks/useInstallPrompt';
@@ -32,6 +32,8 @@ const Header: React.FC = () => {
   const { themeType, toggleTheme } = useTheme();
   const { isInstallable, install } = useInstallPrompt();
   const [menuOpen, setMenuOpen] = useState(false);
+  const menuRef = useRef<HTMLElement>(null);
+  const buttonRef = useRef<HTMLButtonElement>(null);
 
   /** Alterna o menu mobile */
   const toggleMenu = useCallback(() => setMenuOpen((prev) => !prev), []);
@@ -54,10 +56,22 @@ const Header: React.FC = () => {
     }
   }, [menuOpen, closeMenu]);
 
+  /** Fecha ao clicar fora do menu lateral */
+  useEffect(() => {
+    if (!menuOpen) return;
+    const handleClickOutside = (e: MouseEvent) => {
+      const target = e.target as Node;
+      if (menuRef.current?.contains(target) || buttonRef.current?.contains(target)) return;
+      closeMenu();
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [menuOpen, closeMenu]);
+
   return (
     <C.Container>
       <C.LeftSection>
-        <C.MenuButton onClick={toggleMenu} aria-label="Abrir menu">
+        <C.MenuButton ref={buttonRef} onClick={toggleMenu} aria-label="Abrir menu">
           <Icon size={24}>
             <line x1="3" y1="6" x2="21" y2="6" />
             <line x1="3" y1="12" x2="21" y2="12" />
@@ -134,7 +148,7 @@ const Header: React.FC = () => {
       </C.RightSection>
 
       <C.MobileOverlay $isOpen={menuOpen} onClick={closeMenu} />
-      <C.MobileMenu $isOpen={menuOpen}>
+      <C.MobileMenu ref={menuRef as any} $isOpen={menuOpen}>
         <C.CloseButton onClick={closeMenu} aria-label="Fechar menu">
           <Icon size={24}>
             <line x1="18" y1="6" x2="6" y2="18" />
