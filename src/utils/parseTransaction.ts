@@ -22,11 +22,11 @@ function isQuestionLike(message: string): boolean {
 }
 
 /**
- * Sinais fortes de intenção de transação (verbo ou contexto financeiro claro).
+ * Sinais fortes de intenção de transação (verbo ou contexto financeiro claro) — agora inclui dívida.
  */
 function hasTransactionIntent(message: string): boolean {
   const lower = message.toLowerCase();
-  return /\b(comprei|paguei|gastei|mercado|supermercado|restaurante|almo[cç]o|jantar|caf[eé]|farm[aá]cia|posto|combust[ií]vel|transporte|uber|aluguel|condom[ií]nio|luz|[aá]gua|internet|recebi|recebido|ganhei|sal[aá]rio|entrada|sa[ií]da|reembolso|estorno|parcelado|vezes|x\b|R\$|reais?|conto|pila)\b/i.test(lower);
+  return /\b(comprei|paguei|gastei|mercado|supermercado|restaurante|almo[cç]o|jantar|caf[eé]|farm[aá]cia|posto|combust[ií]vel|transporte|uber|aluguel|condom[ií]nio|luz|[aá]gua|internet|recebi|recebido|ganhei|sal[aá]rio|entrada|sa[ií]da|reembolso|estorno|parcelado|vezes|x\b|R\$|reais?|conto|pila|d[ií]vida|dividida|empr[eé]stimo)\b/i.test(lower);
 }
 
 /**
@@ -44,11 +44,9 @@ export function parseTransactionFromMessage(message: string): ParsedTransaction 
   if (!amountResult) return null;
   const valor = amountResult.value;
 
-  // Validação extra: valor inteiro solto (ex: "2000") sem contexto de transação → ignora se for pergunta
-  // Exige pelo menos R$, reais, k, ou verbo de transação para aceitar bare integer
-  if (!/R\$|reais?|conto|k\b|parcelad|vezes/i.test(message) && !hasTransactionIntent(message)) {
-    // Se o valor veio só do integerPattern (ex: "dúvida de 2000"), rejeita
-    if (/^\s*\d+\s*$/.test(String(valor)) || /\bd[uú]vida\b/i.test(message)) return null;
+  // Validação extra: valor inteiro solto sem contexto → ignora se for pergunta/dúvida
+  if (!/R\$|reais?|conto|k\b|parcelad|vezes|d[ií]vida|dividida/i.test(message) && !hasTransactionIntent(message)) {
+    if (/\bd[uú]vida\b/i.test(message)) return null;
   }
 
   const tipo = detectType(message);

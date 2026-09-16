@@ -329,6 +329,7 @@ BEGIN
     (NEW.id, 'Saúde', '#06b6d4', 'FaHeartbeat', 'expense'),
     (NEW.id, 'Educação', '#84cc16', 'FaGraduationCap', 'expense'),
     (NEW.id, 'Lazer', '#ec4899', 'FaGamepad', 'expense'),
+    (NEW.id, 'Dívida', '#f59e0b', 'FaHandHoldingUsd', 'expense'),
     (NEW.id, 'Outros', '#6b7280', 'FaEllipsisH', 'both');
   RETURN NEW;
 END;

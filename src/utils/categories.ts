@@ -65,6 +65,10 @@ export const CATEGORY_MAP: CategoryKeywords[] = [
       'dividendo', 'cripto', 'bitcoin', 'criptomoeda'],
     category: 'Investimentos',
   },
+  {
+    keywords: ['dívida', 'divida', 'dividida', 'empréstimo', 'emprestimo', 'dever', 'fiado'],
+    category: 'Dívida',
+  },
 ];
 
 export const CATEGORY_STYLES: Record<string, { color: string; icon: string }> = {
@@ -77,5 +81,6 @@ export const CATEGORY_STYLES: Record<string, { color: string; icon: string }> = 
   'Salário': { color: '#00B894', icon: 'FaMoneyBillWave' },
   'Freelance': { color: '#6C5CE7', icon: 'FaLaptop' },
   'Investimentos': { color: '#FDCB6E', icon: 'FaChartLine' },
+  'Dívida': { color: '#f59e0b', icon: 'FaHandHoldingUsd' },
   'Outros': { color: '#636E72', icon: 'FaEllipsisH' },
 };
