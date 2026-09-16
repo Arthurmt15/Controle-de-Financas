@@ -8,7 +8,7 @@
 
 import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Bot, Sparkles, Send, X, Trash2, Loader2, User } from 'lucide-react';
+import { Bot, Sparkles, Send, X, Loader2, User } from 'lucide-react';
 import { useTransactions } from '../../../hooks/useTransactions';
 import { useInstallments } from '../../../contexts/InstallmentsContext';
 import { useDebts } from '../../../contexts/DebtsContext';
@@ -315,11 +315,6 @@ Responda como guia quando pergunta for sobre navegação.`;
 
   const formatTime = (date: Date) => date.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
 
-  const handleClearChat = () => {
-    localStorage.removeItem(STORAGE_KEY);
-    setMessages([]);
-  };
-
   if (isLogin) return null;
 
   return (
@@ -358,7 +353,6 @@ Responda como guia quando pergunta for sobre navegação.`;
                   </div>
                 </div>
                 <div className="flex items-center gap-1">
-                  {messages.length > 1 && <Button variant="ghost" size="icon" onClick={handleClearChat} className="h-7 w-7 rounded-full bg-white/10 hover:bg-white/20 text-white"><Trash2 className="h-3.5 w-3.5" /></Button>}
                   <Button variant="ghost" size="icon" onClick={() => setIsOpen(false)} className="h-7 w-7 rounded-full bg-white/10 hover:bg-white/20 text-white"><X className="h-3.5 w-3.5" /></Button>
                 </div>
               </CardHeader>
