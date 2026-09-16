@@ -5,7 +5,7 @@
  * estilizadas, Input shadcn e Button com ícone Send. Preserva streaming via financialAdvisorService.
  */
 
-import React, { useState, useRef, useCallback } from 'react';
+import React, { useState, useRef, useCallback, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Bot, Sparkles, SendHorizontal, Loader2, User } from 'lucide-react';
 import { useTransactions } from '../../../hooks/useTransactions';
@@ -44,6 +44,21 @@ const FinancialAdvisor: React.FC = () => {
   const [input, setInput] = useState('');
   const [isStreaming, setIsStreaming] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const endRef = useRef<HTMLDivElement>(null);
+
+  // Auto-scroll dinâmico — mantém chat sempre no fim (como TransactionChat)
+  useEffect(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+    // scroll suave apenas durante streaming, instantâneo ao trocar mensagem
+    el.scrollTo({ top: el.scrollHeight, behavior: isStreaming ? 'smooth' : 'auto' });
+  }, [messages, isStreaming]);
+
+  // Durante streaming, garante que acompanhe cada chunk (endRef)
+  useEffect(() => {
+    if (isStreaming) endRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
+  }, [messages, isStreaming]);
 
   const sendMessage = useCallback(
     async (text: string) => {
@@ -109,7 +124,7 @@ const FinancialAdvisor: React.FC = () => {
   };
 
   return (
-    <Card className="rounded-2xl overflow-hidden flex flex-col h-auto min-h-[420px] shadow-sm">
+    <Card className="rounded-2xl overflow-hidden flex flex-col h-[520px] sm:h-[560px] lg:h-[620px] max-h-[70vh] lg:max-h-[72vh] shadow-sm">
       {/* Header do chat */}
       <CardHeader className="py-3.5 px-4 flex flex-row items-center justify-center gap-2.5 border-b bg-card shrink-0 space-y-0">
         <span className="w-8 h-8 flex items-center justify-center rounded-xl bg-violet-500 text-white shrink-0">
@@ -123,8 +138,15 @@ const FinancialAdvisor: React.FC = () => {
         </div>
       </CardHeader>
 
-      {/* Área de mensagens — sem scroll interno */}
-      <div className="flex-1 p-4 flex flex-col gap-3 bg-muted/20 min-h-0 overflow-hidden">
+      {/* Área de mensagens — scroll interno dinâmico (não expande a página) */}
+      <div
+        ref={scrollRef}
+        role="log"
+        aria-live="polite"
+        aria-label="Mensagens do consultor"
+        className="flex-1 min-h-0 overflow-y-auto p-4 flex flex-col gap-3 bg-muted/20 scroll-smooth"
+        style={{ scrollbarGutter: 'stable' as any }}
+      >
         {messages.length === 0 && (
           <motion.div
             initial={{ opacity: 0, y: 8 }}
@@ -159,6 +181,7 @@ const FinancialAdvisor: React.FC = () => {
               key={msg.id}
               initial={{ opacity: 0, y: 6 }}
               animate={{ opacity: 1, y: 0 }}
+              layout
               className={`flex flex-col gap-1 ${msg.role === 'user' ? 'items-end' : 'items-start'}`}
             >
               {/* Label do autor */}
@@ -200,6 +223,8 @@ const FinancialAdvisor: React.FC = () => {
             </motion.div>
           ))}
         </AnimatePresence>
+        {/* âncora para auto-scroll */}
+        <div ref={endRef} aria-hidden className="h-0" />
       </div>
 
       {/* Input + botão */}

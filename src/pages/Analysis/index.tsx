@@ -148,9 +148,9 @@ const AnalysisPage: React.FC = () => {
           </motion.div>
         </div>
 
-        {/* Advisor desktop — sem sticky/scroll, acompanha o fluxo da página */}
-        <div className="self-start flex flex-col">
-          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.18 }}>
+        {/* Advisor desktop — sticky + altura dinâmica, chat com scroll interno (não empurra a página) */}
+        <div className="hidden lg:block sticky top-6 self-start h-fit max-h-[calc(100vh-3rem)]">
+          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.18 }} className="flex flex-col">
             <div className="flex items-center gap-2 mb-3 text-muted-foreground">
               <Sparkles className="h-3.5 w-3.5 text-violet-500" />
               <span className="text-[11px] font-semibold tracking-widest uppercase">Assistente IA</span>
