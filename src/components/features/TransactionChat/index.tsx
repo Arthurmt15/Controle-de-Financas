@@ -371,7 +371,10 @@ const TransactionChat: React.FC = () => {
         aria-label="Mensagens do chat"
         className="flex-1 overflow-y-auto p-4 space-y-3 bg-muted/20"
       >
-        {messages.map((message, idx) => (
+        {messages.map((message, idx) => {
+          const isTyping = !message.isUser && isProcessing && !message.text;
+          const isStreamingThis = !message.isUser && isProcessing && !!message.text && idx === messages.length - 1;
+          return (
           <motion.div
             key={message.id}
             initial={{ opacity: 0, y: 6 }}
@@ -384,37 +387,33 @@ const TransactionChat: React.FC = () => {
               {message.isUser ? <User className="h-3 w-3" /> : <Bot className="h-3 w-3" />}
               {message.isUser ? 'Você' : 'Assistente'}
             </span>
-            {/* Balão da mensagem */}
+            {/* Balão — sem compressão, com typing dots e cursor */}
             <div
-              className={`max-w-[85%] rounded-2xl px-3.5 py-2.5 text-[13.5px] leading-relaxed shadow-sm ${
+              className={`${message.isUser ? 'max-w-[85%]' : 'max-w-[88%] min-w-[72px]'} rounded-2xl px-3.5 py-2.5 text-[13.5px] leading-[1.65] shadow-sm break-words [overflow-wrap:anywhere] [hyphens:auto] whitespace-pre-wrap ${
                 message.isUser
                   ? 'bg-primary text-white rounded-br-md'
-                  : 'bg-background border text-foreground rounded-bl-md'
+                  : 'bg-background border text-foreground rounded-bl-md min-h-[38px] flex items-center'
               }`}
             >
-              {message.isUser || !message.text ? (
-                message.text
+              {message.isUser ? (
+                <span className="whitespace-pre-wrap break-words [overflow-wrap:anywhere]">{message.text}</span>
+              ) : isTyping ? (
+                <span className="inline-flex items-center gap-1.5 py-1">
+                  <span className="w-1.5 h-1.5 bg-violet-500 rounded-full animate-bounce [animation-delay:-0.3s]" />
+                  <span className="w-1.5 h-1.5 bg-violet-500 rounded-full animate-bounce [animation-delay:-0.15s]" />
+                  <span className="w-1.5 h-1.5 bg-violet-500 rounded-full animate-bounce" />
+                </span>
               ) : (
-                <span dangerouslySetInnerHTML={{ __html: renderMarkdown(message.text) }} />
+                <span className="[&>strong]:font-semibold">
+                  <span dangerouslySetInnerHTML={{ __html: renderMarkdown(message.text) }} />
+                  {isStreamingThis && <span className="inline-block w-[2px] h-[1em] bg-violet-500 animate-pulse ml-0.5 align-middle translate-y-[1px]" aria-hidden />}
+                </span>
               )}
             </div>
             <span className="text-[11px] text-muted-foreground px-1">{formatTime(message.timestamp)}</span>
           </motion.div>
-        ))}
-        {/* Indicador de processamento — mais dinâmico */}
-        {isProcessing && (
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex items-center gap-2 text-sm text-muted-foreground bg-card border rounded-2xl px-3 py-2 shadow-sm max-w-fit">
-            <Loader2 className="h-4 w-4 animate-spin text-violet-500" />
-            <span className="flex items-center gap-1">
-              Consultor analisando seus dados
-              <span className="inline-flex gap-0.5 ml-1">
-                <span className="w-1 h-1 bg-muted-foreground rounded-full animate-bounce [animation-delay:-0.3s]" />
-                <span className="w-1 h-1 bg-muted-foreground rounded-full animate-bounce [animation-delay:-0.15s]" />
-                <span className="w-1 h-1 bg-muted-foreground rounded-full animate-bounce" />
-              </span>
-            </span>
-          </motion.div>
-        )}
+          );
+        })}
         <div ref={messagesEndRef} />
       </div>
 

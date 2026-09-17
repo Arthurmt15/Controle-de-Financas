@@ -176,12 +176,14 @@ const FinancialAdvisor: React.FC = () => {
         )}
 
         <AnimatePresence initial={false}>
-          {messages.map((msg) => (
+          {messages.map((msg, idx) => {
+            const isTyping = msg.role === 'assistant' && isStreaming && !msg.content;
+            const isStreamingThis = msg.role === 'assistant' && isStreaming && !!msg.content && idx === messages.length - 1;
+            return (
             <motion.div
               key={msg.id}
               initial={{ opacity: 0, y: 6 }}
               animate={{ opacity: 1, y: 0 }}
-              layout
               className={`flex flex-col gap-1 ${msg.role === 'user' ? 'items-end' : 'items-start'}`}
             >
               {/* Label do autor */}
@@ -196,24 +198,26 @@ const FinancialAdvisor: React.FC = () => {
                   </>
                 )}
               </span>
-              {/* Bubble */}
+              {/* Bubble — sem compressão, typing com dots e cursor */}
               <div
-                className={`max-w-[85%] px-3.5 py-2.5 rounded-2xl text-[13px] leading-relaxed break-words ${
+                className={`${msg.role === 'user' ? 'max-w-[85%]' : 'max-w-[88%] min-w-[72px]'} px-3.5 py-2.5 rounded-2xl text-[13px] leading-[1.65] shadow-sm break-words [overflow-wrap:anywhere] [hyphens:auto] whitespace-pre-wrap ${
                   msg.role === 'user'
                     ? 'bg-primary text-primary-foreground rounded-br-md'
-                    : 'bg-card border shadow-sm rounded-bl-md'
+                    : 'bg-card border shadow-sm rounded-bl-md min-h-[38px] flex items-center'
                 }`}
               >
-                {msg.role === 'assistant' && msg.content ? (
-                  <span dangerouslySetInnerHTML={{ __html: renderMarkdown(msg.content) }} />
-                ) : (
-                  <span className="whitespace-pre-wrap">
-                    {msg.content || (isStreaming && msg.role === 'assistant' ? 'Pensando...' : '')}
+                {msg.role === 'user' ? (
+                  <span className="whitespace-pre-wrap break-words [overflow-wrap:anywhere]">{msg.content}</span>
+                ) : isTyping ? (
+                  <span className="inline-flex items-center gap-1.5 py-1">
+                    <span className="w-1.5 h-1.5 bg-violet-500 rounded-full animate-bounce [animation-delay:-0.3s]" />
+                    <span className="w-1.5 h-1.5 bg-violet-500 rounded-full animate-bounce [animation-delay:-0.15s]" />
+                    <span className="w-1.5 h-1.5 bg-violet-500 rounded-full animate-bounce" />
                   </span>
-                )}
-                {isStreaming && msg.role === 'assistant' && !msg.content && (
-                  <span className="inline-flex items-center gap-1 ml-1">
-                    <Loader2 className="h-3 w-3 animate-spin" />
+                ) : (
+                  <span className="[&>strong]:font-semibold [&>strong]:text-foreground">
+                    <span dangerouslySetInnerHTML={{ __html: renderMarkdown(msg.content) }} />
+                    {isStreamingThis && <span className="inline-block w-[2px] h-[1em] bg-violet-500 animate-pulse ml-0.5 align-middle translate-y-[1px]" aria-hidden />}
                   </span>
                 )}
               </div>
@@ -221,7 +225,8 @@ const FinancialAdvisor: React.FC = () => {
                 {msg.timestamp.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
               </span>
             </motion.div>
-          ))}
+            );
+          })}
         </AnimatePresence>
         {/* âncora para auto-scroll */}
         <div ref={endRef} aria-hidden className="h-0" />
