@@ -6,7 +6,7 @@
 
 import React, { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { PiggyBank, Target, TrendingUp, ShieldCheck, Plus, Minus, Edit3, Trash2, Info, Wallet, AlertCircle } from 'lucide-react';
+import { PiggyBank, Target, TrendingUp, ShieldCheck, Plus, Minus, Edit3, Trash2, Info, Wallet, AlertCircle, Copy, ExternalLink } from 'lucide-react';
 import { useEmergencyReserve } from '../../contexts/EmergencyReserveContext';
 import { useTransactions } from '../../hooks/useTransactions';
 import { formatCurrency } from '../../utils/formatters';
@@ -204,8 +204,65 @@ const EmergencyReservePage: React.FC = () => {
 
       {/* Erro */}
       {error && (
-        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="mt-4 flex items-center gap-2 px-4 py-3 bg-red-50 border border-red-200 text-red-700 rounded-xl text-sm dark:bg-red-500/10 dark:border-red-500/20 dark:text-red-400">
-          <AlertCircle className="h-4 w-4" /> {error}
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="mt-4">
+          {error.includes('emergency_reserves') || error.includes('migration 004') ? (
+            <Card className="border-amber-200 bg-amber-50 dark:bg-amber-500/10 dark:border-amber-500/20 overflow-hidden">
+              <CardContent className="p-4 space-y-3">
+                <div className="flex gap-2.5 items-start">
+                  <span className="p-1.5 rounded-lg bg-amber-500/15 text-amber-600 shrink-0"><AlertCircle className="h-4 w-4" /></span>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-semibold text-amber-800 dark:text-amber-300">Migration pendente: tabela emergency_reserves não existe</p>
+                    <p className="text-[13px] leading-relaxed text-amber-700/80 dark:text-amber-300/80 mt-1">
+                      Execute o arquivo <code className="px-1.5 py-0.5 rounded bg-amber-100 dark:bg-amber-500/20 font-mono text-xs">supabase/migrations/004_add_emergency_reserve.sql</code> no Supabase SQL Editor para liberar a Reserva de Emergência.
+                    </p>
+                  </div>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="rounded-xl bg-white dark:bg-transparent border-amber-200 hover:bg-amber-100 dark:hover:bg-amber-500/10"
+                    onClick={() => {
+                      const sql = `-- 004_add_emergency_reserve.sql
+CREATE TABLE IF NOT EXISTS emergency_reserves (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE UNIQUE,
+  goal_amount DECIMAL(12,2) NOT NULL CHECK (goal_amount >= 0),
+  current_amount DECIMAL(12,2) NOT NULL DEFAULT 0 CHECK (current_amount >= 0),
+  notes TEXT,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+ALTER TABLE emergency_reserves ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Users can view own emergency_reserve" ON emergency_reserves FOR SELECT USING (auth.uid() = user_id);
+CREATE POLICY "Users can insert own emergency_reserve" ON emergency_reserves FOR INSERT WITH CHECK (auth.uid() = user_id);
+CREATE POLICY "Users can update own emergency_reserve" ON emergency_reserves FOR UPDATE USING (auth.uid() = user_id);
+CREATE POLICY "Users can delete own emergency_reserve" ON emergency_reserves FOR DELETE USING (auth.uid() = user_id);
+CREATE INDEX IF NOT EXISTS idx_emergency_reserves_user_id ON emergency_reserves(user_id);`;
+                      navigator.clipboard.writeText(sql);
+                    }}
+                  >
+                    <Copy className="h-3.5 w-3.5 mr-1.5" /> Copiar SQL
+                  </Button>
+                  <Button
+                    size="sm"
+                    className="rounded-xl bg-amber-600 hover:bg-amber-700 text-white"
+                    onClick={() => window.open('https://supabase.com/dashboard/project/hagnorgsihjddumzmnaw/sql/new', '_blank')}
+                  >
+                    <ExternalLink className="h-3.5 w-3.5 mr-1.5" /> Abrir SQL Editor
+                  </Button>
+                  <Button size="sm" variant="ghost" className="rounded-xl" onClick={() => setError(null)}>Dispensar</Button>
+                </div>
+                <p className="text-[11px] text-amber-600/70 dark:text-amber-400/60">
+                  Após executar, recarregue a página. Erro original: {error}
+                </p>
+              </CardContent>
+            </Card>
+          ) : (
+            <div className="flex items-center gap-2 px-4 py-3 bg-red-50 border border-red-200 text-red-700 rounded-xl text-sm dark:bg-red-500/10 dark:border-red-500/20 dark:text-red-400">
+              <AlertCircle className="h-4 w-4" /> {error}
+            </div>
+          )}
         </motion.div>
       )}
 
