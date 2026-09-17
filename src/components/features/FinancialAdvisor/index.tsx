@@ -198,26 +198,26 @@ const FinancialAdvisor: React.FC = () => {
                   </>
                 )}
               </span>
-              {/* Bubble — sem compressão, typing com dots e cursor */}
+              {/* Bubble — w-fit evita compressão, sem flex no container */}
               <div
-                className={`${msg.role === 'user' ? 'max-w-[85%]' : 'max-w-[88%] min-w-[72px]'} px-3.5 py-2.5 rounded-2xl text-[13px] leading-[1.65] shadow-sm break-words [overflow-wrap:anywhere] [hyphens:auto] whitespace-pre-wrap ${
+                className={`${msg.role === 'user' ? 'w-fit max-w-[85%]' : 'w-fit max-w-[88%] min-w-[64px]'} px-3.5 py-2.5 rounded-2xl text-[13px] leading-6 shadow-sm break-words [overflow-wrap:anywhere] whitespace-pre-wrap ${
                   msg.role === 'user'
                     ? 'bg-primary text-primary-foreground rounded-br-md'
-                    : 'bg-card border shadow-sm rounded-bl-md min-h-[38px] flex items-center'
+                    : 'bg-card border shadow-sm rounded-bl-md'
                 }`}
               >
                 {msg.role === 'user' ? (
                   <span className="whitespace-pre-wrap break-words [overflow-wrap:anywhere]">{msg.content}</span>
                 ) : isTyping ? (
-                  <span className="inline-flex items-center gap-1.5 py-1">
+                  <span className="inline-flex items-center justify-center gap-1.5 min-h-[20px] py-0.5">
                     <span className="w-1.5 h-1.5 bg-violet-500 rounded-full animate-bounce [animation-delay:-0.3s]" />
                     <span className="w-1.5 h-1.5 bg-violet-500 rounded-full animate-bounce [animation-delay:-0.15s]" />
                     <span className="w-1.5 h-1.5 bg-violet-500 rounded-full animate-bounce" />
                   </span>
                 ) : (
-                  <span className="[&>strong]:font-semibold [&>strong]:text-foreground">
+                  <span className="block [&>strong]:font-semibold [&>strong]:text-foreground">
                     <span dangerouslySetInnerHTML={{ __html: renderMarkdown(msg.content) }} />
-                    {isStreamingThis && <span className="inline-block w-[2px] h-[1em] bg-violet-500 animate-pulse ml-0.5 align-middle translate-y-[1px]" aria-hidden />}
+                    {isStreamingThis && <span className="inline-block w-[2px] h-[14px] bg-violet-500 animate-pulse ml-1 align-text-bottom" aria-hidden />}
                   </span>
                 )}
               </div>

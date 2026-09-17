@@ -382,7 +382,7 @@ Responda como guia quando pergunta for sobre navegação.`;
                 </div>
               </CardHeader>
 
-              <div ref={scrollRef} role="log" aria-live="polite" aria-label="Mensagens do guia" className="flex-1 min-h-0 overflow-y-auto p-3 flex flex-col gap-3 bg-muted/20 scroll-smooth [overflow-anchor:auto]">
+              <div ref={scrollRef} role="log" aria-live="polite" aria-label="Mensagens do guia" className="flex-1 min-h-0 overflow-y-auto p-3 flex flex-col gap-3 bg-muted/20 scroll-smooth">
                 {messages.map((message, idx) => {
                   const isTyping = !message.isUser && isProcessing && !message.text;
                   const isStreaming = !message.isUser && isProcessing && !!message.text && idx === messages.length - 1;
@@ -391,19 +391,19 @@ Responda como guia quando pergunta for sobre navegação.`;
                     <span className={`flex items-center gap-1 text-[10px] font-semibold tracking-widest uppercase px-1 ${message.isUser ? 'text-primary' : 'text-muted-foreground'}`}>
                       {message.isUser ? <><User className="h-3 w-3" /> Você</> : <><Bot className="h-3 w-3" /> Guia</>}
                     </span>
-                    <div className={`${message.isUser ? 'max-w-[85%]' : 'max-w-[88%] min-w-[72px]'} px-3.5 py-2.5 rounded-2xl text-[13px] leading-[1.65] shadow-sm break-words [overflow-wrap:anywhere] [hyphens:auto] whitespace-pre-wrap ${message.isUser ? 'bg-violet-600 text-white rounded-br-md' : 'bg-card border rounded-bl-md min-h-[38px] flex items-center'}`}>
+                    <div className={`${message.isUser ? 'w-fit max-w-[85%]' : 'w-fit max-w-[88%] min-w-[64px]'} px-3.5 py-2.5 rounded-2xl text-[13px] leading-6 shadow-sm break-words [overflow-wrap:anywhere] whitespace-pre-wrap ${message.isUser ? 'bg-violet-600 text-white rounded-br-md' : 'bg-card border rounded-bl-md'}`}>
                       {message.isUser ? (
                         <span className="whitespace-pre-wrap break-words [overflow-wrap:anywhere]">{message.text}</span>
                       ) : isTyping ? (
-                        <span className="inline-flex items-center gap-1.5 py-1">
+                        <span className="inline-flex items-center justify-center gap-1.5 min-h-[20px] py-0.5">
                           <span className="w-1.5 h-1.5 bg-violet-500 rounded-full animate-bounce [animation-delay:-0.3s]" />
                           <span className="w-1.5 h-1.5 bg-violet-500 rounded-full animate-bounce [animation-delay:-0.15s]" />
                           <span className="w-1.5 h-1.5 bg-violet-500 rounded-full animate-bounce" />
                         </span>
                       ) : (
-                        <span className="[&>strong]:font-semibold [&>strong]:text-foreground [&>br]:block">
+                        <span className="block [&>strong]:font-semibold [&>strong]:text-foreground">
                           <span dangerouslySetInnerHTML={{ __html: renderMarkdown(message.text) }} />
-                          {isStreaming && <span className="inline-block w-[2px] h-[1em] bg-violet-500 animate-pulse ml-0.5 align-middle translate-y-[1px]" aria-hidden />}
+                          {isStreaming && <span className="inline-block w-[2px] h-[14px] bg-violet-500 animate-pulse ml-1 align-text-bottom" aria-hidden />}
                         </span>
                       )}
                     </div>
