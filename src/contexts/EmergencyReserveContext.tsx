@@ -15,6 +15,7 @@ interface EmergencyReserveContextValue {
   refresh: () => Promise<void>;
   create: (goalAmount: number, currentAmount?: number) => Promise<EmergencyReserve>;
   updateGoal: (goalAmount: number) => Promise<EmergencyReserve>;
+  updateCurrentAmount: (amount: number) => Promise<EmergencyReserve>;
   deposit: (amount: number) => Promise<EmergencyReserve>;
   withdraw: (amount: number) => Promise<EmergencyReserve>;
   remove: () => Promise<void>;
@@ -71,6 +72,12 @@ export function EmergencyReserveProvider({ children }: { children: React.ReactNo
     return updated;
   }, [reserve]);
 
+  const updateCurrentAmount = useCallback(async (amount: number) => {
+    const updated = await emergencyReserveService.setCurrentAmount(amount);
+    setReserve(updated);
+    return updated;
+  }, []);
+
   const deposit = useCallback(async (amount: number) => {
     const updated = await emergencyReserveService.deposit(amount);
     setReserve(updated);
@@ -90,7 +97,7 @@ export function EmergencyReserveProvider({ children }: { children: React.ReactNo
   }, [reserve]);
 
   return (
-    <EmergencyReserveContext.Provider value={{ reserve, isLoading, error, refresh, create, updateGoal, deposit, withdraw, remove }}>
+    <EmergencyReserveContext.Provider value={{ reserve, isLoading, error, refresh, create, updateGoal, updateCurrentAmount, deposit, withdraw, remove }}>
       {children}
     </EmergencyReserveContext.Provider>
   );

@@ -69,6 +69,7 @@ export class FinanceService {
   deleteEmergencyReserve(id: string) { return this.reserveRepo.delete(id); }
   depositEmergencyReserve(amount: number) { return this.reserveRepo.deposit(amount); }
   withdrawEmergencyReserve(amount: number) { return this.reserveRepo.withdraw(amount); }
+  setEmergencyReserveAmount(amount: number) { return this.reserveRepo.setCurrentAmount(amount); }
 }
 
 /** Singleton para uso em hooks/contexts */

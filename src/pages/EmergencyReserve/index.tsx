@@ -17,13 +17,16 @@ import { Label } from '../../components/ui/label';
 import { Badge } from '../../components/ui/badge';
 
 const EmergencyReservePage: React.FC = () => {
-  const { reserve, isLoading, create, updateGoal, deposit, withdraw, remove } = useEmergencyReserve();
+  const { reserve, isLoading, create, updateGoal, updateCurrentAmount, deposit, withdraw, remove } = useEmergencyReserve();
   const { transactions } = useTransactions();
 
   const [goalInput, setGoalInput] = useState('');
+  const [initialAmountInput, setInitialAmountInput] = useState('');
   const [depositInput, setDepositInput] = useState('');
   const [withdrawInput, setWithdrawInput] = useState('');
+  const [currentAmountInput, setCurrentAmountInput] = useState('');
   const [isEditingGoal, setIsEditingGoal] = useState(false);
+  const [isEditingAmount, setIsEditingAmount] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   // Calcula despesas médias mensais (últimos 3 meses) para sugestão ideal 6x
@@ -55,10 +58,14 @@ const EmergencyReservePage: React.FC = () => {
   const handleCreate = async () => {
     const goal = parseFloat(goalInput.replace(',', '.'));
     if (!goal || goal <= 0) { setError('Informe uma meta válida'); return; }
+    const initialStr = initialAmountInput.trim().replace(',', '.');
+    const initial = initialStr ? parseFloat(initialStr) : 0;
+    if (initialStr && (isNaN(initial) || initial < 0)) { setError('Valor inicial inválido'); return; }
     setError(null);
     try {
-      await create(goal, 0);
+      await create(goal, initial);
       setGoalInput('');
+      setInitialAmountInput('');
       setIsEditingGoal(false);
     } catch (e) { setError((e as Error).message); }
   };
@@ -91,6 +98,17 @@ const EmergencyReservePage: React.FC = () => {
     try {
       await withdraw(val);
       setWithdrawInput('');
+    } catch (e) { setError((e as Error).message); }
+  };
+
+  const handleUpdateCurrentAmount = async () => {
+    const val = parseFloat(currentAmountInput.replace(',', '.'));
+    if (isNaN(val) || val < 0) { setError('Informe um valor válido para definir'); return; }
+    setError(null);
+    try {
+      await updateCurrentAmount(val);
+      setCurrentAmountInput('');
+      setIsEditingAmount(false);
     } catch (e) { setError((e as Error).message); }
   };
 
@@ -200,10 +218,11 @@ const EmergencyReservePage: React.FC = () => {
               <div className="text-center py-8">
                 <div className="w-14 h-14 mx-auto rounded-2xl bg-muted flex items-center justify-center mb-3"><PiggyBank className="h-6 w-6 text-muted-foreground" /></div>
                 <h3 className="text-[16px] font-semibold">Crie sua reserva</h3>
-                <p className="text-sm text-muted-foreground mt-1">Defina quanto quer guardar para emergências</p>
-                <div className="max-w-xs mx-auto mt-4 flex gap-2">
-                  <Input placeholder={String(suggestedGoal)} value={goalInput} onChange={(e) => setGoalInput(e.target.value)} className="rounded-xl" />
-                  <Button onClick={handleCreate} className="rounded-xl">Criar</Button>
+                <p className="text-sm text-muted-foreground mt-1">Defina meta e valor já guardado (opcional)</p>
+                <div className="max-w-xs mx-auto mt-4 space-y-2">
+                  <Input placeholder={`Meta ex: ${suggestedGoal}`} value={goalInput} onChange={(e) => setGoalInput(e.target.value)} className="rounded-xl" />
+                  <Input placeholder="Valor já guardado (opcional) ex: 1500" value={initialAmountInput} onChange={(e) => setInitialAmountInput(e.target.value)} className="rounded-xl" />
+                  <Button onClick={handleCreate} className="w-full rounded-xl">Criar reserva</Button>
                 </div>
                 <Button variant="ghost" size="sm" className="mt-2 rounded-full text-xs" onClick={() => setGoalInput(String(suggestedGoal))}>Usar sugestão {formatCurrency(suggestedGoal)}</Button>
               </div>
@@ -261,6 +280,23 @@ const EmergencyReservePage: React.FC = () => {
                     <Input placeholder="0,00" value={withdrawInput} onChange={(e) => setWithdrawInput(e.target.value)} className="rounded-xl" />
                     <Button variant="outline" onClick={handleWithdraw} className="rounded-xl">Sacar</Button>
                   </div>
+                </div>
+
+                <div className="pt-3 border-t space-y-2">
+                  <Label className="text-sm flex items-center gap-1.5"><Wallet className="h-3.5 w-3.5 text-emerald-600" /> Definir valor guardado</Label>
+                  {!isEditingAmount ? (
+                    <div className="flex gap-2">
+                      <div className="flex-1 px-3 py-2 rounded-xl border bg-muted text-sm font-medium">{formatCurrency(reserve.currentAmount)}</div>
+                      <Button variant="outline" onClick={() => { setIsEditingAmount(true); setCurrentAmountInput(String(reserve.currentAmount)); }} className="rounded-xl">Definir</Button>
+                    </div>
+                  ) : (
+                    <div className="flex gap-2">
+                      <Input value={currentAmountInput} onChange={(e) => setCurrentAmountInput(e.target.value)} className="rounded-xl" autoFocus placeholder="0,00" />
+                      <Button onClick={handleUpdateCurrentAmount} className="rounded-xl bg-emerald-600 hover:bg-emerald-700">Salvar</Button>
+                      <Button variant="ghost" onClick={() => setIsEditingAmount(false)} className="rounded-xl">Cancelar</Button>
+                    </div>
+                  )}
+                  <p className="text-[11px] text-muted-foreground">Defina diretamente o valor total já guardado, sem precisar depositar aos poucos.</p>
                 </div>
 
                 <div className="pt-3 border-t space-y-2">

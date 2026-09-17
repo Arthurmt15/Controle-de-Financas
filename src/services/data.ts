@@ -76,6 +76,7 @@ export const emergencyReserveService = {
   delete: (id: string) => financeService.deleteEmergencyReserve(id),
   deposit: (amount: number) => financeService.depositEmergencyReserve(amount),
   withdraw: (amount: number) => financeService.withdrawEmergencyReserve(amount),
+  setCurrentAmount: (amount: number) => financeService.setEmergencyReserveAmount(amount),
 };
 
 export const futureExpenseService = {

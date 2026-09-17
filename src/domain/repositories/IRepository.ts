@@ -30,4 +30,5 @@ export interface IEmergencyReserveRepository extends IRepository<import('../../t
   getByUser(): Promise<import('../../types').EmergencyReserve | null>;
   deposit(amount: number): Promise<import('../../types').EmergencyReserve>;
   withdraw(amount: number): Promise<import('../../types').EmergencyReserve>;
+  setCurrentAmount(amount: number): Promise<import('../../types').EmergencyReserve>;
 }

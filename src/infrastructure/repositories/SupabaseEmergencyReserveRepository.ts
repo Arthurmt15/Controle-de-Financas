@@ -122,4 +122,12 @@ export class SupabaseEmergencyReserveRepository implements IEmergencyReserveRepo
     const updated = entity.withdraw(amount);
     return this.update(updated.toDTO());
   }
+
+  async setCurrentAmount(amount: number): Promise<EmergencyReserve> {
+    const current = await this.getByUser();
+    if (!current) throw new Error('Reserva não encontrada');
+    const entity = new EmergencyReserveEntity(current);
+    const updated = entity.setCurrentAmount(amount);
+    return this.update(updated.toDTO());
+  }
 }

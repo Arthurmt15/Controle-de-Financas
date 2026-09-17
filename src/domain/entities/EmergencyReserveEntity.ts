@@ -45,6 +45,11 @@ export class EmergencyReserveEntity extends BaseEntity {
     return new EmergencyReserveEntity({ ...this.toDTO(), goalAmount: newGoal });
   }
 
+  setCurrentAmount(newAmount: number): EmergencyReserveEntity {
+    if (newAmount < 0) throw new Error('Valor guardado inválido');
+    return new EmergencyReserveEntity({ ...this.toDTO(), currentAmount: newAmount });
+  }
+
   toDTO(): EmergencyReserve {
     return {
       id: this.id,
