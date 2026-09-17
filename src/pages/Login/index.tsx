@@ -72,33 +72,39 @@ const LoginPage: React.FC = () => {
     const isDark = themeType === 'dark';
     return {
       container: isDark
-        ? 'min-h-screen grid grid-cols-1 lg:grid-cols-2 bg-[#0a0f1e]'
-        : 'min-h-screen grid grid-cols-1 lg:grid-cols-2 bg-[#f5f5f5]',
+        ? 'min-h-[100dvh] min-h-screen grid grid-cols-1 lg:grid-cols-2 bg-[#0a0f1e]'
+        : 'min-h-[100dvh] min-h-screen grid grid-cols-1 lg:grid-cols-2 bg-[#f5f5f5]',
       hero: isDark
-        ? 'hidden lg:flex items-center p-20 bg-gradient-to-br from-[#0a0f1e] to-[#0d1328]'
-        : 'hidden lg:flex items-center p-20 bg-gradient-to-br from-[#f5f5f5] to-[#e8e8e8]',
+        ? 'hidden lg:flex items-center p-12 xl:p-20 bg-gradient-to-br from-[#0a0f1e] to-[#0d1328]'
+        : 'hidden lg:flex items-center p-12 xl:p-20 bg-gradient-to-br from-[#f5f5f5] to-[#e8e8e8]',
+      mobileHero: isDark
+        ? 'lg:hidden w-full flex flex-col items-center text-center px-6 pt-8 pb-2'
+        : 'lg:hidden w-full flex flex-col items-center text-center px-6 pt-8 pb-2',
+      mobileLogo: isDark
+        ? 'w-14 h-14 flex items-center justify-center rounded-2xl bg-gradient-to-br from-[#6366f1] to-[#8b5cf6] shadow-[0_0_30px_rgba(99,102,241,0.35)] shrink-0'
+        : 'w-14 h-14 flex items-center justify-center rounded-2xl bg-gradient-to-br from-[#6366f1] to-[#8b5cf6] shadow-[0_8px_24px_rgba(99,102,241,0.2)] shrink-0',
       logo: isDark
         ? 'w-16 h-16 flex items-center justify-center rounded-2xl bg-gradient-to-br from-[#6366f1] to-[#8b5cf6] shadow-[0_0_35px_rgba(99,102,241,0.35)]'
         : 'w-16 h-16 flex items-center justify-center rounded-2xl bg-gradient-to-br from-[#6366f1] to-[#8b5cf6] shadow-[0_0_35px_rgba(99,102,241,0.2)]',
       heroTitle: isDark
-        ? 'text-white text-5xl lg:text-6xl font-bold leading-tight tracking-tight'
-        : 'text-gray-900 text-5xl lg:text-6xl font-bold leading-tight tracking-tight',
+        ? 'text-white text-5xl xl:text-6xl font-bold leading-tight tracking-tight'
+        : 'text-gray-900 text-5xl xl:text-6xl font-bold leading-tight tracking-tight',
       gradientText: 'bg-gradient-to-r from-[#8b5cf6] to-[#3b82f6] bg-clip-text text-transparent',
       heroDesc: 'text-gray-400 text-lg leading-relaxed mt-6 mb-10',
       featureTitle: isDark ? 'text-white text-sm font-semibold' : 'text-gray-900 text-sm font-semibold',
       featureDesc: 'text-gray-400 text-xs',
-      loginSection: 'flex items-center justify-center p-8 lg:p-16 relative overflow-hidden',
+      loginSection: 'flex flex-col lg:flex-row items-center justify-center lg:justify-center p-4 sm:p-6 lg:p-16 relative overflow-hidden min-h-[100dvh] lg:min-h-0 gap-4 sm:gap-6',
       loginCard: isDark
-        ? 'w-full max-w-[480px] p-8 lg:p-10 bg-[rgba(17,26,51,0.92)] backdrop-blur-xl border border-white/[0.08] rounded-[28px] shadow-[0_20px_80px_rgba(0,0,0,0.55),inset_0_1px_0_rgba(255,255,255,0.06)] relative'
-        : 'w-full max-w-[480px] p-8 lg:p-10 bg-white/80 backdrop-blur-xl border border-black/[0.06] rounded-[28px] shadow-[0_20px_80px_rgba(15,23,42,0.08),inset_0_1px_0_rgba(255,255,255,0.7)] relative',
-      title: isDark ? 'text-white text-3xl font-bold' : 'text-gray-900 text-3xl font-bold',
-      subtitle: 'text-gray-400 text-base',
-      registerText: 'text-gray-500 text-xs',
-      registerLink: 'text-[#6366f1] text-xs hover:text-[#4f46e5] dark:hover:text-white font-medium transition-colors',
-      themeButton: `absolute top-4 right-4 w-10 h-10 rounded-full border bg-card flex items-center justify-center cursor-pointer hover:scale-110 shadow-lg hover:border-primary/30 transition-all`,
+        ? 'w-full max-w-[480px] p-6 sm:p-8 lg:p-10 bg-[rgba(17,26,51,0.96)] backdrop-blur-xl border border-white/[0.08] rounded-2xl sm:rounded-[28px] shadow-[0_20px_80px_rgba(0,0,0,0.55),inset_0_1px_0_rgba(255,255,255,0.06)] relative'
+        : 'w-full max-w-[480px] p-6 sm:p-8 lg:p-10 bg-white backdrop-blur-xl border border-black/[0.06] rounded-2xl sm:rounded-[28px] shadow-[0_16px_48px_rgba(15,23,42,0.08),inset_0_1px_0_rgba(255,255,255,0.9)] relative',
+      title: isDark ? 'text-white text-2xl sm:text-3xl font-bold tracking-tight' : 'text-gray-900 text-2xl sm:text-3xl font-bold tracking-tight',
+      subtitle: 'text-gray-400 text-sm sm:text-base',
+      registerText: 'text-gray-500 text-xs sm:text-[13px]',
+      registerLink: 'text-[#6366f1] text-xs sm:text-[13px] hover:text-[#4f46e5] font-medium transition-colors py-1 px-1 -mx-1 rounded',
+      themeButton: `absolute top-3 right-3 sm:top-4 sm:right-4 w-9 h-9 sm:w-10 sm:h-10 rounded-full border bg-card flex items-center justify-center cursor-pointer hover:scale-105 sm:hover:scale-110 shadow-lg hover:border-primary/30 transition-all z-10`,
       googleButton: isDark
-        ? 'w-full py-3 px-6 flex items-center justify-center gap-3 bg-white text-gray-900 font-medium rounded-xl hover:bg-gray-100 transition-colors cursor-pointer border-none text-base'
-        : 'w-full py-3 px-6 flex items-center justify-center gap-3 bg-white text-gray-900 font-medium rounded-xl hover:bg-gray-100 transition-colors cursor-pointer border border-gray-300 text-base',
+        ? 'w-full py-3.5 sm:py-3 px-5 sm:px-6 flex items-center justify-center gap-3 bg-white text-gray-900 font-medium rounded-xl hover:bg-gray-100 active:bg-gray-100 active:scale-[0.98] transition-all cursor-pointer border-none text-[15px] sm:text-base min-h-[48px] touch-manipulation'
+        : 'w-full py-3.5 sm:py-3 px-5 sm:px-6 flex items-center justify-center gap-3 bg-white text-gray-900 font-medium rounded-xl hover:bg-gray-50 active:bg-gray-100 active:scale-[0.98] transition-all cursor-pointer border border-gray-200 text-[15px] sm:text-base min-h-[48px] touch-manipulation',
     };
   };
 
@@ -118,6 +124,21 @@ const LoginPage: React.FC = () => {
       </section>
 
       <section className={classes.loginSection}>
+        {/* Orbs sutis também no mobile para não ficar chapado */}
+        <div className="absolute -top-20 -left-20 w-[380px] h-[380px] rounded-full blur-[70px] opacity-20 lg:opacity-0 pointer-events-none" style={{ background: 'radial-gradient(circle, #6366f1 0%, transparent 70%)' }} />
+        <div className="absolute -bottom-16 -right-16 w-[340px] h-[340px] rounded-full blur-[60px] opacity-15 lg:opacity-0 pointer-events-none" style={{ background: 'radial-gradient(circle, #06b6d4 0%, transparent 70%)' }} />
+
+        {/* Header mobile — branding visível só no mobile */}
+        <div className={classes.mobileHero}>
+          <div className={classes.mobileLogo}>
+            <span className="text-2xl font-bold text-white tracking-tighter">$</span>
+          </div>
+          <h1 className={`mt-4 text-[22px] sm:text-2xl font-bold tracking-tight leading-tight ${themeType === 'dark' ? 'text-white' : 'text-gray-900'}`}>
+            Controle suas <span className={classes.gradientText}>finanças</span>
+          </h1>
+          <p className="mt-1.5 text-sm text-gray-400 max-w-[300px] leading-relaxed">Bento financeiro com automação e IA. Menos planilha, mais decisão.</p>
+        </div>
+
         <div className={classes.loginCard} style={{ position: 'relative' }}>
           <button className={classes.themeButton} onClick={toggleTheme} aria-label="Alternar tema">
             {themeType === 'light' ? (
@@ -139,22 +160,21 @@ const LoginPage: React.FC = () => {
             )}
           </button>
 
-          <div className="text-center mb-9">
+          <div className="text-center mb-6 sm:mb-9 pr-8 sm:pr-0">
             <h2 className={classes.title}>Bem-vindo de volta!</h2>
-            <p className={classes.subtitle}>Entre para acessar sua conta</p>
+            <p className={`${classes.subtitle} mt-1.5`}>Entre para acessar sua conta</p>
           </div>
 
           {error && (
-            <div className="flex items-center justify-center gap-2 px-4 py-3 mb-4 bg-red-500/10 border border-red-500 rounded-lg text-red-500 text-sm text-center" role="alert">
-              <span></span>
+            <div className="flex items-center justify-center gap-2 px-3 sm:px-4 py-3 mb-4 bg-red-500/10 border border-red-500 rounded-xl text-red-500 text-sm text-center" role="alert">
               <span>{error}</span>
-              <button onClick={clearError} className="ml-1 text-red-500 text-lg leading-none" aria-label="Fechar erro">×</button>
+              <button onClick={clearError} className="ml-1 text-red-500 text-lg leading-none shrink-0" aria-label="Fechar erro">×</button>
             </div>
           )}
 
           {isSupabase ? (
             <button onClick={() => loginWithGoogle()} className={classes.googleButton}>
-              <svg width="20" height="20" viewBox="0 0 24 24">
+              <svg width="20" height="20" viewBox="0 0 24 24" className="shrink-0">
                 <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 01-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z" fill="#4285F4"/>
                 <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
                 <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
@@ -163,13 +183,19 @@ const LoginPage: React.FC = () => {
               Continuar com Google
             </button>
           ) : (
-            <div ref={googleButtonRef} className="w-full flex justify-center" />
+            <div ref={googleButtonRef} className="w-full flex justify-center [&>div]:!w-full [&>div>div]:!w-full" />
           )}
 
-          <div className="flex justify-center items-center gap-2 mt-7">
+          <div className="flex flex-col sm:flex-row justify-center items-center gap-1 sm:gap-2 mt-6 sm:mt-7 text-center">
             <span className={classes.registerText}>Ainda não tem uma conta?</span>
             <button type="button" className={classes.registerLink}>Criar conta</button>
           </div>
+
+          {/* Trust hint só no mobile */}
+          <p className="lg:hidden mt-6 flex items-center justify-center gap-1.5 text-[11px] text-gray-400">
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 inline-block" />
+            LGPD e criptografia • +2.400 usuários
+          </p>
         </div>
       </section>
     </div>
