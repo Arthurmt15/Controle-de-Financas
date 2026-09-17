@@ -9,6 +9,7 @@ import React, { useState, useRef, useCallback, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Bot, Sparkles, SendHorizontal, Loader2, User } from 'lucide-react';
 import { useTransactions } from '../../../hooks/useTransactions';
+import { useTheme } from '../../../contexts/ThemeContext';
 import { buildFinancialContext, streamAdvisor } from '../../../services/financialAdvisorService';
 import { Card, CardHeader, CardContent } from '../../ui/card';
 import { Button } from '../../ui/button';
@@ -40,6 +41,7 @@ const SUGGESTIONS = [
 
 const FinancialAdvisor: React.FC = () => {
   const { transactions, categories } = useTransactions();
+  const { theme } = useTheme();
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [isStreaming, setIsStreaming] = useState(false);
@@ -127,12 +129,12 @@ const FinancialAdvisor: React.FC = () => {
     <Card className="rounded-2xl overflow-hidden flex flex-col h-[520px] sm:h-[560px] lg:h-[620px] max-h-[70vh] lg:max-h-[72vh] shadow-sm">
       {/* Header do chat */}
       <CardHeader className="py-3.5 px-4 flex flex-row items-center justify-center gap-2.5 border-b bg-card shrink-0 space-y-0">
-        <span className="w-8 h-8 flex items-center justify-center rounded-xl bg-violet-500 text-white shrink-0">
+        <span className="w-8 h-8 flex items-center justify-center rounded-xl text-white shrink-0" style={{ backgroundColor: theme.colors.primary }}>
           <Bot className="h-4 w-4" />
         </span>
         <div className="text-center">
           <h3 className="text-[14px] font-semibold leading-none flex items-center gap-1 justify-center">
-            Consultor Financeiro <Sparkles className="h-3 w-3 text-violet-500" />
+            Consultor Financeiro <Sparkles className="h-3 w-3" style={{ color: theme.colors.primary }} />
           </h3>
           <p className="text-xs text-muted-foreground mt-1">IA analisa seus dados reais</p>
         </div>
@@ -153,7 +155,7 @@ const FinancialAdvisor: React.FC = () => {
             animate={{ opacity: 1, y: 0 }}
             className="flex flex-col items-center justify-center text-center py-6 gap-3 flex-1"
           >
-            <span className="w-12 h-12 flex items-center justify-center rounded-2xl bg-violet-500/10 border border-violet-200 text-violet-600 dark:border-transparent">
+            <span className="w-12 h-12 flex items-center justify-center rounded-2xl border dark:border-transparent" style={{ backgroundColor: `${theme.colors.primary}14`, borderColor: `${theme.colors.primary}30`, color: theme.colors.primary }}>
               <Bot className="h-6 w-6" />
             </span>
             <h4 className="text-[15px] font-semibold">Olá! Sou seu consultor financeiro.</h4>
@@ -165,7 +167,8 @@ const FinancialAdvisor: React.FC = () => {
                 <Badge
                   key={s}
                   variant="outline"
-                  className="cursor-pointer rounded-full px-3 py-1 text-xs font-medium bg-violet-50 border-violet-200 text-violet-700 hover:bg-violet-100 dark:bg-violet-500/10 dark:border-violet-500/20 dark:text-violet-300 transition-colors"
+                  className="cursor-pointer rounded-full px-3 py-1 text-xs font-medium transition-colors"
+                  style={{ backgroundColor: `${theme.colors.primary}0d`, borderColor: `${theme.colors.primary}30`, color: theme.colors.primary }}
                   onClick={() => sendMessage(s)}
                 >
                   {s}
@@ -202,22 +205,23 @@ const FinancialAdvisor: React.FC = () => {
               <div
                 className={`${msg.role === 'user' ? 'w-fit max-w-[85%]' : 'w-fit max-w-[88%] min-w-[64px]'} px-3.5 py-2.5 rounded-2xl text-[13px] leading-6 shadow-sm break-words [overflow-wrap:anywhere] whitespace-pre-wrap ${
                   msg.role === 'user'
-                    ? 'bg-primary text-primary-foreground rounded-br-md'
+                    ? 'text-white rounded-br-md'
                     : 'bg-card border shadow-sm rounded-bl-md'
                 }`}
+                style={msg.role === 'user' ? { backgroundColor: theme.colors.primary } : undefined}
               >
                 {msg.role === 'user' ? (
                   <span className="whitespace-pre-wrap break-words [overflow-wrap:anywhere]">{msg.content}</span>
                 ) : isTyping ? (
                   <span className="inline-flex items-center justify-center gap-1.5 min-h-[20px] py-0.5">
-                    <span className="w-1.5 h-1.5 bg-violet-500 rounded-full animate-bounce [animation-delay:-0.3s]" />
-                    <span className="w-1.5 h-1.5 bg-violet-500 rounded-full animate-bounce [animation-delay:-0.15s]" />
-                    <span className="w-1.5 h-1.5 bg-violet-500 rounded-full animate-bounce" />
+                    <span className="w-1.5 h-1.5 rounded-full animate-bounce [animation-delay:-0.3s]" style={{ backgroundColor: theme.colors.primary }} />
+                    <span className="w-1.5 h-1.5 rounded-full animate-bounce [animation-delay:-0.15s]" style={{ backgroundColor: theme.colors.primary }} />
+                    <span className="w-1.5 h-1.5 rounded-full animate-bounce" style={{ backgroundColor: theme.colors.primary }} />
                   </span>
                 ) : (
                   <span className="block [&>strong]:font-semibold [&>strong]:text-foreground">
                     <span dangerouslySetInnerHTML={{ __html: renderMarkdown(msg.content) }} />
-                    {isStreamingThis && <span className="inline-block w-[2px] h-[14px] bg-violet-500 animate-pulse ml-1 align-text-bottom" aria-hidden />}
+                    {isStreamingThis && <span className="inline-block w-[2px] h-[14px] animate-pulse ml-1 align-text-bottom" style={{ backgroundColor: theme.colors.primary }} aria-hidden />}
                   </span>
                 )}
               </div>
@@ -243,14 +247,16 @@ const FinancialAdvisor: React.FC = () => {
               onKeyDown={handleKeyDown}
               placeholder="Pergunte sobre suas finanças..."
               disabled={isStreaming}
-              className="rounded-full h-10 bg-muted/50 border-muted-foreground/10 focus-visible:ring-violet-500"
+              className="rounded-full h-10 bg-muted/50 border-muted-foreground/10"
+              style={{ ['--tw-ring-color' as any]: theme.colors.primary }}
             />
           </div>
           <Button
             type="submit"
             size="icon"
             disabled={!input.trim() || isStreaming}
-            className="rounded-full w-10 h-10 shrink-0"
+            className="rounded-full w-10 h-10 shrink-0 text-white hover:opacity-90"
+            style={{ backgroundColor: theme.colors.primary }}
           >
             {isStreaming ? <Loader2 className="h-4 w-4 animate-spin" /> : <SendHorizontal className="h-4 w-4" />}
           </Button>

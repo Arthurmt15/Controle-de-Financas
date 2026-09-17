@@ -12,6 +12,7 @@ import { Bot, Sparkles, Send, X, User } from 'lucide-react';
 import { useTransactions } from '../../../hooks/useTransactions';
 import { useInstallments } from '../../../contexts/InstallmentsContext';
 import { useDebts } from '../../../contexts/DebtsContext';
+import { useTheme } from '../../../contexts/ThemeContext';
 import { parseTransactionFromMessage } from '../../../utils/parseTransaction';
 import { detectCommand, executeCommand } from '../../../utils/chatCommands';
 import { generateSummary, generateAnalysis } from '../../../utils/analysisEngine';
@@ -47,6 +48,7 @@ const SUGGESTIONS_GUIDE = [
 
 const FloatingChat: React.FC = () => {
   const location = useLocation();
+  const { theme } = useTheme();
   const {
     transactions,
     addTransaction,
@@ -342,11 +344,12 @@ Responda como guia quando pergunta for sobre navegação.`;
 
   return (
     <>
-      {/* FAB */}
+      {/* FAB — cor acompanha accent do usuário */}
       <motion.button
         ref={fabRef}
         onClick={() => setIsOpen(!isOpen)}
-        className={`fixed bottom-4 right-4 sm:bottom-6 sm:right-6 z-[60] w-14 h-14 rounded-full shadow-lg flex items-center justify-center transition-colors ${isOpen ? 'bg-slate-900 text-white hover:bg-slate-800' : 'bg-violet-600 text-white hover:bg-violet-700'}`}
+        style={!isOpen ? { backgroundColor: theme.colors.primary, color: 'white' } : undefined}
+        className={`fixed bottom-4 right-4 sm:bottom-6 sm:right-6 z-[60] w-14 h-14 rounded-full shadow-lg flex items-center justify-center transition-colors ${isOpen ? 'bg-slate-900 text-white hover:bg-slate-800' : 'text-white hover:opacity-90'}`}
         whileHover={{ scale: 1.05 }}
         whileTap={{ scale: 0.95 }}
         aria-label={isOpen ? 'Fechar guia' : 'Abrir guia inteligente'}
@@ -369,7 +372,7 @@ Responda como guia quando pergunta for sobre navegação.`;
             className="fixed bottom-[76px] right-4 sm:right-6 z-[60] w-[360px] sm:w-[400px] max-w-[calc(100vw-32px)]"
           >
             <Card className="rounded-2xl overflow-hidden shadow-2xl border flex flex-col h-[520px] sm:h-[560px] max-h-[70vh] bg-card">
-              <CardHeader className="p-3.5 border-b bg-gradient-to-r from-violet-600 to-indigo-600 text-white shrink-0 flex flex-row items-center justify-between gap-2 space-y-0">
+              <CardHeader className="p-3.5 border-b text-white shrink-0 flex flex-row items-center justify-between gap-2 space-y-0" style={{ background: `linear-gradient(90deg, ${theme.colors.primary}, ${theme.colors.secondary})` }}>
                 <div className="flex items-center gap-2.5">
                   <span className="w-8 h-8 rounded-xl bg-white/15 backdrop-blur flex items-center justify-center"><Bot className="h-4 w-4" /></span>
                   <div>
@@ -388,22 +391,22 @@ Responda como guia quando pergunta for sobre navegação.`;
                   const isStreaming = !message.isUser && isProcessing && !!message.text && idx === messages.length - 1;
                   return (
                   <motion.div key={message.id} initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: idx * 0.01 }} className={`flex flex-col gap-1 ${message.isUser ? 'items-end' : 'items-start'}`}>
-                    <span className={`flex items-center gap-1 text-[10px] font-semibold tracking-widest uppercase px-1 ${message.isUser ? 'text-primary' : 'text-muted-foreground'}`}>
+                    <span className={`flex items-center gap-1 text-[10px] font-semibold tracking-widest uppercase px-1 ${message.isUser ? '' : 'text-muted-foreground'}`} style={message.isUser ? { color: theme.colors.primary } : undefined}>
                       {message.isUser ? <><User className="h-3 w-3" /> Você</> : <><Bot className="h-3 w-3" /> Guia</>}
                     </span>
-                    <div className={`${message.isUser ? 'w-fit max-w-[85%]' : 'w-fit max-w-[88%] min-w-[64px]'} px-3.5 py-2.5 rounded-2xl text-[13px] leading-6 shadow-sm break-words [overflow-wrap:anywhere] whitespace-pre-wrap ${message.isUser ? 'bg-violet-600 text-white rounded-br-md' : 'bg-card border rounded-bl-md'}`}>
+                    <div className={`${message.isUser ? 'w-fit max-w-[85%]' : 'w-fit max-w-[88%] min-w-[64px]'} px-3.5 py-2.5 rounded-2xl text-[13px] leading-6 shadow-sm break-words [overflow-wrap:anywhere] whitespace-pre-wrap ${message.isUser ? 'text-white rounded-br-md' : 'bg-card border rounded-bl-md'}`} style={message.isUser ? { backgroundColor: theme.colors.primary } : undefined}>
                       {message.isUser ? (
                         <span className="whitespace-pre-wrap break-words [overflow-wrap:anywhere]">{message.text}</span>
                       ) : isTyping ? (
                         <span className="inline-flex items-center justify-center gap-1.5 min-h-[20px] py-0.5">
-                          <span className="w-1.5 h-1.5 bg-violet-500 rounded-full animate-bounce [animation-delay:-0.3s]" />
-                          <span className="w-1.5 h-1.5 bg-violet-500 rounded-full animate-bounce [animation-delay:-0.15s]" />
-                          <span className="w-1.5 h-1.5 bg-violet-500 rounded-full animate-bounce" />
+                          <span className="w-1.5 h-1.5 rounded-full animate-bounce [animation-delay:-0.3s]" style={{ backgroundColor: theme.colors.primary }} />
+                          <span className="w-1.5 h-1.5 rounded-full animate-bounce [animation-delay:-0.15s]" style={{ backgroundColor: theme.colors.primary }} />
+                          <span className="w-1.5 h-1.5 rounded-full animate-bounce" style={{ backgroundColor: theme.colors.primary }} />
                         </span>
                       ) : (
                         <span className="block [&>strong]:font-semibold [&>strong]:text-foreground">
                           <span dangerouslySetInnerHTML={{ __html: renderMarkdown(message.text) }} />
-                          {isStreaming && <span className="inline-block w-[2px] h-[14px] bg-violet-500 animate-pulse ml-1 align-text-bottom" aria-hidden />}
+                          {isStreaming && <span className="inline-block w-[2px] h-[14px] animate-pulse ml-1 align-text-bottom" style={{ backgroundColor: theme.colors.primary }} aria-hidden />}
                         </span>
                       )}
                     </div>
@@ -417,7 +420,7 @@ Responda como guia quando pergunta for sobre navegação.`;
               {/* Input */}
               <div className="p-2.5 border-t bg-card shrink-0 flex items-center gap-2">
                 <Input ref={inputRef} value={inputValue} onChange={(e) => setInputValue(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend(); } }} placeholder="Pergunte ou digite 'almoço 25'..." disabled={isProcessing} aria-label="Digite sua mensagem" className="flex-1 h-9 rounded-full bg-muted/50" />
-                <Button onClick={handleSend} disabled={!inputValue.trim() || isProcessing} size="icon" className="h-9 w-9 rounded-full shrink-0 bg-violet-600 hover:bg-violet-700" aria-label="Enviar"><Send className="h-4 w-4" /></Button>
+                <Button onClick={handleSend} disabled={!inputValue.trim() || isProcessing} size="icon" className="h-9 w-9 rounded-full shrink-0 text-white hover:opacity-90" style={{ backgroundColor: theme.colors.primary }} aria-label="Enviar"><Send className="h-4 w-4" /></Button>
               </div>
 
               {/* Atalhos resumidos — 2 a 3 chips apenas */}
@@ -427,7 +430,10 @@ Responda como guia quando pergunta for sobre navegação.`;
                     <Badge
                       key={s}
                       variant="outline"
-                      className="rounded-full px-2.5 py-1 text-[11px] font-medium cursor-pointer bg-card hover:bg-violet-600 hover:text-white hover:border-violet-600 transition-colors"
+                      className="rounded-full px-2.5 py-1 text-[11px] font-medium cursor-pointer bg-card hover:text-white transition-colors"
+                      style={{ borderColor: theme.colors.border } as any}
+                      onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.backgroundColor = theme.colors.primary; (e.currentTarget as HTMLElement).style.borderColor = theme.colors.primary; (e.currentTarget as HTMLElement).style.color = 'white'; }}
+                      onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.backgroundColor = ''; (e.currentTarget as HTMLElement).style.borderColor = theme.colors.border; (e.currentTarget as HTMLElement).style.color = ''; }}
                       onClick={() => handleExampleClick(s)}
                     >
                       {s}

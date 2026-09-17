@@ -11,6 +11,7 @@ import { Send, Bot, User, Sparkles, Trash2, Lightbulb, Loader2 } from 'lucide-re
 import { useTransactions } from '../../../hooks/useTransactions';
 import { useInstallments } from '../../../contexts/InstallmentsContext';
 import { useDebts } from '../../../contexts/DebtsContext';
+import { useTheme } from '../../../contexts/ThemeContext';
 import { getExampleMessages, parseTransactionFromMessage } from '../../../utils/parseTransaction';
 import { detectCommand, executeCommand } from '../../../utils/chatCommands';
 import { generateSummary, generateAnalysis } from '../../../utils/analysisEngine';
@@ -43,6 +44,7 @@ function renderMarkdown(text: string): string {
  * Chat rápido com IA - design shadcn
  */
 const TransactionChat: React.FC = () => {
+  const { theme } = useTheme();
   // Dados do contexto
   const {
     transactions,
@@ -342,10 +344,10 @@ const TransactionChat: React.FC = () => {
   return (
     <div className="flex flex-col h-[560px]">
       {/* Cabeçalho do chat - com CardHeader estilizado */}
-      <CardHeader className="p-4 border-b bg-gradient-to-r from-primary/5 to-transparent">
+      <CardHeader className="p-4 border-b" style={{ background: `linear-gradient(90deg, ${theme.colors.primary}0d, transparent)` }}>
         <div className="flex items-center justify-between gap-2">
           <CardTitle className="text-[14px] font-semibold flex items-center gap-2">
-            <span className="w-7 h-7 rounded-lg bg-primary text-white flex items-center justify-center">
+            <span className="w-7 h-7 rounded-lg text-white flex items-center justify-center" style={{ backgroundColor: theme.colors.primary }}>
               <Bot className="h-4 w-4" />
             </span>
             Chat Rápido
@@ -383,7 +385,7 @@ const TransactionChat: React.FC = () => {
             className={`flex flex-col gap-1 ${message.isUser ? 'items-end' : 'items-start'}`}
           >
             {/* Badge de autor */}
-            <span className={`flex items-center gap-1 text-[11px] font-medium ${message.isUser ? 'text-primary' : 'text-muted-foreground'}`}>
+            <span className={`flex items-center gap-1 text-[11px] font-medium ${message.isUser ? '' : 'text-muted-foreground'}`} style={message.isUser ? { color: theme.colors.primary } : undefined}>
               {message.isUser ? <User className="h-3 w-3" /> : <Bot className="h-3 w-3" />}
               {message.isUser ? 'Você' : 'Assistente'}
             </span>
@@ -391,22 +393,23 @@ const TransactionChat: React.FC = () => {
             <div
               className={`${message.isUser ? 'w-fit max-w-[85%]' : 'w-fit max-w-[88%] min-w-[64px]'} rounded-2xl px-3.5 py-2.5 text-[13.5px] leading-6 shadow-sm break-words [overflow-wrap:anywhere] whitespace-pre-wrap ${
                 message.isUser
-                  ? 'bg-primary text-white rounded-br-md'
+                  ? 'text-white rounded-br-md'
                   : 'bg-background border text-foreground rounded-bl-md'
               }`}
+              style={message.isUser ? { backgroundColor: theme.colors.primary } : undefined}
             >
               {message.isUser ? (
                 <span className="whitespace-pre-wrap break-words [overflow-wrap:anywhere]">{message.text}</span>
               ) : isTyping ? (
                 <span className="inline-flex items-center justify-center gap-1.5 min-h-[20px] py-0.5">
-                  <span className="w-1.5 h-1.5 bg-violet-500 rounded-full animate-bounce [animation-delay:-0.3s]" />
-                  <span className="w-1.5 h-1.5 bg-violet-500 rounded-full animate-bounce [animation-delay:-0.15s]" />
-                  <span className="w-1.5 h-1.5 bg-violet-500 rounded-full animate-bounce" />
+                  <span className="w-1.5 h-1.5 rounded-full animate-bounce [animation-delay:-0.3s]" style={{ backgroundColor: theme.colors.primary }} />
+                  <span className="w-1.5 h-1.5 rounded-full animate-bounce [animation-delay:-0.15s]" style={{ backgroundColor: theme.colors.primary }} />
+                  <span className="w-1.5 h-1.5 rounded-full animate-bounce" style={{ backgroundColor: theme.colors.primary }} />
                 </span>
               ) : (
                 <span className="block [&>strong]:font-semibold">
                   <span dangerouslySetInnerHTML={{ __html: renderMarkdown(message.text) }} />
-                  {isStreamingThis && <span className="inline-block w-[2px] h-[14px] bg-violet-500 animate-pulse ml-1 align-text-bottom" aria-hidden />}
+                  {isStreamingThis && <span className="inline-block w-[2px] h-[14px] animate-pulse ml-1 align-text-bottom" style={{ backgroundColor: theme.colors.primary }} aria-hidden />}
                 </span>
               )}
             </div>
@@ -436,15 +439,15 @@ const TransactionChat: React.FC = () => {
           className="flex-1 h-9 rounded-xl"
         />
 
-        <Button onClick={handleSend} disabled={!inputValue.trim() || isProcessing} size="icon" className="h-9 w-9 rounded-xl shrink-0" aria-label="Enviar mensagem">
+        <Button onClick={handleSend} disabled={!inputValue.trim() || isProcessing} size="icon" className="h-9 w-9 rounded-xl shrink-0 text-white hover:opacity-90" style={{ backgroundColor: theme.colors.primary }} aria-label="Enviar mensagem">
           <Send className="h-4 w-4" />
         </Button>
       </div>
 
       {/* Sugestões dinâmicas — aparecem após resposta da IA para manter conversa fluida */}
       {dynamicFollowUps.length > 0 && (
-        <div className="px-3 py-2.5 bg-violet-50/50 dark:bg-violet-500/5 border-t border-violet-100 dark:border-violet-500/10">
-          <p className="text-[11px] font-semibold tracking-widest uppercase text-violet-700 dark:text-violet-300 mb-1.5 flex items-center gap-1">
+        <div className="px-3 py-2.5 border-t" style={{ backgroundColor: `${theme.colors.primary}0a`, borderColor: `${theme.colors.primary}14` }}>
+          <p className="text-[11px] font-semibold tracking-widest uppercase mb-1.5 flex items-center gap-1" style={{ color: theme.colors.primary }}>
             <Sparkles className="h-3 w-3" /> Continue a conversa
           </p>
           <div className="flex flex-wrap gap-1.5">
@@ -452,7 +455,10 @@ const TransactionChat: React.FC = () => {
               <Badge
                 key={s}
                 variant="outline"
-                className="rounded-full px-2.5 py-1 text-xs font-medium cursor-pointer bg-card hover:bg-violet-600 hover:text-white hover:border-violet-600 transition-colors"
+                className="rounded-full px-2.5 py-1 text-xs font-medium cursor-pointer bg-card hover:text-white transition-colors"
+                style={{ borderColor: `${theme.colors.primary}30` } as any}
+                onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.backgroundColor = theme.colors.primary; (e.currentTarget as HTMLElement).style.borderColor = theme.colors.primary; (e.currentTarget as HTMLElement).style.color = 'white'; }}
+                onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.backgroundColor = ''; (e.currentTarget as HTMLElement).style.borderColor = `${theme.colors.primary}30`; (e.currentTarget as HTMLElement).style.color = ''; }}
                 onClick={() => handleExampleClick(s)}
               >
                 {s}
