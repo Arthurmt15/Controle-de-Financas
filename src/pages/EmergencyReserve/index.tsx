@@ -139,14 +139,6 @@ const EmergencyReservePage: React.FC = () => {
           </Badge>
         </div>
 
-        <Card className="border-dashed bg-muted/30">
-          <CardContent className="p-3 flex gap-2.5 items-start">
-            <span className="mt-0.5 p-1.5 rounded-lg bg-emerald-500/10 text-emerald-600 shrink-0"><Info className="h-3.5 w-3.5" /></span>
-            <p className="text-[13px] leading-relaxed text-muted-foreground">
-              Defina sua meta (sugerimos <strong className="text-foreground">{formatCurrency(suggestedGoal)}</strong> com base nos seus gastos) e vá depositando aos poucos. Use para imprevistos, sem misturar com investimentos.
-            </p>
-          </CardContent>
-        </Card>
       </motion.div>
 
       {/* Métricas */}
