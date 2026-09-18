@@ -31,6 +31,14 @@ function isTableNotFound(error: any): boolean {
   return code === 'PGRST205' || code === '42P01' || code === 'PGRST301' || msg.includes('does not exist') || msg.includes('could not find the table') || msg.includes('schema cache');
 }
 
+let hasLoggedMissingTable = false;
+function logMissingTableOnce(error: any) {
+  if (hasLoggedMissingTable) return;
+  hasLoggedMissingTable = true;
+  // Usa debug para não poluir console em produção; detalhe técnico só para dev
+  console.debug('[EmergencyReserve] Tabela emergency_reserves não existe - migration 004 pendente', error);
+}
+
 export class SupabaseEmergencyReserveRepository implements IEmergencyReserveRepository {
   async getAll(): Promise<EmergencyReserve[]> {
     const r = await this.getByUser();
@@ -41,7 +49,7 @@ export class SupabaseEmergencyReserveRepository implements IEmergencyReserveRepo
     const { data, error } = await supabase.from('emergency_reserves').select('*').eq('id', id).single();
     if (error) {
       if (isTableNotFound(error)) {
-        console.warn('Tabela emergency_reserves não existe ainda. Execute a migration 004 em Supabase SQL Editor.');
+        logMissingTableOnce(error);
         return null;
       }
       throw error;
@@ -54,7 +62,7 @@ export class SupabaseEmergencyReserveRepository implements IEmergencyReserveRepo
     const { data, error } = await supabase.from('emergency_reserves').select('*').limit(1).maybeSingle();
     if (error) {
       if (isTableNotFound(error)) {
-        console.warn('Tabela emergency_reserves não existe ainda. Execute a migration 004 em Supabase SQL Editor.');
+        logMissingTableOnce(error);
         return null;
       }
       throw error;
@@ -76,7 +84,7 @@ export class SupabaseEmergencyReserveRepository implements IEmergencyReserveRepo
     }).select().single();
     if (error) {
       if (isTableNotFound(error)) {
-        console.error('[EmergencyReserve] Tabela emergency_reserves não existe - migration 004 pendente', error);
+        logMissingTableOnce(error);
         throw new Error('Não foi possível salvar a reserva no momento. Tente novamente mais tarde.');
       }
       throw error;
@@ -94,7 +102,7 @@ export class SupabaseEmergencyReserveRepository implements IEmergencyReserveRepo
     }).eq('id', entity.id).select().single();
     if (error) {
       if (isTableNotFound(error)) {
-        console.error('[EmergencyReserve] Tabela emergency_reserves não existe - migration 004 pendente', error);
+        logMissingTableOnce(error);
         throw new Error('Não foi possível salvar a reserva no momento. Tente novamente mais tarde.');
       }
       throw error;
@@ -106,7 +114,7 @@ export class SupabaseEmergencyReserveRepository implements IEmergencyReserveRepo
     const { error } = await supabase.from('emergency_reserves').delete().eq('id', id);
     if (error) {
       if (isTableNotFound(error)) {
-        console.warn('Tabela emergency_reserves não existe.');
+        logMissingTableOnce(error);
         return;
       }
       throw error;
