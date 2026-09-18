@@ -6,7 +6,7 @@
 
 import React, { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { PiggyBank, Target, TrendingUp, ShieldCheck, Plus, Minus, Edit3, Trash2, Info, Wallet, AlertCircle } from 'lucide-react';
+import { PiggyBank, TrendingUp, ShieldCheck, Plus, Minus, Edit3, Trash2, Info, Wallet, AlertCircle } from 'lucide-react';
 import { useEmergencyReserve } from '../../contexts/EmergencyReserveContext';
 import { useTransactions } from '../../hooks/useTransactions';
 import { formatCurrency } from '../../utils/formatters';
@@ -142,18 +142,7 @@ const EmergencyReservePage: React.FC = () => {
       </motion.div>
 
       {/* Métricas */}
-      <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.45, delay: 0.08 }} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5 mt-5">
-        <Card className="relative overflow-hidden rounded-2xl border bg-card shadow-sm">
-          <span className="absolute left-0 top-0 bottom-0 w-[3px] bg-gradient-to-b from-sky-500 to-blue-500" />
-          <CardContent className="p-[18px] flex items-center gap-3.5">
-            <span className="w-[42px] h-[42px] flex items-center justify-center rounded-xl border bg-sky-50 border-sky-100 text-sky-600 dark:bg-sky-500/10 dark:border-transparent"><Target size={16} /></span>
-            <div className="min-w-0 flex-1">
-              <span className="block text-[11px] font-semibold tracking-widest uppercase text-muted-foreground">Ideal (6x)</span>
-              <strong className="block mt-1.5 text-[18px] font-bold tracking-tight">{formatCurrency(suggestedGoal)}</strong>
-              <span className="mt-1.5 inline-block text-[11px] font-medium text-muted-foreground bg-muted px-2 py-0.5 rounded-full">Sugestão automática</span>
-            </div>
-          </CardContent>
-        </Card>
+      <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.45, delay: 0.08 }} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5 mt-5">
 
         <Card className="relative overflow-hidden rounded-2xl border bg-card shadow-sm">
           <span className="absolute left-0 top-0 bottom-0 w-[3px] bg-gradient-to-b from-violet-500 to-purple-500" />
