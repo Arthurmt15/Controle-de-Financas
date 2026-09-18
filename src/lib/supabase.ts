@@ -7,4 +7,11 @@ if (!supabaseUrl || !supabaseAnonKey) {
   console.warn('Supabase env ausente — funcionalidades limitadas');
 }
 
-export const supabase = createClient(supabaseUrl || 'https://placeholder.supabase.co', supabaseAnonKey || 'placeholder');
+if (!supabaseUrl || !supabaseAnonKey) {
+  console.error('❌ REACT_APP_SUPABASE_URL / REACT_APP_SUPABASE_ANON_KEY ausentes. Configure .env');
+}
+
+export const supabase = createClient(
+  supabaseUrl || 'https://placeholder.supabase.co',
+  supabaseAnonKey || 'placeholder-key'
+);

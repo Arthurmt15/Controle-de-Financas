@@ -7,19 +7,32 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2"
 
-const corsHeaders = {
-  "Access-Control-Allow-Origin": Deno.env.get("SUPABASE_CORS_ORIGIN") || "*",
+const corsHeadersBase = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-requested-with",
   "Access-Control-Allow-Methods": "POST, OPTIONS",
   "Access-Control-Max-Age": "86400",
 }
 
 function getCorsHeaders(req: Request): Record<string, string> {
-  const origin = req.headers.get("origin") || Deno.env.get("SUPABASE_CORS_ORIGIN") || "*"
-  const allowedOrigin = Deno.env.get("SUPABASE_CORS_ORIGIN")
-  const allowOrigin = allowedOrigin ? allowedOrigin : origin || "*"
+  const allowedOriginEnv = Deno.env.get("SUPABASE_CORS_ORIGIN")
+  const requestOrigin = req.headers.get("origin") || ""
+
+  let allowOrigin = ""
+  if (allowedOriginEnv) {
+    const allowedList = allowedOriginEnv.split(",").map((s) => s.trim()).filter(Boolean)
+    if (requestOrigin && allowedList.includes(requestOrigin)) {
+      allowOrigin = requestOrigin
+    } else {
+      // Se request sem origin ou não listado, usa o primeiro permitido (evita "*")
+      allowOrigin = allowedList[0] || ""
+    }
+  } else if (requestOrigin) {
+    // Sem env configurado: ecoa origin da requisição (nunca "*")
+    allowOrigin = requestOrigin
+  }
+
   return {
-    ...corsHeaders,
+    ...corsHeadersBase,
     "Access-Control-Allow-Origin": allowOrigin,
     "Vary": "Origin",
   }

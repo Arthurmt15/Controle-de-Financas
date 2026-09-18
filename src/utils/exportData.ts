@@ -28,23 +28,38 @@ interface ExportConfig {
  * const csv = convertToCSV({ transactions, categories });
  * downloadCSV(csv, 'transacoes.csv');
  */
+/**
+ * Escapa valor para CSV e previne CSV Injection (OWASP).
+ * Prefixa com ' se começar com = + - @ e escapa aspas.
+ */
+function escapeCsvField(value: string): string {
+  let v = value;
+  if (/^[=+\-@\t\r]/.test(v)) {
+    v = `'${v}`;
+  }
+  if (v.includes('"') || v.includes(';') || v.includes('\n') || v.includes(',')) {
+    v = `"${v.replace(/"/g, '""')}"`;
+  }
+  return v;
+}
+
 export function convertToCSV(config: ExportConfig): string {
   const { transactions, categories } = config;
 
-  // Cabeçalho do CSV
+  // Cabeçalho do CSV — separador ; para compatibilidade pt-BR Excel
   const headers = ['Data', 'Descrição', 'Tipo', 'Categoria', 'Valor', 'Observações'];
 
   // Mapeia transações para linhas CSV
   const rows = transactions.map((t) => {
     const category = categories.find((c) => c.id === t.categoryId);
     return [
-      formatDate(t.date),
-      `"${t.description.replace(/"/g, '""')}"`,
-      t.type === 'income' ? 'Entrada' : 'Saída',
-      category?.name || 'Sem categoria',
-      t.amount.toFixed(2),
-      t.notes ? `"${t.notes.replace(/"/g, '""')}"` : '',
-    ].join(',');
+      escapeCsvField(formatDate(t.date)),
+      escapeCsvField(t.description),
+      escapeCsvField(t.type === 'income' ? 'Entrada' : 'Saída'),
+      escapeCsvField(category?.name || 'Sem categoria'),
+      escapeCsvField(t.amount.toFixed(2)),
+      escapeCsvField(t.notes || ''),
+    ].join(';');
   });
 
   // Junta cabeçalho e linhas

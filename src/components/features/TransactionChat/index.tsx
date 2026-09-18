@@ -7,7 +7,7 @@
 
 import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { motion } from 'framer-motion';
-import { Send, Bot, User, Sparkles, Trash2, Lightbulb, Loader2 } from 'lucide-react';
+import { Send, Bot, User, Sparkles, Trash2, Lightbulb } from 'lucide-react';
 import { useTransactions } from '../../../hooks/useTransactions';
 import { useInstallments } from '../../../contexts/InstallmentsContext';
 import { useDebts } from '../../../contexts/DebtsContext';
@@ -31,9 +31,19 @@ interface ChatMessage {
   transaction?: Transaction;
 }
 
-/** Renderiza markdown básico para negrito, listas e quebras */
-function renderMarkdown(text: string): string {
+function escapeHtml(text: string): string {
   return text
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+}
+
+/** Renderiza markdown básico para negrito, listas e quebras (com escape XSS) */
+function renderMarkdown(text: string): string {
+  const escaped = escapeHtml(text);
+  return escaped
     .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
     .replace(/^(\d+)\.\s+(.+)/gm, '<strong>$1.</strong> $2')
     .replace(/^-\s+(.+)/gm, '&bull; $1')

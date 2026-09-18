@@ -61,14 +61,11 @@ CREATE TABLE IF NOT EXISTS recurring_bills (
 -- ROW LEVEL SECURITY (RLS)
 -- ============================================
 
--- Habilita RLS em todas as tabelas
+-- Habilita RLS em tabelas base
 ALTER TABLE categories ENABLE ROW LEVEL SECURITY;
 ALTER TABLE transactions ENABLE ROW LEVEL SECURITY;
 ALTER TABLE budgets ENABLE ROW LEVEL SECURITY;
 ALTER TABLE recurring_bills ENABLE ROW LEVEL SECURITY;
-ALTER TABLE installments ENABLE ROW LEVEL SECURITY;
-ALTER TABLE debts ENABLE ROW LEVEL SECURITY;
-ALTER TABLE future_expenses ENABLE ROW LEVEL SECURITY;
 
 -- ============================================
 -- POLÍTICAS RLS - CATEGORIES
@@ -301,6 +298,10 @@ CREATE TABLE IF NOT EXISTS emergency_reserves (
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
+-- Habilita RLS nas tabelas criadas após o bloco inicial (corrige ordem)
+ALTER TABLE installments ENABLE ROW LEVEL SECURITY;
+ALTER TABLE debts ENABLE ROW LEVEL SECURITY;
+ALTER TABLE future_expenses ENABLE ROW LEVEL SECURITY;
 ALTER TABLE emergency_reserves ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "Users can view own emergency_reserve" ON emergency_reserves FOR SELECT USING (auth.uid() = user_id);
 CREATE POLICY "Users can insert own emergency_reserve" ON emergency_reserves FOR INSERT WITH CHECK (auth.uid() = user_id);

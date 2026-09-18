@@ -9,18 +9,19 @@ import jwt from 'jsonwebtoken';
 
 /**
  * Obtém o JWT_SECRET das variáveis de ambiente.
- * Em produção, falha se não estiver definido.
+ * Falha em qualquer ambiente se não estiver definido (fail-fast).
+ * Em ambiente de teste, permite secret de teste previsível.
  */
 function getJwtSecret(): string {
   const secret = process.env.JWT_SECRET;
 
   if (!secret) {
-    if (process.env.NODE_ENV === 'production') {
-      console.error('❌ JWT_SECRET é obrigatório em produção');
-      process.exit(1);
+    if (process.env.NODE_ENV === 'test') {
+      return 'test-secret-not-for-production';
     }
-    console.warn('⚠️ JWT_SECRET não definido. Use variável de ambiente.');
-    return 'dev-secret-not-for-production';
+    console.error('❌ JWT_SECRET é obrigatório. Defina JWT_SECRET nas variáveis de ambiente.');
+    process.exit(1);
+    throw new Error('JWT_SECRET é obrigatório');
   }
 
   return secret;
