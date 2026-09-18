@@ -75,7 +75,10 @@ export class SupabaseEmergencyReserveRepository implements IEmergencyReserveRepo
       notes: dto.notes || null,
     }).select().single();
     if (error) {
-      if (isTableNotFound(error)) throw new Error('Tabela emergency_reserves não existe. Execute supabase/migrations/004_add_emergency_reserve.sql no Supabase SQL Editor: https://supabase.com/dashboard/project/hagnorgsihjddumzmnaw/sql/new');
+      if (isTableNotFound(error)) {
+        console.error('[EmergencyReserve] Tabela emergency_reserves não existe - migration 004 pendente', error);
+        throw new Error('Não foi possível salvar a reserva no momento. Tente novamente mais tarde.');
+      }
       throw error;
     }
     return mapRow(data as ReserveRow);
@@ -90,7 +93,10 @@ export class SupabaseEmergencyReserveRepository implements IEmergencyReserveRepo
       updated_at: new Date().toISOString(),
     }).eq('id', entity.id).select().single();
     if (error) {
-      if (isTableNotFound(error)) throw new Error('Tabela emergency_reserves não existe. Execute supabase/migrations/004_add_emergency_reserve.sql em https://supabase.com/dashboard/project/hagnorgsihjddumzmnaw/sql/new');
+      if (isTableNotFound(error)) {
+        console.error('[EmergencyReserve] Tabela emergency_reserves não existe - migration 004 pendente', error);
+        throw new Error('Não foi possível salvar a reserva no momento. Tente novamente mais tarde.');
+      }
       throw error;
     }
     return mapRow(data as ReserveRow);
