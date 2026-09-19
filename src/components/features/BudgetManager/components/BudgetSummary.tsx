@@ -66,7 +66,12 @@ const BudgetSummary: React.FC<BudgetSummaryProps> = ({ totalBudget, totalSpent }
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5">
       {items.map((it, idx) => (
-        <motion.div key={it.label} initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: idx * 0.05 }}>
+        <motion.div
+          key={it.label}
+          initial={{ opacity: 0, y: 6 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: idx * 0.05 }}
+        >
           <Card className="rounded-2xl h-full">
             <CardContent className="p-4 flex items-center gap-3">
               <span
@@ -81,11 +86,18 @@ const BudgetSummary: React.FC<BudgetSummaryProps> = ({ totalBudget, totalSpent }
                 <it.icon className="h-4 w-4" />
               </span>
               <div className="min-w-0 flex-1">
-                <span className="block text-[11px] font-semibold tracking-widest uppercase text-muted-foreground">{it.label}</span>
-                <strong className={`block mt-1 text-[16px] font-bold tracking-tight leading-none truncate ${it.danger ? 'text-red-600' : ''}`}>
+                <span className="block text-[11px] font-semibold tracking-widest uppercase text-muted-foreground">
+                  {it.label}
+                </span>
+                <strong
+                  className={`block mt-1 text-[16px] font-bold tracking-tight leading-none truncate ${it.danger ? 'text-red-600' : ''}`}
+                >
                   {it.value}
                 </strong>
-                <Badge variant="secondary" className="mt-1.5 rounded-full bg-muted text-muted-foreground text-[11px] font-normal px-2 py-0">
+                <Badge
+                  variant="secondary"
+                  className="mt-1.5 rounded-full bg-muted text-muted-foreground text-[11px] font-normal px-2 py-0"
+                >
                   {it.sub}
                 </Badge>
               </div>
@@ -95,14 +107,20 @@ const BudgetSummary: React.FC<BudgetSummaryProps> = ({ totalBudget, totalSpent }
       ))}
 
       {/* Card de progresso — ocupa a 4ª coluna */}
-      <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }}>
+      <motion.div
+        initial={{ opacity: 0, y: 6 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.15 }}
+      >
         <Card className="rounded-2xl h-full">
           <CardContent className="p-4 flex flex-col justify-center gap-2 h-full">
             <div className="flex items-center gap-2">
               <span className="w-9 h-9 rounded-xl bg-violet-500/10 text-violet-600 flex items-center justify-center border border-violet-100 dark:border-transparent shrink-0">
                 <BarChart3 className="h-4 w-4" />
               </span>
-              <span className="text-[11px] font-semibold tracking-widest uppercase text-muted-foreground">Progresso</span>
+              <span className="text-[11px] font-semibold tracking-widest uppercase text-muted-foreground">
+                Progresso
+              </span>
             </div>
             <div className="mt-1 w-full h-2 rounded-full bg-muted overflow-hidden">
               <motion.div

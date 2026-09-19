@@ -31,3 +31,4 @@ nul
 
 .vercel
 .env*
+!.env.example

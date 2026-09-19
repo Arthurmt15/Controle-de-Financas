@@ -23,7 +23,7 @@ async function main() {
   const sqlPath = path.join(__dirname, '..', 'supabase', 'migrations', '004_add_emergency_reserve.sql');
   const sql = fs.readFileSync(sqlPath, 'utf8');
   console.log('📄 Lendo migration:', sqlPath);
-  console.log(sql);
+  console.log(`📄 SQL carregado (${sql.length} bytes)`);
   const client = new Client({ connectionString: dbUrl, ssl: { rejectUnauthorized: false } });
   try {
     await client.connect();

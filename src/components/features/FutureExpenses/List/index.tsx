@@ -14,7 +14,13 @@ import FutureExpenseForm from '../Form';
 import { Card, CardContent, CardHeader, CardTitle } from '../../../ui/card';
 import { Button } from '../../../ui/button';
 import { Badge } from '../../../ui/badge';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '../../../ui/dialog';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from '../../../ui/dialog';
 import type { FutureExpense } from '../../../../types';
 
 /** Lista de despesas futuras */
@@ -38,8 +44,12 @@ const FutureExpenseList: React.FC = () => {
   };
 
   const filteredExpenses = futureExpenses.filter((e) => e.status === activeTab);
-  const totalPending = futureExpenses.filter((e) => e.status === 'pending').reduce((sum, e) => sum + Number(e.amount), 0);
-  const totalPaid = futureExpenses.filter((e) => e.status === 'paid').reduce((sum, e) => sum + Number(e.amount), 0);
+  const totalPending = futureExpenses
+    .filter((e) => e.status === 'pending')
+    .reduce((sum, e) => sum + Number(e.amount), 0);
+  const totalPaid = futureExpenses
+    .filter((e) => e.status === 'paid')
+    .reduce((sum, e) => sum + Number(e.amount), 0);
 
   const handleConfirmDelete = () => {
     if (deletingId) {
@@ -78,7 +88,10 @@ const FutureExpenseList: React.FC = () => {
             <Badge variant="outline" className="rounded-full px-3 py-1 text-xs">
               Pendente: {formatCurrency(totalPending)}
             </Badge>
-            <Badge variant="outline" className="rounded-full px-3 py-1 text-xs bg-emerald-50 border-emerald-200 text-emerald-700">
+            <Badge
+              variant="outline"
+              className="rounded-full px-3 py-1 text-xs bg-emerald-50 border-emerald-200 text-emerald-700"
+            >
               Pago: {formatCurrency(totalPaid)}
             </Badge>
           </div>
@@ -89,9 +102,21 @@ const FutureExpenseList: React.FC = () => {
       <Card className="rounded-2xl">
         <CardContent className="p-2 flex gap-2 flex-wrap">
           {[
-            { id: 'pending', label: 'Pendentes', count: futureExpenses.filter((e) => e.status === 'pending').length },
-            { id: 'paid', label: 'Pagas', count: futureExpenses.filter((e) => e.status === 'paid').length },
-            { id: 'cancelled', label: 'Canceladas', count: futureExpenses.filter((e) => e.status === 'cancelled').length },
+            {
+              id: 'pending',
+              label: 'Pendentes',
+              count: futureExpenses.filter((e) => e.status === 'pending').length,
+            },
+            {
+              id: 'paid',
+              label: 'Pagas',
+              count: futureExpenses.filter((e) => e.status === 'paid').length,
+            },
+            {
+              id: 'cancelled',
+              label: 'Canceladas',
+              count: futureExpenses.filter((e) => e.status === 'cancelled').length,
+            },
           ].map((tab) => (
             <Button
               key={tab.id}
@@ -114,15 +139,20 @@ const FutureExpenseList: React.FC = () => {
               <Inbox className="h-6 w-6 text-muted-foreground" />
             </span>
             <p className="text-sm font-semibold">
-              Nenhuma despesa {activeTab === 'pending' ? 'pendente' : activeTab === 'paid' ? 'paga' : 'cancelada'}
+              Nenhuma despesa{' '}
+              {activeTab === 'pending' ? 'pendente' : activeTab === 'paid' ? 'paga' : 'cancelada'}
             </p>
-            <p className="text-sm text-muted-foreground">Crie uma nova despesa futura para começar.</p>
+            <p className="text-sm text-muted-foreground">
+              Crie uma nova despesa futura para começar.
+            </p>
           </CardContent>
         </Card>
       ) : (
         <div className="grid gap-3">
           {filteredExpenses.map((expense, idx) => {
-            const daysUntil = Math.ceil((new Date(expense.expectedDate).getTime() - Date.now()) / (1000 * 60 * 60 * 24));
+            const daysUntil = Math.ceil(
+              (new Date(expense.expectedDate).getTime() - Date.now()) / (1000 * 60 * 60 * 24)
+            );
             const isUrgent = daysUntil <= 7 && daysUntil >= 0;
             const isOverdue = daysUntil < 0;
 
@@ -141,7 +171,9 @@ const FutureExpenseList: React.FC = () => {
                     <div className="flex-1 min-w-0 space-y-2">
                       <div className="flex items-center gap-2 min-w-0">
                         <span className="w-2 h-2 rounded-full bg-red-500 shrink-0" />
-                        <span className="text-[15px] font-semibold truncate">{expense.description}</span>
+                        <span className="text-[15px] font-semibold truncate">
+                          {expense.description}
+                        </span>
                         {isUrgent && (
                           <Badge variant="warning" className="gap-1 px-2 py-0 text-[11px]">
                             <AlertTriangle className="h-3 w-3" />
@@ -166,8 +198,14 @@ const FutureExpenseList: React.FC = () => {
                           {formatDate(expense.expectedDate)}
                         </span>
                         {activeTab === 'pending' && (
-                          <span className={`font-medium ${isUrgent ? 'text-amber-600' : isOverdue ? 'text-red-600' : 'text-muted-foreground'}`}>
-                            {daysUntil <= 0 ? 'Vencido' : daysUntil === 1 ? 'Amanhã' : `Em ${daysUntil} dias`}
+                          <span
+                            className={`font-medium ${isUrgent ? 'text-amber-600' : isOverdue ? 'text-red-600' : 'text-muted-foreground'}`}
+                          >
+                            {daysUntil <= 0
+                              ? 'Vencido'
+                              : daysUntil === 1
+                                ? 'Amanhã'
+                                : `Em ${daysUntil} dias`}
                           </span>
                         )}
                       </div>
@@ -175,7 +213,9 @@ const FutureExpenseList: React.FC = () => {
 
                     {/* Valor + ações */}
                     <div className="flex items-center gap-3 shrink-0">
-                      <span className="text-[15px] font-bold">{formatCurrency(expense.amount)}</span>
+                      <span className="text-[15px] font-bold">
+                        {formatCurrency(expense.amount)}
+                      </span>
                       <div className="flex items-center gap-1">
                         {activeTab === 'pending' && (
                           <Button
@@ -223,7 +263,9 @@ const FutureExpenseList: React.FC = () => {
             <DialogTitle>Editar Despesa Futura</DialogTitle>
             <DialogDescription>Atualize os dados e salve.</DialogDescription>
           </DialogHeader>
-          {editingExpense && <FutureExpenseForm expense={editingExpense} onClose={() => setEditingExpense(null)} />}
+          {editingExpense && (
+            <FutureExpenseForm expense={editingExpense} onClose={() => setEditingExpense(null)} />
+          )}
         </DialogContent>
       </Dialog>
 
@@ -232,7 +274,9 @@ const FutureExpenseList: React.FC = () => {
         <DialogContent className="sm:max-w-[420px]">
           <DialogHeader>
             <DialogTitle>Confirmar exclusão</DialogTitle>
-            <DialogDescription>Tem certeza que deseja excluir esta despesa futura? Esta ação não pode ser desfeita.</DialogDescription>
+            <DialogDescription>
+              Tem certeza que deseja excluir esta despesa futura? Esta ação não pode ser desfeita.
+            </DialogDescription>
           </DialogHeader>
           <div className="flex justify-end gap-2 mt-2">
             <Button variant="outline" onClick={() => setDeletingId(null)}>

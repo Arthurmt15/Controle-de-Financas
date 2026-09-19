@@ -24,7 +24,10 @@ interface Insight {
 }
 
 // Mapeia tipo para ícone lucide e classes tailwind
-const typeConfig: Record<Insight['type'], { icon: React.ElementType; wrap: string; iconColor: string; border: string; bg: string }> = {
+const typeConfig: Record<
+  Insight['type'],
+  { icon: React.ElementType; wrap: string; iconColor: string; border: string; bg: string }
+> = {
   warning: {
     icon: AlertTriangle,
     wrap: 'bg-amber-50 border-amber-200 dark:bg-amber-500/10 dark:border-amber-500/20',
@@ -68,7 +71,9 @@ const SpendingInsights: React.FC<SpendingInsightsProps> = ({ transactions, categ
     });
 
     const currentExpenses = currentMonthTx.filter((t) => t.type === 'expense');
-    const currentIncome = currentMonthTx.filter((t) => t.type === 'income').reduce((s, t) => s + t.amount, 0);
+    const currentIncome = currentMonthTx
+      .filter((t) => t.type === 'income')
+      .reduce((s, t) => s + t.amount, 0);
     const currentExpense = currentExpenses.reduce((s, t) => s + t.amount, 0);
 
     const expensesByCategory: Record<string, number> = {};
@@ -166,7 +171,9 @@ const SpendingInsights: React.FC<SpendingInsightsProps> = ({ transactions, categ
             </span>
             <CardTitle className="text-[15px] font-semibold">Insights</CardTitle>
           </div>
-          <CardDescription className="text-[13px]">Análise automática dos seus gastos</CardDescription>
+          <CardDescription className="text-[13px]">
+            Análise automática dos seus gastos
+          </CardDescription>
         </CardHeader>
         <CardContent>
           <div className="flex flex-col items-center justify-center py-8 gap-2 text-center text-muted-foreground">
@@ -189,7 +196,9 @@ const SpendingInsights: React.FC<SpendingInsightsProps> = ({ transactions, categ
           </span>
           <CardTitle className="text-[15px] font-semibold">Insights</CardTitle>
         </div>
-        <CardDescription className="text-[13px]">Análise automática dos seus gastos</CardDescription>
+        <CardDescription className="text-[13px]">
+          Análise automática dos seus gastos
+        </CardDescription>
       </CardHeader>
       <CardContent className="pt-0">
         <div className="flex flex-col gap-2.5">
@@ -204,12 +213,16 @@ const SpendingInsights: React.FC<SpendingInsightsProps> = ({ transactions, categ
                 transition={{ delay: idx * 0.05 }}
                 className={`flex gap-3 p-3.5 rounded-xl border ${cfg.bg} ${cfg.border}`}
               >
-                <span className={`w-8 h-8 shrink-0 flex items-center justify-center rounded-lg border ${cfg.wrap} ${cfg.iconColor}`}>
+                <span
+                  className={`w-8 h-8 shrink-0 flex items-center justify-center rounded-lg border ${cfg.wrap} ${cfg.iconColor}`}
+                >
                   <Icon className="h-4 w-4" />
                 </span>
                 <div className="min-w-0 flex-1">
                   <p className="text-[13px] font-semibold leading-tight">{insight.title}</p>
-                  <p className="text-xs text-muted-foreground leading-relaxed mt-1">{insight.text}</p>
+                  <p className="text-xs text-muted-foreground leading-relaxed mt-1">
+                    {insight.text}
+                  </p>
                 </div>
               </motion.div>
             );

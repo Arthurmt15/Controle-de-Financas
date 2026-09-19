@@ -6,7 +6,17 @@
 
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Layers, Plus, Trash2, CalendarDays, CheckCircle2, Wallet, ArrowUpRight, ArrowDownRight, Hash } from 'lucide-react';
+import {
+  Layers,
+  Plus,
+  Trash2,
+  CalendarDays,
+  CheckCircle2,
+  Wallet,
+  ArrowUpRight,
+  ArrowDownRight,
+  Hash,
+} from 'lucide-react';
 import { useTransactions } from '../../../hooks/useTransactions';
 import { toInputDate } from '../../../utils/formatters';
 import { Card, CardContent } from '../../ui/card';
@@ -30,16 +40,23 @@ const BulkTransactionForm: React.FC = () => {
   // Tipo, data e lista de itens
   const [type, setType] = useState<'income' | 'expense'>('expense');
   const [date, setDate] = useState(toInputDate(new Date()));
-  const [items, setItems] = useState<BulkItem[]>([{ id: '1', description: '', amount: '', categoryId: '' }]);
+  const [items, setItems] = useState<BulkItem[]>([
+    { id: '1', description: '', amount: '', categoryId: '' },
+  ]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [success, setSuccess] = useState(false);
 
   // Categorias filtradas por tipo
-  const filteredCategories = categories.filter((cat) => cat.defaultType === type || cat.defaultType === 'both');
+  const filteredCategories = categories.filter(
+    (cat) => cat.defaultType === type || cat.defaultType === 'both'
+  );
 
   /** Adiciona novo item vazio */
   const addItem = () => {
-    setItems((prev) => [...prev, { id: Date.now().toString(), description: '', amount: '', categoryId: '' }]);
+    setItems((prev) => [
+      ...prev,
+      { id: Date.now().toString(), description: '', amount: '', categoryId: '' },
+    ]);
   };
 
   /** Remove item (mantém ao menos 1) */
@@ -56,7 +73,9 @@ const BulkTransactionForm: React.FC = () => {
   /** Valida e salva transações válidas */
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const validItems = items.filter((item) => item.description.trim() && item.amount && parseFloat(item.amount) > 0);
+    const validItems = items.filter(
+      (item) => item.description.trim() && item.amount && parseFloat(item.amount) > 0
+    );
     if (validItems.length === 0) return;
     setIsSubmitting(true);
     try {
@@ -93,8 +112,12 @@ const BulkTransactionForm: React.FC = () => {
             <Layers className="h-4 w-4" />
           </span>
           <div>
-            <h2 className="text-[15px] font-semibold tracking-tight leading-none">Adicionar múltiplos itens</h2>
-            <p className="text-xs text-muted-foreground mt-1">Lance várias transações com a mesma data</p>
+            <h2 className="text-[15px] font-semibold tracking-tight leading-none">
+              Adicionar múltiplos itens
+            </h2>
+            <p className="text-xs text-muted-foreground mt-1">
+              Lance várias transações com a mesma data
+            </p>
           </div>
         </div>
         <Badge variant="outline" className="rounded-full px-2.5 py-1 text-xs gap-1.5">
@@ -132,7 +155,12 @@ const BulkTransactionForm: React.FC = () => {
             <CalendarDays className="h-3.5 w-3.5 text-muted-foreground" />
             Data
           </Label>
-          <Input type="date" value={date} onChange={(e) => setDate(e.target.value)} className="h-9 rounded-xl" />
+          <Input
+            type="date"
+            value={date}
+            onChange={(e) => setDate(e.target.value)}
+            className="h-9 rounded-xl"
+          />
         </div>
 
         {/* Lista de itens */}
@@ -170,7 +198,10 @@ const BulkTransactionForm: React.FC = () => {
                       step="0.01"
                       className="h-9 rounded-xl"
                     />
-                    <Select value={item.categoryId} onValueChange={(v) => updateItem(item.id, 'categoryId', v)}>
+                    <Select
+                      value={item.categoryId}
+                      onValueChange={(v) => updateItem(item.id, 'categoryId', v)}
+                    >
                       <SelectTrigger className="h-9 rounded-xl">
                         <SelectValue placeholder="Categoria" />
                       </SelectTrigger>
@@ -178,7 +209,10 @@ const BulkTransactionForm: React.FC = () => {
                         {filteredCategories.map((cat) => (
                           <SelectItem key={cat.id} value={cat.id}>
                             <span className="flex items-center gap-2">
-                              <span className="w-2 h-2 rounded-full" style={{ background: cat.color }} />
+                              <span
+                                className="w-2 h-2 rounded-full"
+                                style={{ background: cat.color }}
+                              />
                               {cat.name}
                             </span>
                           </SelectItem>
@@ -212,7 +246,9 @@ const BulkTransactionForm: React.FC = () => {
               <Wallet className="h-4 w-4 text-muted-foreground" />
               Total
             </span>
-            <span className={`text-[15px] font-bold tracking-tight ${isExpense ? 'text-red-600' : 'text-emerald-600'}`}>
+            <span
+              className={`text-[15px] font-bold tracking-tight ${isExpense ? 'text-red-600' : 'text-emerald-600'}`}
+            >
               {isExpense ? '-' : '+'}{' '}
               {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(total)}
             </span>

@@ -63,8 +63,8 @@ export const Tab = styled.button<{ $isActive: boolean }>`
   font-weight: 500;
   color: ${({ $isActive, theme }) =>
     $isActive ? theme.colors?.primary || '#6366f1' : theme.colors?.textSecondary || '#6b7280'};
-  border-bottom: 2px solid ${({ $isActive, theme }) =>
-    $isActive ? theme.colors?.primary || '#6366f1' : 'transparent'};
+  border-bottom: 2px solid
+    ${({ $isActive, theme }) => ($isActive ? theme.colors?.primary || '#6366f1' : 'transparent')};
   cursor: pointer;
   transition: all 0.2s;
 
@@ -124,9 +124,7 @@ export const TypeIndicator = styled.div<{ $type: string }>`
   height: 8px;
   border-radius: 50%;
   background-color: ${({ $type, theme }) =>
-    $type === 'income'
-      ? theme.colors?.success || '#10b981'
-      : theme.colors?.error || '#ef4444'};
+    $type === 'income' ? theme.colors?.success || '#10b981' : theme.colors?.error || '#ef4444'};
 `;
 
 /** Detalhes do item */

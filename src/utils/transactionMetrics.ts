@@ -60,9 +60,7 @@ export function calculateMetrics(transactions: Transaction[]): DashboardMetrics 
  * const total = sumByType(transactions, 'expense');
  */
 function sumByType(transactions: Transaction[], type: 'income' | 'expense'): number {
-  return transactions
-    .filter((t) => t.type === type)
-    .reduce((sum, t) => sum + t.amount, 0);
+  return transactions.filter((t) => t.type === type).reduce((sum, t) => sum + t.amount, 0);
 }
 
 /**
@@ -138,10 +136,13 @@ export function calculatePercentageVariation(current: number, previous: number):
  * // { '1': 500, '2': 300, ... }
  */
 export function sumByCategory(transactions: Transaction[]): Record<string, number> {
-  return transactions.reduce((acc, t) => {
-    acc[t.categoryId] = (acc[t.categoryId] || 0) + t.amount;
-    return acc;
-  }, {} as Record<string, number>);
+  return transactions.reduce(
+    (acc, t) => {
+      acc[t.categoryId] = (acc[t.categoryId] || 0) + t.amount;
+      return acc;
+    },
+    {} as Record<string, number>
+  );
 }
 
 /**
@@ -154,10 +155,13 @@ export function sumByCategory(transactions: Transaction[]): Record<string, numbe
  * // { '2026-09': 1500, '2026-08': 2000, ... }
  */
 export function sumByMonth(transactions: Transaction[]): Record<string, number> {
-  return transactions.reduce((acc, t) => {
-    const date = new Date(t.date);
-    const key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
-    acc[key] = (acc[key] || 0) + t.amount;
-    return acc;
-  }, {} as Record<string, number>);
+  return transactions.reduce(
+    (acc, t) => {
+      const date = new Date(t.date);
+      const key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+      acc[key] = (acc[key] || 0) + t.amount;
+      return acc;
+    },
+    {} as Record<string, number>
+  );
 }

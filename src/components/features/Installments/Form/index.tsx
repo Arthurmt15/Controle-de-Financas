@@ -159,7 +159,9 @@ const InstallmentForm: React.FC<InstallmentFormProps> = ({ installment = null, o
   };
 
   // Filtra apenas categorias de despesa
-  const expenseCategories = categories.filter((cat) => cat.defaultType === 'expense' || cat.defaultType === 'both');
+  const expenseCategories = categories.filter(
+    (cat) => cat.defaultType === 'expense' || cat.defaultType === 'both'
+  );
 
   return (
     <form onSubmit={handleSubmit} className="space-y-5">
@@ -245,14 +247,19 @@ const InstallmentForm: React.FC<InstallmentFormProps> = ({ installment = null, o
               {expenseCategories.map((cat) => (
                 <SelectItem key={cat.id} value={cat.id}>
                   <span className="flex items-center gap-2">
-                    <span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: cat.color }} />
+                    <span
+                      className="h-2.5 w-2.5 rounded-full"
+                      style={{ backgroundColor: cat.color }}
+                    />
                     {cat.name}
                   </span>
                 </SelectItem>
               ))}
             </SelectContent>
           </Select>
-          {errors.categoryId && <p className="text-xs font-medium text-red-500">{errors.categoryId}</p>}
+          {errors.categoryId && (
+            <p className="text-xs font-medium text-red-500">{errors.categoryId}</p>
+          )}
         </div>
 
         {/* Data da primeira parcela */}

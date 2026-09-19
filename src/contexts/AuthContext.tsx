@@ -45,9 +45,21 @@ function authReducer(state: AuthState, action: AuthAction): AuthState {
     case 'LOGIN_START':
       return { ...state, isLoading: true, error: null };
     case 'LOGIN_SUCCESS':
-      return { ...state, isAuthenticated: true, user: action.payload, isLoading: false, error: null };
+      return {
+        ...state,
+        isAuthenticated: true,
+        user: action.payload,
+        isLoading: false,
+        error: null,
+      };
     case 'LOGIN_FAILURE':
-      return { ...state, isAuthenticated: false, user: null, isLoading: false, error: action.payload };
+      return {
+        ...state,
+        isAuthenticated: false,
+        user: null,
+        isLoading: false,
+        error: action.payload,
+      };
     case 'LOGOUT':
       return { ...initialState };
     case 'CLEAR_ERROR':
@@ -79,20 +91,26 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     if (isSupabase) {
-      authService.getSession().then((session) => {
-        if (session?.user) {
-          const user: User = {
-            id: session.user.id,
-            name: session.user.user_metadata?.full_name || session.user.email?.split('@')[0] || '',
-            email: session.user.email || '',
-            avatar: session.user.user_metadata?.avatar_url,
-          };
-          dispatch({ type: 'LOGIN_SUCCESS', payload: user });
-          setStoredUser(user);
-        }
-      }).catch(() => {});
+      authService
+        .getSession()
+        .then((session) => {
+          if (session?.user) {
+            const user: User = {
+              id: session.user.id,
+              name:
+                session.user.user_metadata?.full_name || session.user.email?.split('@')[0] || '',
+              email: session.user.email || '',
+              avatar: session.user.user_metadata?.avatar_url,
+            };
+            dispatch({ type: 'LOGIN_SUCCESS', payload: user });
+            setStoredUser(user);
+          }
+        })
+        .catch(() => {});
 
-      const { data: { subscription } } = authService.onAuthStateChange((user) => {
+      const {
+        data: { subscription },
+      } = authService.onAuthStateChange((user) => {
         if (user) {
           dispatch({ type: 'LOGIN_SUCCESS', payload: user });
           setStoredUser(user);
@@ -115,7 +133,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         if (cookieToken) {
           authService.setAuthToken(cookieToken);
           dispatch({ type: 'LOGIN_START' });
-          authService.getCurrentUser()
+          authService
+            .getCurrentUser()
             .then((userData) => {
               if (userData) {
                 const user: User = {
@@ -135,7 +154,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }
       }
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const loginWithGoogle = useCallback(

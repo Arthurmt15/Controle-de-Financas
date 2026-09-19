@@ -1,6 +1,9 @@
 import type { Transaction, Installment } from '../../types';
 import { InstallmentPlan } from '../../domain/value-objects/InstallmentPlan';
-import type { ITransactionRepository, IInstallmentRepository } from '../../domain/repositories/IRepository';
+import type {
+  ITransactionRepository,
+  IInstallmentRepository,
+} from '../../domain/repositories/IRepository';
 
 /**
  * Use Case: cria transação e, se parcelado, cria parcelado automaticamente.
@@ -10,7 +13,7 @@ import type { ITransactionRepository, IInstallmentRepository } from '../../domai
 export class CreateTransactionWithInstallment {
   constructor(
     private readonly txRepo: ITransactionRepository,
-    private readonly instRepo: IInstallmentRepository,
+    private readonly instRepo: IInstallmentRepository
   ) {}
 
   /**
@@ -20,7 +23,7 @@ export class CreateTransactionWithInstallment {
    */
   async execute(
     tx: Omit<Transaction, 'id'>,
-    installmentOpt?: { totalInstallments: number },
+    installmentOpt?: { totalInstallments: number }
   ): Promise<{ transaction: Transaction; installment: Installment | null }> {
     const transaction = await this.txRepo.create(tx);
 

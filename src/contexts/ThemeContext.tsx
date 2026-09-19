@@ -14,7 +14,10 @@ export type ThemeType = 'light' | 'dark';
 export type AccentColor = 'indigo' | 'purple' | 'blue' | 'green' | 'orange' | 'pink' | 'red';
 
 /** Cores de destaque predefinidas */
-export const ACCENT_COLORS: Record<AccentColor, { primary: string; primaryHover: string; secondary: string }> = {
+export const ACCENT_COLORS: Record<
+  AccentColor,
+  { primary: string; primaryHover: string; secondary: string }
+> = {
   indigo: { primary: '#6366f1', primaryHover: '#4f46e5', secondary: '#8b5cf6' },
   purple: { primary: '#a855f7', primaryHover: '#9333ea', secondary: '#c084fc' },
   blue: { primary: '#3b82f6', primaryHover: '#2563eb', secondary: '#60a5fa' },
@@ -150,7 +153,11 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     if (typeof window !== 'undefined') {
       const saved = window.localStorage.getItem('financas_theme');
       if (saved) {
-        try { return JSON.parse(saved) as ThemeType; } catch { /* fallback */ }
+        try {
+          return JSON.parse(saved) as ThemeType;
+        } catch {
+          /* fallback */
+        }
       }
       if (window.matchMedia('(prefers-color-scheme: dark)').matches) return 'dark';
     }
@@ -215,7 +222,9 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   }, [theme, themeType]);
 
   return (
-    <ThemeContext.Provider value={{ theme, themeType, accentColor, toggleTheme, setTheme, setAccentColor }}>
+    <ThemeContext.Provider
+      value={{ theme, themeType, accentColor, toggleTheme, setTheme, setAccentColor }}
+    >
       {children}
     </ThemeContext.Provider>
   );

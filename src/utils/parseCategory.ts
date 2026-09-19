@@ -1,7 +1,75 @@
 import { CATEGORY_MAP } from './categories';
 
-const INCOME_KEYWORDS = ['entrada','entra','entrou','recebi','recebido','ganhei','ganho','salário','salario','pagamento','ordenha','depósito','deposito','transferência recebida','rendimento','cashback','estorno','reembolso','prêmio','premio','dividendos','caiu','entrou','crédito','credito','investimento','investimentos','renda fixa','rendimento'];
-const EXPENSE_KEYWORDS = ['saída','saida','gastei','paguei','comprei','saiu','perdi','compra','despesa','conta','mercado','supermercado','restaurante','almoço','almoco','jantar','café','cafe','farmácia','farmacia','posto','combustível','combustivel','transporte','uber','taxi','ônibus','onibus','aluguel','condomínio','condominio','luz','água','agua','internet','telefone','iptu'];
+const INCOME_KEYWORDS = [
+  'entrada',
+  'entra',
+  'entrou',
+  'recebi',
+  'recebido',
+  'ganhei',
+  'ganho',
+  'salário',
+  'salario',
+  'pagamento',
+  'ordenha',
+  'depósito',
+  'deposito',
+  'transferência recebida',
+  'rendimento',
+  'cashback',
+  'estorno',
+  'reembolso',
+  'prêmio',
+  'premio',
+  'dividendos',
+  'caiu',
+  'entrou',
+  'crédito',
+  'credito',
+  'investimento',
+  'investimentos',
+  'renda fixa',
+  'rendimento',
+];
+const EXPENSE_KEYWORDS = [
+  'saída',
+  'saida',
+  'gastei',
+  'paguei',
+  'comprei',
+  'saiu',
+  'perdi',
+  'compra',
+  'despesa',
+  'conta',
+  'mercado',
+  'supermercado',
+  'restaurante',
+  'almoço',
+  'almoco',
+  'jantar',
+  'café',
+  'cafe',
+  'farmácia',
+  'farmacia',
+  'posto',
+  'combustível',
+  'combustivel',
+  'transporte',
+  'uber',
+  'taxi',
+  'ônibus',
+  'onibus',
+  'aluguel',
+  'condomínio',
+  'condominio',
+  'luz',
+  'água',
+  'agua',
+  'internet',
+  'telefone',
+  'iptu',
+];
 
 /** Detecta tipo despesa/receita por palavras-chave no texto */
 export function detectType(text: string): 'despesa' | 'receita' {
@@ -13,15 +81,25 @@ export function detectType(text: string): 'despesa' | 'receita' {
 }
 
 /** Detecta categoria pelo CATEGORY_MAP e tipo, retorna fallback Outros/Salário — agora inclui Dívida */
-export function detectCategory(text: string, tipo: 'despesa' | 'receita'): { category: string; clean: string } {
+export function detectCategory(
+  text: string,
+  tipo: 'despesa' | 'receita'
+): { category: string; clean: string } {
   const lower = text.toLowerCase();
   // Dívida tem prioridade: se falar divida/dívida, categoriza como Dívida direto
   if (/d[ií]vida|dividida|empr[eé]stimo/.test(lower)) return { category: 'Dívida', clean: text };
   for (const { keywords, category } of CATEGORY_MAP) {
     for (const keyword of keywords) {
       if (lower.includes(keyword)) {
-        if (tipo === 'receita' && ['Salário','Freelance','Investimentos'].includes(category)) return { category, clean: text };
-        if (tipo === 'despesa' && ['Alimentação','Transporte','Moradia','Saúde','Educação','Lazer','Dívida'].includes(category)) return { category, clean: text };
+        if (tipo === 'receita' && ['Salário', 'Freelance', 'Investimentos'].includes(category))
+          return { category, clean: text };
+        if (
+          tipo === 'despesa' &&
+          ['Alimentação', 'Transporte', 'Moradia', 'Saúde', 'Educação', 'Lazer', 'Dívida'].includes(
+            category
+          )
+        )
+          return { category, clean: text };
       }
     }
   }
@@ -31,12 +109,36 @@ export function detectCategory(text: string, tipo: 'despesa' | 'receita'): { cat
 /** Extrai descrição limpa removendo keywords de tipo, números e parcelado — agora limpa também 'de' pendente de 'divida de' */
 export function extractDescription(remainingText: string): string {
   let desc = remainingText;
-  const typeKeywords = ['gastei','paguei','comprei','saiu','perdi','despesa','recebi','recebido','ganhei','ganho','pagamento','entrada','entra','entrou','salário','salario','rendimento','cashback','estorno','reembolso'];
+  const typeKeywords = [
+    'gastei',
+    'paguei',
+    'comprei',
+    'saiu',
+    'perdi',
+    'despesa',
+    'recebi',
+    'recebido',
+    'ganhei',
+    'ganho',
+    'pagamento',
+    'entrada',
+    'entra',
+    'entrou',
+    'salário',
+    'salario',
+    'rendimento',
+    'cashback',
+    'estorno',
+    'reembolso',
+  ];
   for (const k of typeKeywords) {
     desc = desc.replace(new RegExp(`\\\\b${k}\\\\b`, 'gi'), ' ');
   }
   // Remove prefixo solto
-  desc = desc.replace(/^\s*(de|da|do|das|dos|no|na|nas|nos|em|e|a|o|as|os|um|uma|uns|umas)\s+/gi, '');
+  desc = desc.replace(
+    /^\s*(de|da|do|das|dos|no|na|nas|nos|em|e|a|o|as|os|um|uma|uns|umas)\s+/gi,
+    ''
+  );
   desc = desc.replace(/\b\d{1,6}(?:\.\d{3})*(?:,\d{1,2})?\b/g, '');
   desc = desc.replace(/\b\d{2,6}\b/g, '');
   desc = desc.replace(/\b(parcelado?|vezes|prestação|prestacao|plt|taxa)\b/gi, ' ');

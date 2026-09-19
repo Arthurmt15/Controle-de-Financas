@@ -18,6 +18,7 @@ import styled from 'styled-components';
 import Header from './components/layout/Header';
 import SkipLink from './components/common/SkipLink';
 import FloatingChat from './components/features/FloatingChat';
+import ErrorBoundary from './components/common/ErrorBoundary';
 import GlobalStyle from './Styles/global';
 
 const Main = styled.main`
@@ -93,43 +94,47 @@ const MainLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => (
  * Rotas autenticadas
  */
 const AuthenticatedRoutes: React.FC = () => (
-  <TransactionsProvider>
-    <InstallmentsProvider>
-      <DebtsProvider>
-        <EmergencyReserveProvider>
-          <FutureExpensesProvider>
-            <MainLayout>
-              <Suspense fallback={<LoadingFallback />}>
-                <Routes>
-                  <Route path="/dashboard" element={<DashboardPage />} />
-                  <Route path="/transactions" element={<TransactionsPage />} />
-                  <Route path="/analysis" element={<AnalysisPage />} />
-                  <Route path="/settings" element={<SettingsPage />} />
-                  <Route path="/installments" element={<InstallmentsPage />} />
-                  <Route path="/debts" element={<DebtsPage />} />
-                  <Route path="/emergency-reserve" element={<EmergencyReservePage />} />
-                  <Route path="/future-expenses" element={<FutureExpensesPage />} />
-                  <Route path="*" element={<Navigate to="/dashboard" replace />} />
-                </Routes>
-              </Suspense>
-            </MainLayout>
-          </FutureExpensesProvider>
-        </EmergencyReserveProvider>
-      </DebtsProvider>
-    </InstallmentsProvider>
-  </TransactionsProvider>
+  <ErrorBoundary>
+    <TransactionsProvider>
+      <InstallmentsProvider>
+        <DebtsProvider>
+          <EmergencyReserveProvider>
+            <FutureExpensesProvider>
+              <MainLayout>
+                <Suspense fallback={<LoadingFallback />}>
+                  <Routes>
+                    <Route path="/dashboard" element={<DashboardPage />} />
+                    <Route path="/transactions" element={<TransactionsPage />} />
+                    <Route path="/analysis" element={<AnalysisPage />} />
+                    <Route path="/settings" element={<SettingsPage />} />
+                    <Route path="/installments" element={<InstallmentsPage />} />
+                    <Route path="/debts" element={<DebtsPage />} />
+                    <Route path="/emergency-reserve" element={<EmergencyReservePage />} />
+                    <Route path="/future-expenses" element={<FutureExpensesPage />} />
+                    <Route path="*" element={<Navigate to="/dashboard" replace />} />
+                  </Routes>
+                </Suspense>
+              </MainLayout>
+            </FutureExpensesProvider>
+          </EmergencyReserveProvider>
+        </DebtsProvider>
+      </InstallmentsProvider>
+    </TransactionsProvider>
+  </ErrorBoundary>
 );
 
 /**
  * Rotas públicas
  */
 const PublicRoutes: React.FC = () => (
-  <Suspense fallback={<LoadingFallback />}>
-    <Routes>
-      <Route path="/login" element={<LoginPage />} />
-      <Route path="*" element={<Navigate to="/login" replace />} />
-    </Routes>
-  </Suspense>
+  <ErrorBoundary>
+    <Suspense fallback={<LoadingFallback />}>
+      <Routes>
+        <Route path="/login" element={<LoginPage />} />
+        <Route path="*" element={<Navigate to="/login" replace />} />
+      </Routes>
+    </Suspense>
+  </ErrorBoundary>
 );
 
 /**

@@ -68,11 +68,16 @@ const DebtForm: React.FC<DebtFormProps> = ({ debt = null, onClose }) => {
     e.preventDefault();
     const newErrors: Record<string, string> = {};
     if (!formData.description.trim()) newErrors.description = 'Descrição é obrigatória';
-    if (!formData.totalAmount || parseFloat(formData.totalAmount) <= 0) newErrors.totalAmount = 'Valor deve ser maior que 0';
-    if (parseInt(formData.totalInstallments, 10) <= 0) newErrors.totalInstallments = 'Deve ter pelo menos 1 parcela';
+    if (!formData.totalAmount || parseFloat(formData.totalAmount) <= 0)
+      newErrors.totalAmount = 'Valor deve ser maior que 0';
+    if (parseInt(formData.totalInstallments, 10) <= 0)
+      newErrors.totalInstallments = 'Deve ter pelo menos 1 parcela';
     if (!formData.categoryId) newErrors.categoryId = 'Categoria é obrigatória';
     if (!formData.startDate) newErrors.startDate = 'Data é obrigatória';
-    if (Object.keys(newErrors).length > 0) { setErrors(newErrors); return; }
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
+      return;
+    }
 
     setIsSubmitting(true);
     try {
@@ -101,7 +106,9 @@ const DebtForm: React.FC<DebtFormProps> = ({ debt = null, onClose }) => {
             type: 'expense',
             date: new Date(formData.startDate).toISOString(),
             categoryId: formData.categoryId,
-            notes: formData.notes.trim() ? `Dívida dividida ${parcels}x - ${formData.notes.trim()}` : `Dívida dividida ${parcels}x - ${formData.description.trim()}`,
+            notes: formData.notes.trim()
+              ? `Dívida dividida ${parcels}x - ${formData.notes.trim()}`
+              : `Dívida dividida ${parcels}x - ${formData.description.trim()}`,
           });
         } catch (txError) {
           console.error('Dívida criada, mas falhou ao criar transação da 1ª parcela:', txError);
@@ -125,7 +132,9 @@ const DebtForm: React.FC<DebtFormProps> = ({ debt = null, onClose }) => {
     }
   };
 
-  const expenseCategories = categories.filter((cat) => cat.defaultType === 'expense' || cat.defaultType === 'both');
+  const expenseCategories = categories.filter(
+    (cat) => cat.defaultType === 'expense' || cat.defaultType === 'both'
+  );
 
   return (
     <form onSubmit={handleSubmit} className="space-y-5">
@@ -140,18 +149,49 @@ const DebtForm: React.FC<DebtFormProps> = ({ debt = null, onClose }) => {
 
       <div className="grid gap-4">
         <div className="space-y-1.5">
-          <Label htmlFor="description">Descrição <span className="text-red-500">*</span></Label>
-          <Input id="description" name="description" value={formData.description} onChange={handleChange} placeholder="Ex: Jantar dividido com João" error={errors.description} />
+          <Label htmlFor="description">
+            Descrição <span className="text-red-500">*</span>
+          </Label>
+          <Input
+            id="description"
+            name="description"
+            value={formData.description}
+            onChange={handleChange}
+            placeholder="Ex: Jantar dividido com João"
+            error={errors.description}
+          />
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div className="space-y-1.5">
-            <Label htmlFor="totalAmount">Valor Total <span className="text-red-500">*</span></Label>
-            <Input id="totalAmount" name="totalAmount" type="number" step="0.01" value={formData.totalAmount} onChange={handleChange} placeholder="0,00" error={errors.totalAmount} />
+            <Label htmlFor="totalAmount">
+              Valor Total <span className="text-red-500">*</span>
+            </Label>
+            <Input
+              id="totalAmount"
+              name="totalAmount"
+              type="number"
+              step="0.01"
+              value={formData.totalAmount}
+              onChange={handleChange}
+              placeholder="0,00"
+              error={errors.totalAmount}
+            />
           </div>
           <div className="space-y-1.5">
-            <Label htmlFor="totalInstallments">Nº de Parcelas <span className="text-red-500">*</span></Label>
-            <Input id="totalInstallments" name="totalInstallments" type="number" min={1} value={formData.totalInstallments} onChange={handleChange} placeholder="12" error={errors.totalInstallments} />
+            <Label htmlFor="totalInstallments">
+              Nº de Parcelas <span className="text-red-500">*</span>
+            </Label>
+            <Input
+              id="totalInstallments"
+              name="totalInstallments"
+              type="number"
+              min={1}
+              value={formData.totalInstallments}
+              onChange={handleChange}
+              placeholder="12"
+              error={errors.totalInstallments}
+            />
           </div>
         </div>
 
@@ -163,7 +203,9 @@ const DebtForm: React.FC<DebtFormProps> = ({ debt = null, onClose }) => {
         )}
 
         <div className="space-y-1.5">
-          <Label>Categoria <span className="text-red-500">*</span></Label>
+          <Label>
+            Categoria <span className="text-red-500">*</span>
+          </Label>
           <Select value={formData.categoryId} onValueChange={handleCategoryChange}>
             <SelectTrigger className={errors.categoryId ? 'border-red-500 focus:ring-red-500' : ''}>
               <SelectValue placeholder="Selecione uma categoria" />
@@ -172,24 +214,45 @@ const DebtForm: React.FC<DebtFormProps> = ({ debt = null, onClose }) => {
               {expenseCategories.map((cat) => (
                 <SelectItem key={cat.id} value={cat.id}>
                   <span className="flex items-center gap-2">
-                    <span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: cat.color }} />
+                    <span
+                      className="h-2.5 w-2.5 rounded-full"
+                      style={{ backgroundColor: cat.color }}
+                    />
                     {cat.name}
                   </span>
                 </SelectItem>
               ))}
             </SelectContent>
           </Select>
-          {errors.categoryId && <p className="text-xs font-medium text-red-500">{errors.categoryId}</p>}
+          {errors.categoryId && (
+            <p className="text-xs font-medium text-red-500">{errors.categoryId}</p>
+          )}
         </div>
 
         <div className="space-y-1.5">
-          <Label htmlFor="startDate">Data da Primeira Parcela <span className="text-red-500">*</span></Label>
-          <Input id="startDate" name="startDate" type="date" value={formData.startDate} onChange={handleChange} error={errors.startDate} />
+          <Label htmlFor="startDate">
+            Data da Primeira Parcela <span className="text-red-500">*</span>
+          </Label>
+          <Input
+            id="startDate"
+            name="startDate"
+            type="date"
+            value={formData.startDate}
+            onChange={handleChange}
+            error={errors.startDate}
+          />
         </div>
 
         <div className="space-y-1.5">
           <Label htmlFor="notes">Observações (opcional)</Label>
-          <Textarea id="notes" name="notes" value={formData.notes} onChange={handleChange} placeholder="Ex: Dividido com 3 pessoas, cada um R$..." rows={3} />
+          <Textarea
+            id="notes"
+            name="notes"
+            value={formData.notes}
+            onChange={handleChange}
+            placeholder="Ex: Dividido com 3 pessoas, cada um R$..."
+            rows={3}
+          />
         </div>
       </div>
 

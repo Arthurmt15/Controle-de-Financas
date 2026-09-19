@@ -46,7 +46,9 @@ const Modal: React.FC<ModalProps> = ({
       previousFocusRef.current?.focus();
       document.body.style.overflow = 'unset';
     }
-    return () => { document.body.style.overflow = 'unset'; };
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
   }, [isOpen]);
 
   /** Adiciona listener para tecla ESC */

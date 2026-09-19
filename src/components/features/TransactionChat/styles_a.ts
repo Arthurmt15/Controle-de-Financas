@@ -110,10 +110,8 @@ export const MessageBubble = styled.div<{ $isUser: boolean }>`
   line-height: 1.4;
   background-color: ${({ $isUser, theme }) =>
     $isUser ? theme.colors.primary : theme.colors.surface};
-  color: ${({ $isUser, theme }) =>
-    $isUser ? 'white' : theme.colors.text};
-  border: ${({ $isUser, theme }) =>
-    $isUser ? 'none' : `1px solid ${theme.colors.border}`};
+  color: ${({ $isUser, theme }) => ($isUser ? 'white' : theme.colors.text)};
+  border: ${({ $isUser, theme }) => ($isUser ? 'none' : `1px solid ${theme.colors.border}`)};
   word-break: break-word;
 
   @media (max-width: 480px) {

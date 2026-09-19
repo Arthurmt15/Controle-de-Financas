@@ -22,9 +22,11 @@ const stripeByTone: Record<string, string> = {
 
 // Classes do ícone por tom
 const iconToneClass: Record<string, string> = {
-  emerald: 'bg-emerald-50 border-emerald-100 text-emerald-600 dark:bg-emerald-500/10 dark:border-transparent',
+  emerald:
+    'bg-emerald-50 border-emerald-100 text-emerald-600 dark:bg-emerald-500/10 dark:border-transparent',
   rose: 'bg-rose-50 border-rose-100 text-rose-600 dark:bg-rose-500/10 dark:border-transparent',
-  violet: 'bg-violet-50 border-violet-100 text-violet-600 dark:bg-violet-500/10 dark:border-transparent',
+  violet:
+    'bg-violet-50 border-violet-100 text-violet-600 dark:bg-violet-500/10 dark:border-transparent',
   slate: 'bg-slate-50 border-slate-200 text-slate-600 dark:bg-slate-500/10 dark:border-transparent',
 };
 
@@ -89,7 +91,10 @@ const SummaryCards: React.FC = () => {
         >
           <Card className="relative overflow-hidden rounded-2xl border bg-card shadow-sm hover:shadow-md transition-all hover:-translate-y-0.5 min-h-[118px]">
             {/* Faixa lateral colorida por tom */}
-            <span className="absolute left-0 top-0 bottom-0 w-[3px] opacity-90" style={{ background: stripeByTone[tone] }} />
+            <span
+              className="absolute left-0 top-0 bottom-0 w-[3px] opacity-90"
+              style={{ background: stripeByTone[tone] }}
+            />
             <CardContent className="p-[18px] flex items-center gap-3.5">
               {/* Ícone com fundo tonalizado */}
               <span
@@ -98,8 +103,12 @@ const SummaryCards: React.FC = () => {
                 <Icon size={16} />
               </span>
               <div className="min-w-0 flex-1">
-                <span className="block text-[11px] font-semibold tracking-widest uppercase text-muted-foreground">{label}</span>
-                <strong className="block mt-1.5 text-[19px] font-bold tracking-tight leading-none truncate">{value}</strong>
+                <span className="block text-[11px] font-semibold tracking-widest uppercase text-muted-foreground">
+                  {label}
+                </span>
+                <strong className="block mt-1.5 text-[19px] font-bold tracking-tight leading-none truncate">
+                  {value}
+                </strong>
                 {/* Subtexto como pill tonalizado */}
                 <span
                   className={`mt-1.5 inline-block text-[11px] font-medium px-2 py-0.5 rounded-full border ${

@@ -74,8 +74,15 @@ export function DebtsProvider({ children }: { children: React.ReactNode }) {
             return;
           }
           // Tabela debts ainda não existe (migration 002 pendente) — não bloqueia app
-          if (error instanceof Error && (error.message.includes('Tabela') || error.message.toLowerCase().includes('does not exist') || error.message.toLowerCase().includes('could not find the table'))) {
-            console.warn('Dívidas: tabela debts não existe ainda. Execute supabase/migrations/002_add_debts.sql no SQL Editor.');
+          if (
+            error instanceof Error &&
+            (error.message.includes('Tabela') ||
+              error.message.toLowerCase().includes('does not exist') ||
+              error.message.toLowerCase().includes('could not find the table'))
+          ) {
+            console.warn(
+              'Dívidas: tabela debts não existe ainda. Execute supabase/migrations/002_add_debts.sql no SQL Editor.'
+            );
             dispatch({ type: 'SET_DEBTS', payload: [] });
             return;
           }
@@ -84,14 +91,19 @@ export function DebtsProvider({ children }: { children: React.ReactNode }) {
       }
     };
     loadData();
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+    };
   }, [userId, logout]);
 
-  const addDebt = useCallback(async (debt: Omit<Debt, 'id'>) => {
-    const newDebt = await debtService.create(debt, userId);
-    dispatch({ type: 'ADD_DEBT', payload: newDebt });
-    return newDebt;
-  }, [userId]);
+  const addDebt = useCallback(
+    async (debt: Omit<Debt, 'id'>) => {
+      const newDebt = await debtService.create(debt, userId);
+      dispatch({ type: 'ADD_DEBT', payload: newDebt });
+      return newDebt;
+    },
+    [userId]
+  );
 
   const updateDebt = useCallback(async (debt: Debt) => {
     const updated = await debtService.update(debt);

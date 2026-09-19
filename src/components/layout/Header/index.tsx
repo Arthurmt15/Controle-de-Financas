@@ -84,7 +84,12 @@ const Header: React.FC = () => {
   return (
     <C.Container>
       <C.LeftSection>
-        <C.MenuButton ref={buttonRef} onClick={toggleMenu} aria-label={menuOpen ? 'Fechar menu' : 'Abrir menu'} aria-expanded={menuOpen}>
+        <C.MenuButton
+          ref={buttonRef}
+          onClick={toggleMenu}
+          aria-label={menuOpen ? 'Fechar menu' : 'Abrir menu'}
+          aria-expanded={menuOpen}
+        >
           <Icon size={22}>
             {menuOpen ? (
               <>
@@ -112,7 +117,12 @@ const Header: React.FC = () => {
 
         <C.NavLinks>
           {NAV_ITEMS.map(({ path, label }) => (
-            <C.NavLink key={path} to={path} $active={isActive(path)} aria-current={isActive(path) ? 'page' : undefined}>
+            <C.NavLink
+              key={path}
+              to={path}
+              $active={isActive(path)}
+              aria-current={isActive(path) ? 'page' : undefined}
+            >
               {label}
             </C.NavLink>
           ))}
@@ -131,7 +141,10 @@ const Header: React.FC = () => {
           </C.InstallButton>
         )}
         <ColorPicker />
-        <C.ThemeToggle onClick={toggleTheme} title={`Tema ${themeType === 'light' ? 'escuro' : 'claro'}`}>
+        <C.ThemeToggle
+          onClick={toggleTheme}
+          title={`Tema ${themeType === 'light' ? 'escuro' : 'claro'}`}
+        >
           {themeType === 'light' ? (
             <Icon>
               <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
@@ -154,7 +167,11 @@ const Header: React.FC = () => {
         {user && (
           <C.UserSection>
             <C.UserAvatar>
-              {user.avatar ? <img src={user.avatar} alt={user.name} /> : <span>{user.name.charAt(0).toUpperCase()}</span>}
+              {user.avatar ? (
+                <img src={user.avatar} alt={user.name} />
+              ) : (
+                <span>{user.name.charAt(0).toUpperCase()}</span>
+              )}
             </C.UserAvatar>
             <C.UserInfo>
               <C.UserName>{user.name}</C.UserName>
@@ -172,7 +189,13 @@ const Header: React.FC = () => {
       </C.RightSection>
 
       <C.MobileOverlay $isOpen={menuOpen} onClick={closeMenu} aria-hidden={!menuOpen} />
-      <C.MobileMenu ref={menuRef as any} $isOpen={menuOpen} role="dialog" aria-modal="true" aria-label="Menu de navegação">
+      <C.MobileMenu
+        ref={menuRef as any}
+        $isOpen={menuOpen}
+        role="dialog"
+        aria-modal="true"
+        aria-label="Menu de navegação"
+      >
         <C.DrawerHeader>
           <C.DrawerHeaderLeft>
             <C.DrawerLogoIcon>
@@ -193,7 +216,11 @@ const Header: React.FC = () => {
         {user && (
           <C.DrawerUserCard>
             <C.DrawerAvatar>
-              {user.avatar ? <img src={user.avatar} alt={user.name} /> : <span>{user.name.charAt(0).toUpperCase()}</span>}
+              {user.avatar ? (
+                <img src={user.avatar} alt={user.name} />
+              ) : (
+                <span>{user.name.charAt(0).toUpperCase()}</span>
+              )}
             </C.DrawerAvatar>
             <C.DrawerUserInfo>
               <C.DrawerUserName title={user.name}>{user.name}</C.DrawerUserName>
@@ -208,7 +235,13 @@ const Header: React.FC = () => {
             {NAV_ITEMS.map(({ path, label, Icon: ItemIcon }) => {
               const active = isActive(path);
               return (
-                <C.MobileNavLink key={path} to={path} $active={active} onClick={closeMenu} aria-current={active ? 'page' : undefined}>
+                <C.MobileNavLink
+                  key={path}
+                  to={path}
+                  $active={active}
+                  onClick={closeMenu}
+                  aria-current={active ? 'page' : undefined}
+                >
                   <ItemIcon size={18} strokeWidth={active ? 2.2 : 1.8} />
                   <span style={{ flex: 1 }}>{label}</span>
                   <ChevronRight size={16} style={{ opacity: active ? 0.9 : 0.35 }} />
@@ -222,7 +255,12 @@ const Header: React.FC = () => {
           <C.DrawerSection>
             <C.DrawerLabel>Ações</C.DrawerLabel>
             {isInstallable && (
-              <C.DrawerInstallButton onClick={() => { closeMenu(); install(); }}>
+              <C.DrawerInstallButton
+                onClick={() => {
+                  closeMenu();
+                  install();
+                }}
+              >
                 <Download size={18} />
                 Instalar App
               </C.DrawerInstallButton>
@@ -240,7 +278,14 @@ const Header: React.FC = () => {
         </C.DrawerContent>
 
         <C.DrawerFooter>
-          <span style={{ fontSize: '11px', color: 'var(--color-textSecondary, #64748b)', textAlign: 'center', lineHeight: 1.4 }}>
+          <span
+            style={{
+              fontSize: '11px',
+              color: 'var(--color-textSecondary, #64748b)',
+              textAlign: 'center',
+              lineHeight: 1.4,
+            }}
+          >
             Toque fora ou pressione ESC para fechar
           </span>
         </C.DrawerFooter>

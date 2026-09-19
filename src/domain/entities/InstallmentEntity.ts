@@ -29,13 +29,19 @@ export class InstallmentEntity extends BaseEntity {
   }
 
   /** Progresso 0-1 */
-  getProgress(): number { return this.currentInstallment / this.totalInstallments; }
+  getProgress(): number {
+    return this.currentInstallment / this.totalInstallments;
+  }
 
   /** Está concluído? */
-  isCompleted(): boolean { return this.currentInstallment >= this.totalInstallments; }
+  isCompleted(): boolean {
+    return this.currentInstallment >= this.totalInstallments;
+  }
 
   /** Valor restante */
-  getRemainingAmount(): number { return (this.totalInstallments - this.currentInstallment) * this.installmentAmount; }
+  getRemainingAmount(): number {
+    return (this.totalInstallments - this.currentInstallment) * this.installmentAmount;
+  }
 
   /** Próximo vencimento como Date ou null */
   getNextDueDate(): Date | null {
@@ -51,8 +57,10 @@ export class InstallmentEntity extends BaseEntity {
   getDaysUntilDue(): number | null {
     const next = this.getNextDueDate();
     if (!next) return null;
-    const today = new Date(); today.setHours(0, 0, 0, 0);
-    const t = new Date(next); t.setHours(0, 0, 0, 0);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const t = new Date(next);
+    t.setHours(0, 0, 0, 0);
     return Math.round((t.getTime() - today.getTime()) / 86400000);
   }
 

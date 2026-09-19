@@ -34,9 +34,16 @@ const getPercentageColor = (percentage: number): string => {
 };
 
 /** Cards de orçamento — shadcn */
-const BudgetCards: React.FC<BudgetCardsProps> = ({ budgets, categorySpending, categories, onDelete }) => {
-  const getCategoryName = (categoryId: string): string => categories.find((c) => c.id === categoryId)?.name || 'Sem categoria';
-  const getCategoryColor = (categoryId: string): string => categories.find((c) => c.id === categoryId)?.color || '#6b7280';
+const BudgetCards: React.FC<BudgetCardsProps> = ({
+  budgets,
+  categorySpending,
+  categories,
+  onDelete,
+}) => {
+  const getCategoryName = (categoryId: string): string =>
+    categories.find((c) => c.id === categoryId)?.name || 'Sem categoria';
+  const getCategoryColor = (categoryId: string): string =>
+    categories.find((c) => c.id === categoryId)?.color || '#6b7280';
 
   // Estado vazio
   if (budgets.length === 0) {
@@ -47,7 +54,9 @@ const BudgetCards: React.FC<BudgetCardsProps> = ({ budgets, categorySpending, ca
             <Wallet className="h-5 w-5" />
           </span>
           <p className="text-sm font-semibold">Nenhum orçamento definido para este mês</p>
-          <p className="mt-1 text-xs text-muted-foreground">Clique em “Novo orçamento” para começar.</p>
+          <p className="mt-1 text-xs text-muted-foreground">
+            Clique em “Novo orçamento” para começar.
+          </p>
         </CardContent>
       </Card>
     );
@@ -71,13 +80,21 @@ const BudgetCards: React.FC<BudgetCardsProps> = ({ budgets, categorySpending, ca
           >
             <Card className="rounded-2xl overflow-hidden relative hover:shadow-md transition-shadow">
               {/* Faixa superior com cor da porcentagem */}
-              <span className="absolute top-0 left-0 right-0 h-[3px]" style={{ background: color }} />
+              <span
+                className="absolute top-0 left-0 right-0 h-[3px]"
+                style={{ background: color }}
+              />
               <CardContent className="p-4 space-y-3">
                 {/* Cabeçalho: categoria + excluir */}
                 <div className="flex items-center justify-between gap-2">
                   <div className="flex items-center gap-2 min-w-0">
-                    <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ background: getCategoryColor(budget.categoryId) }} />
-                    <span className="text-[13.5px] font-semibold truncate">{getCategoryName(budget.categoryId)}</span>
+                    <span
+                      className="w-2.5 h-2.5 rounded-full shrink-0"
+                      style={{ background: getCategoryColor(budget.categoryId) }}
+                    />
+                    <span className="text-[13.5px] font-semibold truncate">
+                      {getCategoryName(budget.categoryId)}
+                    </span>
                     {isOver && (
                       <Badge variant="destructive" className="rounded-full text-[10px] px-1.5 py-0">
                         estourado
@@ -98,8 +115,12 @@ const BudgetCards: React.FC<BudgetCardsProps> = ({ budgets, categorySpending, ca
                 {/* Progresso: gasto / limite */}
                 <div className="space-y-2">
                   <div className="flex items-baseline justify-between gap-2">
-                    <span className="text-[18px] font-bold tracking-tight leading-none">{formatCurrency(spent)}</span>
-                    <span className="text-xs text-muted-foreground">de {formatCurrency(budget.limit)}</span>
+                    <span className="text-[18px] font-bold tracking-tight leading-none">
+                      {formatCurrency(spent)}
+                    </span>
+                    <span className="text-xs text-muted-foreground">
+                      de {formatCurrency(budget.limit)}
+                    </span>
                   </div>
                   <div className="w-full h-2 rounded-full bg-muted overflow-hidden">
                     <motion.div
@@ -115,15 +136,28 @@ const BudgetCards: React.FC<BudgetCardsProps> = ({ budgets, categorySpending, ca
                 {/* Rodapé: restante e porcentagem */}
                 <div className="flex justify-between pt-3 border-t gap-4">
                   <div className="space-y-1">
-                    <span className="block text-[11px] tracking-widest uppercase font-semibold text-muted-foreground">Restante</span>
-                    <span className={`text-[13px] font-bold flex items-center gap-1 ${isOver ? 'text-red-600' : 'text-emerald-600'}`}>
-                      {isOver ? <TrendingDown className="h-3 w-3" /> : <TrendingUp className="h-3 w-3" />}
+                    <span className="block text-[11px] tracking-widest uppercase font-semibold text-muted-foreground">
+                      Restante
+                    </span>
+                    <span
+                      className={`text-[13px] font-bold flex items-center gap-1 ${isOver ? 'text-red-600' : 'text-emerald-600'}`}
+                    >
+                      {isOver ? (
+                        <TrendingDown className="h-3 w-3" />
+                      ) : (
+                        <TrendingUp className="h-3 w-3" />
+                      )}
                       {formatCurrency(remaining)}
                     </span>
                   </div>
                   <div className="space-y-1 text-right">
-                    <span className="block text-[11px] tracking-widest uppercase font-semibold text-muted-foreground">Utilizado</span>
-                    <Badge className="rounded-full text-xs font-semibold border-0" style={{ background: color, color: 'white' }}>
+                    <span className="block text-[11px] tracking-widest uppercase font-semibold text-muted-foreground">
+                      Utilizado
+                    </span>
+                    <Badge
+                      className="rounded-full text-xs font-semibold border-0"
+                      style={{ background: color, color: 'white' }}
+                    >
                       {percentage.toFixed(0)}%
                     </Badge>
                   </div>

@@ -16,32 +16,51 @@ export class FinanceService {
   private readonly instRepo = new SupabaseInstallmentRepository();
   private readonly debtRepo = new SupabaseDebtRepository();
   private readonly reserveRepo = new SupabaseEmergencyReserveRepository();
-  private readonly createTxWithInstallment = new CreateTransactionWithInstallment(this.txRepo, this.instRepo);
+  private readonly createTxWithInstallment = new CreateTransactionWithInstallment(
+    this.txRepo,
+    this.instRepo
+  );
   private readonly createTxWithDebt = new CreateTransactionWithDebt(this.txRepo, this.debtRepo);
 
   /** Lista transações com paginação */
-  listTransactions(page?: number, limit?: number) { return this.txRepo.getAll(page, limit); }
+  listTransactions(page?: number, limit?: number) {
+    return this.txRepo.getAll(page, limit);
+  }
 
   /** Lista parcelados */
-  listInstallments() { return this.instRepo.getAll(); }
+  listInstallments() {
+    return this.instRepo.getAll();
+  }
 
   /** Cria transação simples */
-  createTransaction(dto: Omit<Transaction, 'id'>) { return this.txRepo.create(dto); }
+  createTransaction(dto: Omit<Transaction, 'id'>) {
+    return this.txRepo.create(dto);
+  }
 
   /** Atualiza transação */
-  updateTransaction(entity: Transaction) { return this.txRepo.update(entity); }
+  updateTransaction(entity: Transaction) {
+    return this.txRepo.update(entity);
+  }
 
   /** Remove transação */
-  deleteTransaction(id: string) { return this.txRepo.delete(id); }
+  deleteTransaction(id: string) {
+    return this.txRepo.delete(id);
+  }
 
   /** Cria parcelado simples */
-  createInstallment(dto: Omit<Installment, 'id'>) { return this.instRepo.create(dto); }
+  createInstallment(dto: Omit<Installment, 'id'>) {
+    return this.instRepo.create(dto);
+  }
 
   /** Atualiza parcelado */
-  updateInstallment(entity: Installment) { return this.instRepo.update(entity); }
+  updateInstallment(entity: Installment) {
+    return this.instRepo.update(entity);
+  }
 
   /** Remove parcelado */
-  deleteInstallment(id: string) { return this.instRepo.delete(id); }
+  deleteInstallment(id: string) {
+    return this.instRepo.delete(id);
+  }
 
   /** Fluxo parcelado: transação + parcelado atômico */
   createParcelledTransaction(tx: Omit<Transaction, 'id'>, totalInstallments: number) {
@@ -49,27 +68,55 @@ export class FinanceService {
   }
 
   /** Avança parcela */
-  advanceInstallment(id: string) { return this.instRepo.advance(id); }
+  advanceInstallment(id: string) {
+    return this.instRepo.advance(id);
+  }
 
   /** Dívidas divididas */
-  listDebts() { return this.debtRepo.getAll(); }
-  createDebt(dto: Omit<Debt, 'id'>) { return this.debtRepo.create(dto); }
-  updateDebt(entity: Debt) { return this.debtRepo.update(entity); }
-  deleteDebt(id: string) { return this.debtRepo.delete(id); }
-  advanceDebt(id: string) { return this.debtRepo.advance(id); }
+  listDebts() {
+    return this.debtRepo.getAll();
+  }
+  createDebt(dto: Omit<Debt, 'id'>) {
+    return this.debtRepo.create(dto);
+  }
+  updateDebt(entity: Debt) {
+    return this.debtRepo.update(entity);
+  }
+  deleteDebt(id: string) {
+    return this.debtRepo.delete(id);
+  }
+  advanceDebt(id: string) {
+    return this.debtRepo.advance(id);
+  }
   createDividedTransaction(tx: Omit<Transaction, 'id'>, totalInstallments: number) {
     return this.createTxWithDebt.execute(tx, { totalInstallments });
   }
 
   /** Reserva de emergência */
-  getEmergencyReserve() { return this.reserveRepo.getByUser(); }
-  listEmergencyReserves() { return this.reserveRepo.getAll(); }
-  createEmergencyReserve(dto: Omit<EmergencyReserve, 'id'>) { return this.reserveRepo.create(dto); }
-  updateEmergencyReserve(entity: EmergencyReserve) { return this.reserveRepo.update(entity); }
-  deleteEmergencyReserve(id: string) { return this.reserveRepo.delete(id); }
-  depositEmergencyReserve(amount: number) { return this.reserveRepo.deposit(amount); }
-  withdrawEmergencyReserve(amount: number) { return this.reserveRepo.withdraw(amount); }
-  setEmergencyReserveAmount(amount: number) { return this.reserveRepo.setCurrentAmount(amount); }
+  getEmergencyReserve() {
+    return this.reserveRepo.getByUser();
+  }
+  listEmergencyReserves() {
+    return this.reserveRepo.getAll();
+  }
+  createEmergencyReserve(dto: Omit<EmergencyReserve, 'id'>) {
+    return this.reserveRepo.create(dto);
+  }
+  updateEmergencyReserve(entity: EmergencyReserve) {
+    return this.reserveRepo.update(entity);
+  }
+  deleteEmergencyReserve(id: string) {
+    return this.reserveRepo.delete(id);
+  }
+  depositEmergencyReserve(amount: number) {
+    return this.reserveRepo.deposit(amount);
+  }
+  withdrawEmergencyReserve(amount: number) {
+    return this.reserveRepo.withdraw(amount);
+  }
+  setEmergencyReserveAmount(amount: number) {
+    return this.reserveRepo.setCurrentAmount(amount);
+  }
 }
 
 /** Singleton para uso em hooks/contexts */

@@ -40,7 +40,10 @@ const initialState: InstallmentsState = {
 };
 
 /** Reducer para gerenciar estado dos parcelados */
-function installmentsReducer(state: InstallmentsState, action: InstallmentsAction): InstallmentsState {
+function installmentsReducer(
+  state: InstallmentsState,
+  action: InstallmentsAction
+): InstallmentsState {
   switch (action.type) {
     case 'SET_INSTALLMENTS':
       return { ...state, installments: action.payload, isLoading: false };
@@ -99,7 +102,9 @@ export function InstallmentsProvider({ children }: { children: React.ReactNode }
     };
 
     loadData();
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+    };
   }, [userId, logout]);
 
   /** Adiciona um novo parcelado */
@@ -113,32 +118,23 @@ export function InstallmentsProvider({ children }: { children: React.ReactNode }
   );
 
   /** Atualiza um parcelado existente */
-  const updateInstallment = useCallback(
-    async (installment: Installment) => {
-      const updated = await installmentService.update(installment);
-      dispatch({ type: 'UPDATE_INSTALLMENT', payload: updated });
-      return updated;
-    },
-    []
-  );
+  const updateInstallment = useCallback(async (installment: Installment) => {
+    const updated = await installmentService.update(installment);
+    dispatch({ type: 'UPDATE_INSTALLMENT', payload: updated });
+    return updated;
+  }, []);
 
   /** Remove um parcelado */
-  const deleteInstallment = useCallback(
-    async (id: string) => {
-      await installmentService.delete(id);
-      dispatch({ type: 'DELETE_INSTALLMENT', payload: id });
-    },
-    []
-  );
+  const deleteInstallment = useCallback(async (id: string) => {
+    await installmentService.delete(id);
+    dispatch({ type: 'DELETE_INSTALLMENT', payload: id });
+  }, []);
 
   /** Avança para a próxima parcela */
-  const advanceInstallment = useCallback(
-    async (id: string) => {
-      const updated = await installmentService.advance(id);
-      dispatch({ type: 'UPDATE_INSTALLMENT', payload: updated });
-    },
-    []
-  );
+  const advanceInstallment = useCallback(async (id: string) => {
+    const updated = await installmentService.advance(id);
+    dispatch({ type: 'UPDATE_INSTALLMENT', payload: updated });
+  }, []);
 
   return (
     <InstallmentsContext.Provider

@@ -57,17 +57,16 @@ function mapTransaction(row: TransactionRow): Transaction {
 
 export const recurringBillService = {
   async getAll(): Promise<RecurringBill[]> {
-    const { data, error } = await supabase
-      .from('recurring_bills')
-      .select('*')
-      .order('name');
+    const { data, error } = await supabase.from('recurring_bills').select('*').order('name');
 
     if (error) throw error;
     return (data as RecurringBillRow[]).map(mapRecurringBill);
   },
 
   async create(bill: Omit<RecurringBill, 'id'>): Promise<RecurringBill> {
-    const { data: { user } } = await supabase.auth.getUser();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
     if (!user) throw new Error('Não autenticado');
 
     const id = crypto.randomUUID();
@@ -114,16 +113,15 @@ export const recurringBillService = {
   },
 
   async delete(id: string): Promise<void> {
-    const { error } = await supabase
-      .from('recurring_bills')
-      .delete()
-      .eq('id', id);
+    const { error } = await supabase.from('recurring_bills').delete().eq('id', id);
 
     if (error) throw error;
   },
 
   async generate(): Promise<Transaction[]> {
-    const { data: { user } } = await supabase.auth.getUser();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
     if (!user) throw new Error('Não autenticado');
 
     const now = new Date();

@@ -19,7 +19,13 @@ export class CategoryEntity extends BaseEntity {
   }
 
   toDTO(): Category {
-    return { id: this.id, name: this.name, color: this.color, icon: this.icon, defaultType: this.defaultType };
+    return {
+      id: this.id,
+      name: this.name,
+      color: this.color,
+      icon: this.icon,
+      defaultType: this.defaultType,
+    };
   }
 
   static create(props: Omit<Category, 'id'>): CategoryEntity {

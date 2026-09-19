@@ -40,7 +40,10 @@ const initialState: FutureExpensesState = {
 };
 
 /** Reducer para gerenciar estado das despesas futuras */
-function futureExpensesReducer(state: FutureExpensesState, action: FutureExpensesAction): FutureExpensesState {
+function futureExpensesReducer(
+  state: FutureExpensesState,
+  action: FutureExpensesAction
+): FutureExpensesState {
   switch (action.type) {
     case 'SET_FUTURE_EXPENSES':
       return { ...state, futureExpenses: action.payload, isLoading: false };
@@ -99,7 +102,9 @@ export function FutureExpensesProvider({ children }: { children: React.ReactNode
     };
 
     loadData();
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+    };
   }, [userId, logout]);
 
   /** Adiciona uma nova despesa futura */
@@ -113,32 +118,23 @@ export function FutureExpensesProvider({ children }: { children: React.ReactNode
   );
 
   /** Atualiza uma despesa futura existente */
-  const updateFutureExpense = useCallback(
-    async (expense: FutureExpense) => {
-      const updated = await futureExpenseService.update(expense);
-      dispatch({ type: 'UPDATE_FUTURE_EXPENSE', payload: updated });
-      return updated;
-    },
-    []
-  );
+  const updateFutureExpense = useCallback(async (expense: FutureExpense) => {
+    const updated = await futureExpenseService.update(expense);
+    dispatch({ type: 'UPDATE_FUTURE_EXPENSE', payload: updated });
+    return updated;
+  }, []);
 
   /** Remove uma despesa futura */
-  const deleteFutureExpense = useCallback(
-    async (id: string) => {
-      await futureExpenseService.delete(id);
-      dispatch({ type: 'DELETE_FUTURE_EXPENSE', payload: id });
-    },
-    []
-  );
+  const deleteFutureExpense = useCallback(async (id: string) => {
+    await futureExpenseService.delete(id);
+    dispatch({ type: 'DELETE_FUTURE_EXPENSE', payload: id });
+  }, []);
 
   /** Marca uma despesa como paga */
-  const markAsPaid = useCallback(
-    async (id: string) => {
-      const updated = await futureExpenseService.markAsPaid(id);
-      dispatch({ type: 'UPDATE_FUTURE_EXPENSE', payload: updated });
-    },
-    []
-  );
+  const markAsPaid = useCallback(async (id: string) => {
+    const updated = await futureExpenseService.markAsPaid(id);
+    dispatch({ type: 'UPDATE_FUTURE_EXPENSE', payload: updated });
+  }, []);
 
   return (
     <FutureExpensesContext.Provider

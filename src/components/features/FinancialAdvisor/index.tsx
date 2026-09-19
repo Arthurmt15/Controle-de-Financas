@@ -108,12 +108,18 @@ const FinancialAdvisor: React.FC = () => {
         for await (const chunk of chunks) {
           accumulated += chunk;
           const content = accumulated;
-          setMessages((prev) => prev.map((m) => (m.id === assistantMsg.id ? { ...m, content } : m)));
+          setMessages((prev) =>
+            prev.map((m) => (m.id === assistantMsg.id ? { ...m, content } : m))
+          );
         }
       } catch (error) {
         console.error('Erro no consultor financeiro:', error);
         setMessages((prev) =>
-          prev.map((m) => (m.id === assistantMsg.id ? { ...m, content: 'Erro ao conectar com o consultor. Tente novamente.' } : m))
+          prev.map((m) =>
+            m.id === assistantMsg.id
+              ? { ...m, content: 'Erro ao conectar com o consultor. Tente novamente.' }
+              : m
+          )
         );
       } finally {
         setIsStreaming(false);
@@ -139,12 +145,16 @@ const FinancialAdvisor: React.FC = () => {
     <Card className="rounded-2xl overflow-hidden flex flex-col h-[520px] sm:h-[560px] lg:h-[620px] max-h-[70vh] lg:max-h-[72vh] shadow-sm">
       {/* Header do chat */}
       <CardHeader className="py-3.5 px-4 flex flex-row items-center justify-center gap-2.5 border-b bg-card shrink-0 space-y-0">
-        <span className="w-8 h-8 flex items-center justify-center rounded-xl text-white shrink-0" style={{ backgroundColor: theme.colors.primary }}>
+        <span
+          className="w-8 h-8 flex items-center justify-center rounded-xl text-white shrink-0"
+          style={{ backgroundColor: theme.colors.primary }}
+        >
           <Bot className="h-4 w-4" />
         </span>
         <div className="text-center">
           <h3 className="text-[14px] font-semibold leading-none flex items-center gap-1 justify-center">
-            Consultor Financeiro <Sparkles className="h-3 w-3" style={{ color: theme.colors.primary }} />
+            Consultor Financeiro{' '}
+            <Sparkles className="h-3 w-3" style={{ color: theme.colors.primary }} />
           </h3>
           <p className="text-xs text-muted-foreground mt-1">IA analisa seus dados reais</p>
         </div>
@@ -165,12 +175,20 @@ const FinancialAdvisor: React.FC = () => {
             animate={{ opacity: 1, y: 0 }}
             className="flex flex-col items-center justify-center text-center py-6 gap-3 flex-1"
           >
-            <span className="w-12 h-12 flex items-center justify-center rounded-2xl border dark:border-transparent" style={{ backgroundColor: `${theme.colors.primary}14`, borderColor: `${theme.colors.primary}30`, color: theme.colors.primary }}>
+            <span
+              className="w-12 h-12 flex items-center justify-center rounded-2xl border dark:border-transparent"
+              style={{
+                backgroundColor: `${theme.colors.primary}14`,
+                borderColor: `${theme.colors.primary}30`,
+                color: theme.colors.primary,
+              }}
+            >
               <Bot className="h-6 w-6" />
             </span>
             <h4 className="text-[15px] font-semibold">Olá! Sou seu consultor financeiro.</h4>
             <p className="text-[13px] text-muted-foreground leading-relaxed max-w-[280px]">
-              Analiso seus dados reais para dar conselhos personalizados. Pergunte sobre gastos, investimentos ou planejamento.
+              Analiso seus dados reais para dar conselhos personalizados. Pergunte sobre gastos,
+              investimentos ou planejamento.
             </p>
             <div className="flex flex-wrap gap-1.5 justify-center mt-2 max-w-[300px]">
               {SUGGESTIONS.map((s) => (
@@ -178,7 +196,11 @@ const FinancialAdvisor: React.FC = () => {
                   key={s}
                   variant="outline"
                   className="cursor-pointer rounded-full px-3 py-1 text-xs font-medium transition-colors"
-                  style={{ backgroundColor: `${theme.colors.primary}0d`, borderColor: `${theme.colors.primary}30`, color: theme.colors.primary }}
+                  style={{
+                    backgroundColor: `${theme.colors.primary}0d`,
+                    borderColor: `${theme.colors.primary}30`,
+                    color: theme.colors.primary,
+                  }}
                   onClick={() => sendMessage(s)}
                 >
                   {s}
@@ -191,54 +213,80 @@ const FinancialAdvisor: React.FC = () => {
         <AnimatePresence initial={false}>
           {messages.map((msg, idx) => {
             const isTyping = msg.role === 'assistant' && isStreaming && !msg.content;
-            const isStreamingThis = msg.role === 'assistant' && isStreaming && !!msg.content && idx === messages.length - 1;
+            const isStreamingThis =
+              msg.role === 'assistant' &&
+              isStreaming &&
+              !!msg.content &&
+              idx === messages.length - 1;
             return (
-            <motion.div
-              key={msg.id}
-              initial={{ opacity: 0, y: 6 }}
-              animate={{ opacity: 1, y: 0 }}
-              className={`flex flex-col gap-1 ${msg.role === 'user' ? 'items-end' : 'items-start'}`}
-            >
-              {/* Label do autor */}
-              <span className="flex items-center gap-1 text-[10px] font-semibold tracking-widest uppercase text-muted-foreground px-1">
-                {msg.role === 'user' ? (
-                  <>
-                    <User className="h-3 w-3" /> Você
-                  </>
-                ) : (
-                  <>
-                    <Bot className="h-3 w-3" /> Consultor
-                  </>
-                )}
-              </span>
-              {/* Bubble — w-fit evita compressão, sem flex no container */}
-              <div
-                className={`${msg.role === 'user' ? 'w-fit max-w-[85%]' : 'w-fit max-w-[88%] min-w-[64px]'} px-3.5 py-2.5 rounded-2xl text-[13px] leading-6 shadow-sm break-words [overflow-wrap:anywhere] whitespace-pre-wrap ${
-                  msg.role === 'user'
-                    ? 'text-white rounded-br-md'
-                    : 'bg-card border shadow-sm rounded-bl-md'
-                }`}
-                style={msg.role === 'user' ? { backgroundColor: theme.colors.primary } : undefined}
+              <motion.div
+                key={msg.id}
+                initial={{ opacity: 0, y: 6 }}
+                animate={{ opacity: 1, y: 0 }}
+                className={`flex flex-col gap-1 ${msg.role === 'user' ? 'items-end' : 'items-start'}`}
               >
-                {msg.role === 'user' ? (
-                  <span className="whitespace-pre-wrap break-words [overflow-wrap:anywhere]">{msg.content}</span>
-                ) : isTyping ? (
-                  <span className="inline-flex items-center justify-center gap-1.5 min-h-[20px] py-0.5">
-                    <span className="w-1.5 h-1.5 rounded-full animate-bounce [animation-delay:-0.3s]" style={{ backgroundColor: theme.colors.primary }} />
-                    <span className="w-1.5 h-1.5 rounded-full animate-bounce [animation-delay:-0.15s]" style={{ backgroundColor: theme.colors.primary }} />
-                    <span className="w-1.5 h-1.5 rounded-full animate-bounce" style={{ backgroundColor: theme.colors.primary }} />
-                  </span>
-                ) : (
-                  <span className="block [&>strong]:font-semibold [&>strong]:text-foreground">
-                    <span dangerouslySetInnerHTML={{ __html: renderMarkdown(msg.content) }} />
-                    {isStreamingThis && <span className="inline-block w-[2px] h-[14px] animate-pulse ml-1 align-text-bottom" style={{ backgroundColor: theme.colors.primary }} aria-hidden />}
-                  </span>
-                )}
-              </div>
-              <span className="text-[11px] text-muted-foreground px-1">
-                {msg.timestamp.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
-              </span>
-            </motion.div>
+                {/* Label do autor */}
+                <span className="flex items-center gap-1 text-[10px] font-semibold tracking-widest uppercase text-muted-foreground px-1">
+                  {msg.role === 'user' ? (
+                    <>
+                      <User className="h-3 w-3" /> Você
+                    </>
+                  ) : (
+                    <>
+                      <Bot className="h-3 w-3" /> Consultor
+                    </>
+                  )}
+                </span>
+                {/* Bubble — w-fit evita compressão, sem flex no container */}
+                <div
+                  className={`${msg.role === 'user' ? 'w-fit max-w-[85%]' : 'w-fit max-w-[88%] min-w-[64px]'} px-3.5 py-2.5 rounded-2xl text-[13px] leading-6 shadow-sm break-words [overflow-wrap:anywhere] whitespace-pre-wrap ${
+                    msg.role === 'user'
+                      ? 'text-white rounded-br-md'
+                      : 'bg-card border shadow-sm rounded-bl-md'
+                  }`}
+                  style={
+                    msg.role === 'user' ? { backgroundColor: theme.colors.primary } : undefined
+                  }
+                >
+                  {msg.role === 'user' ? (
+                    <span className="whitespace-pre-wrap break-words [overflow-wrap:anywhere]">
+                      {msg.content}
+                    </span>
+                  ) : isTyping ? (
+                    <span className="inline-flex items-center justify-center gap-1.5 min-h-[20px] py-0.5">
+                      <span
+                        className="w-1.5 h-1.5 rounded-full animate-bounce [animation-delay:-0.3s]"
+                        style={{ backgroundColor: theme.colors.primary }}
+                      />
+                      <span
+                        className="w-1.5 h-1.5 rounded-full animate-bounce [animation-delay:-0.15s]"
+                        style={{ backgroundColor: theme.colors.primary }}
+                      />
+                      <span
+                        className="w-1.5 h-1.5 rounded-full animate-bounce"
+                        style={{ backgroundColor: theme.colors.primary }}
+                      />
+                    </span>
+                  ) : (
+                    <span className="block [&>strong]:font-semibold [&>strong]:text-foreground">
+                      <span dangerouslySetInnerHTML={{ __html: renderMarkdown(msg.content) }} />
+                      {isStreamingThis && (
+                        <span
+                          className="inline-block w-[2px] h-[14px] animate-pulse ml-1 align-text-bottom"
+                          style={{ backgroundColor: theme.colors.primary }}
+                          aria-hidden
+                        />
+                      )}
+                    </span>
+                  )}
+                </div>
+                <span className="text-[11px] text-muted-foreground px-1">
+                  {msg.timestamp.toLocaleTimeString('pt-BR', {
+                    hour: '2-digit',
+                    minute: '2-digit',
+                  })}
+                </span>
+              </motion.div>
             );
           })}
         </AnimatePresence>
@@ -268,7 +316,11 @@ const FinancialAdvisor: React.FC = () => {
             className="rounded-full w-10 h-10 shrink-0 text-white hover:opacity-90"
             style={{ backgroundColor: theme.colors.primary }}
           >
-            {isStreaming ? <Loader2 className="h-4 w-4 animate-spin" /> : <SendHorizontal className="h-4 w-4" />}
+            {isStreaming ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <SendHorizontal className="h-4 w-4" />
+            )}
           </Button>
         </form>
       </CardContent>

@@ -40,11 +40,10 @@ export const TypeSelector = styled.div`
 export const TypeButton = styled.button<{ $isActive: boolean }>`
   flex: 1;
   padding: 12px;
-  border: 2px solid ${({ theme, $isActive }) =>
-    $isActive ? theme.colors.primary : theme.colors.border};
+  border: 2px solid
+    ${({ theme, $isActive }) => ($isActive ? theme.colors.primary : theme.colors.border)};
   border-radius: ${({ theme }) => theme.borderRadius};
-  background-color: ${({ theme, $isActive }) =>
-    $isActive ? theme.colors.primary : 'transparent'};
+  background-color: ${({ theme, $isActive }) => ($isActive ? theme.colors.primary : 'transparent')};
   color: ${({ theme, $isActive }) => ($isActive ? 'white' : theme.colors.text)};
   font-weight: 600;
   cursor: pointer;

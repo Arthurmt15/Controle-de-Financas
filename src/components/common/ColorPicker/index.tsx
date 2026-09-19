@@ -73,7 +73,9 @@ const ColorOption = styled.button<{ $color: string; $isSelected: boolean }>`
   border: 3px solid ${({ $isSelected, theme }) => ($isSelected ? theme.colors.text : 'transparent')};
   background: ${({ $color }) => $color};
   cursor: pointer;
-  transition: transform 0.2s, border-color 0.2s;
+  transition:
+    transform 0.2s,
+    border-color 0.2s;
 
   &:hover {
     transform: scale(1.1);

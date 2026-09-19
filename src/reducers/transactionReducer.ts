@@ -54,9 +54,7 @@ export function transactionReducer(
     case 'DELETE_TRANSACTION':
       return {
         ...state,
-        transactions: state.transactions.filter(
-          (transaction) => transaction.id !== action.payload
-        ),
+        transactions: state.transactions.filter((transaction) => transaction.id !== action.payload),
       };
 
     /**
@@ -107,9 +105,7 @@ export function transactionReducer(
     case 'DELETE_CATEGORY':
       return {
         ...state,
-        categories: state.categories.filter(
-          (category) => category.id !== action.payload
-        ),
+        categories: state.categories.filter((category) => category.id !== action.payload),
       };
 
     // ============================================
@@ -151,9 +147,7 @@ export function transactionReducer(
     case 'DELETE_RECURRING_BILL':
       return {
         ...state,
-        recurringBills: state.recurringBills.filter(
-          (bill) => bill.id !== action.payload
-        ),
+        recurringBills: state.recurringBills.filter((bill) => bill.id !== action.payload),
       };
 
     // ============================================

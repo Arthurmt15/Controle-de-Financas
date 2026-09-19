@@ -41,7 +41,9 @@ export const transactionService = {
   },
 
   async create(transaction: Omit<Transaction, 'id'>): Promise<Transaction> {
-    const { data: { user } } = await supabase.auth.getUser();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
     if (!user) throw new Error('Não autenticado');
 
     const id = crypto.randomUUID();
@@ -86,10 +88,7 @@ export const transactionService = {
   },
 
   async delete(id: string): Promise<void> {
-    const { error } = await supabase
-      .from('transactions')
-      .delete()
-      .eq('id', id);
+    const { error } = await supabase.from('transactions').delete().eq('id', id);
 
     if (error) throw error;
   },

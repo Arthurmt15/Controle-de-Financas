@@ -21,10 +21,7 @@ function currency(value: number): string {
 /**
  * Gera resumo rápido do mês atual
  */
-export function generateSummary(
-  transactions: Transaction[],
-  categories: Category[],
-): string {
+export function generateSummary(transactions: Transaction[], categories: Category[]): string {
   const monthly = filterByCurrentMonth(transactions);
   const now = new Date();
   const monthName = getMonthAbbreviation(now.getMonth());
@@ -33,12 +30,8 @@ export function generateSummary(
     return ` Nenhuma transação encontrada para ${monthName}. Adicione uma transação primeiro!`;
   }
 
-  const income = monthly
-    .filter(t => t.type === 'income')
-    .reduce((s, t) => s + t.amount, 0);
-  const expense = monthly
-    .filter(t => t.type === 'expense')
-    .reduce((s, t) => s + t.amount, 0);
+  const income = monthly.filter((t) => t.type === 'income').reduce((s, t) => s + t.amount, 0);
+  const expense = monthly.filter((t) => t.type === 'expense').reduce((s, t) => s + t.amount, 0);
   const balance = income - expense;
 
   const balanceIcon = balance >= 0 ? '' : '';
@@ -57,10 +50,7 @@ export function generateSummary(
 /**
  * Gera análise completa dos gastos
  */
-export function generateAnalysis(
-  transactions: Transaction[],
-  categories: Category[],
-): string {
+export function generateAnalysis(transactions: Transaction[], categories: Category[]): string {
   const monthly = filterByCurrentMonth(transactions);
   const yearly = filterByCurrentYear(transactions);
   const now = new Date();
@@ -70,25 +60,21 @@ export function generateAnalysis(
     return ` Nenhuma transação encontrada para ${monthName}. Adicione transações para ver a análise!`;
   }
 
-  const income = monthly
-    .filter(t => t.type === 'income')
-    .reduce((s, t) => s + t.amount, 0);
-  const expense = monthly
-    .filter(t => t.type === 'expense')
-    .reduce((s, t) => s + t.amount, 0);
+  const income = monthly.filter((t) => t.type === 'income').reduce((s, t) => s + t.amount, 0);
+  const expense = monthly.filter((t) => t.type === 'expense').reduce((s, t) => s + t.amount, 0);
   const balance = income - expense;
 
   // Gastos por categoria
   const expensesByCategory: Record<string, number> = {};
   monthly
-    .filter(t => t.type === 'expense')
-    .forEach(t => {
+    .filter((t) => t.type === 'expense')
+    .forEach((t) => {
       expensesByCategory[t.categoryId] = (expensesByCategory[t.categoryId] || 0) + t.amount;
     });
 
   const sortedCategories = Object.entries(expensesByCategory)
     .map(([catId, total]) => {
-      const cat = categories.find(c => c.id === catId);
+      const cat = categories.find((c) => c.id === catId);
       return {
         name: cat?.name || 'Outros',
         color: cat?.color || '#6b7280',
@@ -100,11 +86,13 @@ export function generateAnalysis(
 
   // Top 5 categorias
   const topCategories = sortedCategories.slice(0, 5);
-  const categoryBars = topCategories.map(cat => {
-    const barLength = Math.round(cat.percent / 5);
-    const bar = '█'.repeat(barLength) + '░'.repeat(20 - barLength);
-    return `  ${cat.name.padEnd(14)} ${bar} ${cat.percent.toFixed(0)}% — ${currency(cat.total)}`;
-  }).join('\n');
+  const categoryBars = topCategories
+    .map((cat) => {
+      const barLength = Math.round(cat.percent / 5);
+      const bar = '█'.repeat(barLength) + '░'.repeat(20 - barLength);
+      return `  ${cat.name.padEnd(14)} ${bar} ${cat.percent.toFixed(0)}% — ${currency(cat.total)}`;
+    })
+    .join('\n');
 
   // Insights automáticos
   const insights: string[] = [];
@@ -125,7 +113,9 @@ export function generateAnalysis(
     const topTwo = sortedCategories[0].total + sortedCategories[1].total;
     const topTwoPercent = expense > 0 ? (topTwo / expense) * 100 : 0;
     if (topTwoPercent > 60) {
-      insights.push(` Gastos concentrados: ${sortedCategories[0].name} + ${sortedCategories[1].name} = ${topTwoPercent.toFixed(0)}%`);
+      insights.push(
+        ` Gastos concentrados: ${sortedCategories[0].name} + ${sortedCategories[1].name} = ${topTwoPercent.toFixed(0)}%`
+      );
     }
   }
 
@@ -136,15 +126,12 @@ export function generateAnalysis(
     insights.push(` Se reduzir 10% em ${top.name}, economiza ${currency(saveAmount)}/mês`);
   }
 
-  const insightsText = insights.length > 0
-    ? `\n\n Insights:\n${insights.map(i => `  ${i}`).join('\n')}`
-    : '';
+  const insightsText =
+    insights.length > 0 ? `\n\n Insights:\n${insights.map((i) => `  ${i}`).join('\n')}` : '';
 
-  const yearlyIncome = yearly
-    .filter(t => t.type === 'income')
-    .reduce((s, t) => s + t.amount, 0);
+  const yearlyIncome = yearly.filter((t) => t.type === 'income').reduce((s, t) => s + t.amount, 0);
   const yearlyExpense = yearly
-    .filter(t => t.type === 'expense')
+    .filter((t) => t.type === 'expense')
     .reduce((s, t) => s + t.amount, 0);
 
   return (
@@ -165,30 +152,35 @@ export function generateAnalysis(
 /**
  * Gera análise de tendências (mês atual vs anterior)
  */
-export function generateTrendAnalysis(
-  transactions: Transaction[],
-  categories: Category[],
-): string {
+export function generateTrendAnalysis(transactions: Transaction[], categories: Category[]): string {
   const now = new Date();
   const currentMonth = now.getMonth();
   const currentYear = now.getFullYear();
   const prevMonth = currentMonth === 0 ? 11 : currentMonth - 1;
   const prevYear = currentMonth === 0 ? currentYear - 1 : currentYear;
 
-  const currentMonthTx = transactions.filter(t => {
+  const currentMonthTx = transactions.filter((t) => {
     const d = new Date(t.date);
     return d.getMonth() === currentMonth && d.getFullYear() === currentYear;
   });
 
-  const prevMonthTx = transactions.filter(t => {
+  const prevMonthTx = transactions.filter((t) => {
     const d = new Date(t.date);
     return d.getMonth() === prevMonth && d.getFullYear() === prevYear;
   });
 
-  const currentIncome = currentMonthTx.filter(t => t.type === 'income').reduce((s, t) => s + t.amount, 0);
-  const currentExpense = currentMonthTx.filter(t => t.type === 'expense').reduce((s, t) => s + t.amount, 0);
-  const prevIncome = prevMonthTx.filter(t => t.type === 'income').reduce((s, t) => s + t.amount, 0);
-  const prevExpense = prevMonthTx.filter(t => t.type === 'expense').reduce((s, t) => s + t.amount, 0);
+  const currentIncome = currentMonthTx
+    .filter((t) => t.type === 'income')
+    .reduce((s, t) => s + t.amount, 0);
+  const currentExpense = currentMonthTx
+    .filter((t) => t.type === 'expense')
+    .reduce((s, t) => s + t.amount, 0);
+  const prevIncome = prevMonthTx
+    .filter((t) => t.type === 'income')
+    .reduce((s, t) => s + t.amount, 0);
+  const prevExpense = prevMonthTx
+    .filter((t) => t.type === 'expense')
+    .reduce((s, t) => s + t.amount, 0);
 
   const incomeChange = prevIncome > 0 ? ((currentIncome - prevIncome) / prevIncome) * 100 : 0;
   const expenseChange = prevExpense > 0 ? ((currentExpense - prevExpense) / prevExpense) * 100 : 0;

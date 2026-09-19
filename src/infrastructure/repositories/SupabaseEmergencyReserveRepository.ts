@@ -28,7 +28,14 @@ function isTableNotFound(error: any): boolean {
   if (!error) return false;
   const code = error.code || '';
   const msg = (error.message || '').toLowerCase();
-  return code === 'PGRST205' || code === '42P01' || code === 'PGRST301' || msg.includes('does not exist') || msg.includes('could not find the table') || msg.includes('schema cache');
+  return (
+    code === 'PGRST205' ||
+    code === '42P01' ||
+    code === 'PGRST301' ||
+    msg.includes('does not exist') ||
+    msg.includes('could not find the table') ||
+    msg.includes('schema cache')
+  );
 }
 
 let hasLoggedMissingTable = false;
@@ -36,7 +43,10 @@ function logMissingTableOnce(error: any) {
   if (hasLoggedMissingTable) return;
   hasLoggedMissingTable = true;
   // Usa debug para não poluir console em produção; detalhe técnico só para dev
-  console.debug('[EmergencyReserve] Tabela emergency_reserves não existe - migration 004 pendente', error);
+  console.debug(
+    '[EmergencyReserve] Tabela emergency_reserves não existe - migration 004 pendente',
+    error
+  );
 }
 
 export class SupabaseEmergencyReserveRepository implements IEmergencyReserveRepository {
@@ -46,7 +56,11 @@ export class SupabaseEmergencyReserveRepository implements IEmergencyReserveRepo
   }
 
   async getById(id: string): Promise<EmergencyReserve | null> {
-    const { data, error } = await supabase.from('emergency_reserves').select('*').eq('id', id).single();
+    const { data, error } = await supabase
+      .from('emergency_reserves')
+      .select('*')
+      .eq('id', id)
+      .single();
     if (error) {
       if (isTableNotFound(error)) {
         logMissingTableOnce(error);
@@ -59,7 +73,11 @@ export class SupabaseEmergencyReserveRepository implements IEmergencyReserveRepo
   }
 
   async getByUser(): Promise<EmergencyReserve | null> {
-    const { data, error } = await supabase.from('emergency_reserves').select('*').limit(1).maybeSingle();
+    const { data, error } = await supabase
+      .from('emergency_reserves')
+      .select('*')
+      .limit(1)
+      .maybeSingle();
     if (error) {
       if (isTableNotFound(error)) {
         logMissingTableOnce(error);
@@ -72,20 +90,28 @@ export class SupabaseEmergencyReserveRepository implements IEmergencyReserveRepo
   }
 
   async create(dto: Omit<EmergencyReserve, 'id'>): Promise<EmergencyReserve> {
-    const { data: { user } } = await supabase.auth.getUser();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
     if (!user) throw new Error('Não autenticado');
     const id = crypto.randomUUID();
-    const { data, error } = await supabase.from('emergency_reserves').insert({
-      id,
-      user_id: user.id,
-      goal_amount: dto.goalAmount,
-      current_amount: dto.currentAmount,
-      notes: dto.notes || null,
-    }).select().single();
+    const { data, error } = await supabase
+      .from('emergency_reserves')
+      .insert({
+        id,
+        user_id: user.id,
+        goal_amount: dto.goalAmount,
+        current_amount: dto.currentAmount,
+        notes: dto.notes || null,
+      })
+      .select()
+      .single();
     if (error) {
       if (isTableNotFound(error)) {
         logMissingTableOnce(error);
-        throw new Error('Não foi possível salvar a reserva no momento. Tente novamente mais tarde.');
+        throw new Error(
+          'Não foi possível salvar a reserva no momento. Tente novamente mais tarde.'
+        );
       }
       throw error;
     }
@@ -94,16 +120,23 @@ export class SupabaseEmergencyReserveRepository implements IEmergencyReserveRepo
 
   async update(entity: EmergencyReserve): Promise<EmergencyReserve> {
     new EmergencyReserveEntity(entity);
-    const { data, error } = await supabase.from('emergency_reserves').update({
-      goal_amount: entity.goalAmount,
-      current_amount: entity.currentAmount,
-      notes: entity.notes || null,
-      updated_at: new Date().toISOString(),
-    }).eq('id', entity.id).select().single();
+    const { data, error } = await supabase
+      .from('emergency_reserves')
+      .update({
+        goal_amount: entity.goalAmount,
+        current_amount: entity.currentAmount,
+        notes: entity.notes || null,
+        updated_at: new Date().toISOString(),
+      })
+      .eq('id', entity.id)
+      .select()
+      .single();
     if (error) {
       if (isTableNotFound(error)) {
         logMissingTableOnce(error);
-        throw new Error('Não foi possível salvar a reserva no momento. Tente novamente mais tarde.');
+        throw new Error(
+          'Não foi possível salvar a reserva no momento. Tente novamente mais tarde.'
+        );
       }
       throw error;
     }

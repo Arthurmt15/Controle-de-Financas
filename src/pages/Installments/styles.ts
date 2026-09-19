@@ -92,8 +92,12 @@ export const SummaryCard = styled.div<{ $variant?: string }>`
   border-radius: 14px;
   border: 1px solid ${({ theme }) => theme.colors?.border || '#e5e7eb'};
   background: ${({ theme }) => theme.colors?.background || '#ffffff'};
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04), 0 4px 12px rgba(0, 0, 0, 0.03);
-  transition: transform 0.15s ease, box-shadow 0.15s ease;
+  box-shadow:
+    0 1px 2px rgba(0, 0, 0, 0.04),
+    0 4px 12px rgba(0, 0, 0, 0.03);
+  transition:
+    transform 0.15s ease,
+    box-shadow 0.15s ease;
 
   &:hover {
     transform: translateY(-1px);
@@ -233,7 +237,9 @@ export const AddButton = styled.button`
   border: none;
   background-color: ${({ theme }) => theme.colors?.primary || '#6366f1'};
   color: white;
-  transition: opacity 0.2s, transform 0.1s;
+  transition:
+    opacity 0.2s,
+    transform 0.1s;
   white-space: nowrap;
   flex-shrink: 0;
 

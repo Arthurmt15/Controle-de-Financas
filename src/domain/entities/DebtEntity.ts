@@ -29,9 +29,15 @@ export class DebtEntity extends BaseEntity {
     this.source = props.source;
   }
 
-  getProgress(): number { return this.currentInstallment / this.totalInstallments; }
-  isCompleted(): boolean { return this.currentInstallment >= this.totalInstallments; }
-  getRemainingAmount(): number { return (this.totalInstallments - this.currentInstallment) * this.installmentAmount; }
+  getProgress(): number {
+    return this.currentInstallment / this.totalInstallments;
+  }
+  isCompleted(): boolean {
+    return this.currentInstallment >= this.totalInstallments;
+  }
+  getRemainingAmount(): number {
+    return (this.totalInstallments - this.currentInstallment) * this.installmentAmount;
+  }
   getNextDueDate(): Date | null {
     if (this.isCompleted()) return null;
     const d = new Date(this.startDate + 'T12:00:00');
@@ -43,8 +49,10 @@ export class DebtEntity extends BaseEntity {
   getDaysUntilDue(): number | null {
     const next = this.getNextDueDate();
     if (!next) return null;
-    const today = new Date(); today.setHours(0, 0, 0, 0);
-    const t = new Date(next); t.setHours(0, 0, 0, 0);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const t = new Date(next);
+    t.setHours(0, 0, 0, 0);
     return Math.round((t.getTime() - today.getTime()) / 86400000);
   }
   advance(): DebtEntity {

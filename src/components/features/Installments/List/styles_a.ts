@@ -72,9 +72,7 @@ export const TypeIndicator = styled.div<{ $type: string }>`
   height: 8px;
   border-radius: 50%;
   background-color: ${({ $type, theme }) =>
-    $type === 'income'
-      ? theme.colors?.success || '#10b981'
-      : theme.colors?.error || '#ef4444'};
+    $type === 'income' ? theme.colors?.success || '#10b981' : theme.colors?.error || '#ef4444'};
 `;
 
 /** Ações do card */

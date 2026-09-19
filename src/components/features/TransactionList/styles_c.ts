@@ -63,8 +63,7 @@ export const MobileCardDescription = styled.div`
 export const MobileCardAmount = styled.span<{ $type: 'income' | 'expense' }>`
   font-size: 14px;
   font-weight: 600;
-  color: ${({ theme, $type }) =>
-    $type === 'income' ? theme.colors.success : theme.colors.error};
+  color: ${({ theme, $type }) => ($type === 'income' ? theme.colors.success : theme.colors.error)};
   white-space: nowrap;
 `;
 

@@ -59,7 +59,9 @@ const CategoryManager: React.FC = () => {
       setError('Nome deve ter pelo menos 2 caracteres');
       return;
     }
-    const exists = categories.some((c) => c.name.toLowerCase() === newCategory.name.trim().toLowerCase());
+    const exists = categories.some(
+      (c) => c.name.toLowerCase() === newCategory.name.trim().toLowerCase()
+    );
     if (exists) {
       setError('Já existe uma categoria com este nome');
       return;
@@ -70,7 +72,12 @@ const CategoryManager: React.FC = () => {
       icon: newCategory.icon,
       defaultType: newCategory.defaultType,
     });
-    setNewCategory({ name: '', color: getRandomColor(), icon: 'FaEllipsisH', defaultType: 'expense' });
+    setNewCategory({
+      name: '',
+      color: getRandomColor(),
+      icon: 'FaEllipsisH',
+      defaultType: 'expense',
+    });
     setError('');
     setIsAdding(false);
   };
@@ -87,7 +94,8 @@ const CategoryManager: React.FC = () => {
   };
 
   /** Conta uso da categoria */
-  const getCategoryUsageCount = (categoryId: string): number => transactions.filter((t) => t.categoryId === categoryId).length;
+  const getCategoryUsageCount = (categoryId: string): number =>
+    transactions.filter((t) => t.categoryId === categoryId).length;
 
   return (
     <div className="space-y-5">
@@ -98,7 +106,9 @@ const CategoryManager: React.FC = () => {
             <Tags className="h-4 w-4" />
           </span>
           <div>
-            <h2 className="text-[15px] font-semibold tracking-tight leading-none">Gerenciar categorias</h2>
+            <h2 className="text-[15px] font-semibold tracking-tight leading-none">
+              Gerenciar categorias
+            </h2>
             <p className="text-xs text-muted-foreground mt-1">
               {categories.length} {categories.length === 1 ? 'categoria' : 'categorias'} cadastradas
             </p>
@@ -149,7 +159,12 @@ const CategoryManager: React.FC = () => {
                     <Label className="text-xs">Tipo</Label>
                     <Select
                       value={newCategory.defaultType}
-                      onValueChange={(v) => setNewCategory((prev) => ({ ...prev, defaultType: v as typeof prev.defaultType }))}
+                      onValueChange={(v) =>
+                        setNewCategory((prev) => ({
+                          ...prev,
+                          defaultType: v as typeof prev.defaultType,
+                        }))
+                      }
                     >
                       <SelectTrigger className="h-9 rounded-xl">
                         <SelectValue placeholder="Selecione o tipo" />
@@ -170,21 +185,29 @@ const CategoryManager: React.FC = () => {
                         <Input
                           type="color"
                           value={newCategory.color}
-                          onChange={(e) => setNewCategory((prev) => ({ ...prev, color: e.target.value }))}
+                          onChange={(e) =>
+                            setNewCategory((prev) => ({ ...prev, color: e.target.value }))
+                          }
                           className="absolute inset-0 h-full w-full p-0 border-0 rounded-none cursor-pointer"
                         />
                       </div>
                       <Badge variant="outline" className="rounded-full font-mono text-xs">
                         {newCategory.color}
                       </Badge>
-                      <span className="w-3 h-3 rounded-full shrink-0 border" style={{ background: newCategory.color }} />
+                      <span
+                        className="w-3 h-3 rounded-full shrink-0 border"
+                        style={{ background: newCategory.color }}
+                      />
                     </div>
                   </div>
 
                   {/* Ícone */}
                   <div className="space-y-1.5">
                     <Label className="text-xs">Ícone</Label>
-                    <Select value={newCategory.icon} onValueChange={(v) => setNewCategory((prev) => ({ ...prev, icon: v }))}>
+                    <Select
+                      value={newCategory.icon}
+                      onValueChange={(v) => setNewCategory((prev) => ({ ...prev, icon: v }))}
+                    >
                       <SelectTrigger className="h-9 rounded-xl">
                         <SelectValue />
                       </SelectTrigger>
@@ -248,7 +271,10 @@ const CategoryManager: React.FC = () => {
               <CardContent className="p-3.5 flex items-center justify-between gap-3">
                 <div className="flex items-center gap-3 min-w-0">
                   {/* Bolinha de cor */}
-                  <span className="w-3 h-3 rounded-full shrink-0 border border-black/5" style={{ background: category.color }} />
+                  <span
+                    className="w-3 h-3 rounded-full shrink-0 border border-black/5"
+                    style={{ background: category.color }}
+                  />
                   <div className="min-w-0">
                     <span className="text-[13.5px] font-semibold truncate flex items-center gap-1.5">
                       <Tag className="h-3 w-3 text-muted-foreground hidden sm:inline" />
@@ -265,9 +291,16 @@ const CategoryManager: React.FC = () => {
                               : 'bg-muted'
                         }`}
                       >
-                        {category.defaultType === 'income' ? 'Entrada' : category.defaultType === 'expense' ? 'Saída' : 'Ambos'}
+                        {category.defaultType === 'income'
+                          ? 'Entrada'
+                          : category.defaultType === 'expense'
+                            ? 'Saída'
+                            : 'Ambos'}
                       </Badge>
-                      <Badge variant="secondary" className="rounded-full bg-muted text-muted-foreground text-[11px] font-normal">
+                      <Badge
+                        variant="secondary"
+                        className="rounded-full bg-muted text-muted-foreground text-[11px] font-normal"
+                      >
                         {getCategoryUsageCount(category.id)} transações
                       </Badge>
                     </div>
@@ -279,10 +312,20 @@ const CategoryManager: React.FC = () => {
                   {deletingId === category.id ? (
                     <div className="flex items-center gap-1.5">
                       <span className="text-xs font-medium mr-1">Excluir?</span>
-                      <Button size="sm" variant="destructive" onClick={() => handleConfirmDelete(category.id)} className="h-7 px-2.5 rounded-lg text-xs">
+                      <Button
+                        size="sm"
+                        variant="destructive"
+                        onClick={() => handleConfirmDelete(category.id)}
+                        className="h-7 px-2.5 rounded-lg text-xs"
+                      >
                         Sim
                       </Button>
-                      <Button size="sm" variant="outline" onClick={() => setDeletingId(null)} className="h-7 px-2.5 rounded-lg text-xs">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => setDeletingId(null)}
+                        className="h-7 px-2.5 rounded-lg text-xs"
+                      >
                         Não
                       </Button>
                     </div>
@@ -312,7 +355,9 @@ const CategoryManager: React.FC = () => {
               <Tags className="h-5 w-5" />
             </span>
             <p className="text-sm font-semibold">Nenhuma categoria ainda</p>
-            <p className="mt-1 text-xs text-muted-foreground">Clique em “Nova categoria” para começar.</p>
+            <p className="mt-1 text-xs text-muted-foreground">
+              Clique em “Nova categoria” para começar.
+            </p>
           </CardContent>
         </Card>
       )}

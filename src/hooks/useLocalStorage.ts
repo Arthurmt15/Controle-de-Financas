@@ -50,19 +50,21 @@ export function useLocalStorage<T>(
   const setValue = useCallback(
     (value: T | ((val: T) => T)) => {
       try {
-        // Permite que o valor seja uma função (como useState)
-        const valueToStore = value instanceof Function ? value(storedValue) : value;
-        
-        // Atualiza o estado
-        setStoredValue(valueToStore);
-        
-        // Atualiza o localStorage
-        window.localStorage.setItem(key, JSON.stringify(valueToStore));
+        // Usa updater funcional para evitar stale closure em storedValue
+        setStoredValue((prev) => {
+          const valueToStore = value instanceof Function ? (value as (val: T) => T)(prev) : value;
+          try {
+            window.localStorage.setItem(key, JSON.stringify(valueToStore));
+          } catch (innerError) {
+            console.error(`Erro ao salvar no localStorage para a chave "${key}":`, innerError);
+          }
+          return valueToStore;
+        });
       } catch (error) {
         console.error(`Erro ao salvar no localStorage para a chave "${key}":`, error);
       }
     },
-    [key, storedValue]
+    [key]
   );
 
   /**

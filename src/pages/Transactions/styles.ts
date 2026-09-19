@@ -39,10 +39,8 @@ export const Tab = styled.button<{ $isActive: boolean }>`
   padding: 12px 20px;
   border: none;
   border-radius: ${({ theme }) => theme.borderRadius};
-  background-color: ${({ $isActive, theme }) =>
-    $isActive ? theme.colors.primary : 'transparent'};
-  color: ${({ $isActive, theme }) =>
-    $isActive ? 'white' : theme.colors.text};
+  background-color: ${({ $isActive, theme }) => ($isActive ? theme.colors.primary : 'transparent')};
+  color: ${({ $isActive, theme }) => ($isActive ? 'white' : theme.colors.text)};
   font-size: 14px;
   font-weight: 500;
   cursor: pointer;

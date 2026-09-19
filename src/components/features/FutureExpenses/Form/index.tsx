@@ -69,7 +69,8 @@ const FutureExpenseForm: React.FC<FutureExpenseFormProps> = ({ expense = null, o
     e.preventDefault();
     const newErrors: Record<string, string> = {};
     if (!formData.description.trim()) newErrors.description = 'Descrição é obrigatória';
-    if (!formData.amount || parseFloat(formData.amount) <= 0) newErrors.amount = 'Valor deve ser maior que 0';
+    if (!formData.amount || parseFloat(formData.amount) <= 0)
+      newErrors.amount = 'Valor deve ser maior que 0';
     if (!formData.categoryId) newErrors.categoryId = 'Categoria é obrigatória';
     if (!formData.expectedDate) newErrors.expectedDate = 'Data prevista é obrigatória';
     if (Object.keys(newErrors).length > 0) {
@@ -104,7 +105,9 @@ const FutureExpenseForm: React.FC<FutureExpenseFormProps> = ({ expense = null, o
     }
   };
 
-  const expenseCategories = categories.filter((cat) => cat.defaultType === 'expense' || cat.defaultType === 'both');
+  const expenseCategories = categories.filter(
+    (cat) => cat.defaultType === 'expense' || cat.defaultType === 'both'
+  );
 
   return (
     <form onSubmit={handleSubmit} className="space-y-5">
@@ -113,7 +116,9 @@ const FutureExpenseForm: React.FC<FutureExpenseFormProps> = ({ expense = null, o
         <span className="p-2 rounded-xl bg-primary/10 text-primary">
           <Calculator className="h-4 w-4" />
         </span>
-        <h3 className="text-base font-semibold tracking-tight">{expense ? 'Editar Despesa Futura' : 'Nova Despesa Futura'}</h3>
+        <h3 className="text-base font-semibold tracking-tight">
+          {expense ? 'Editar Despesa Futura' : 'Nova Despesa Futura'}
+        </h3>
       </div>
 
       <div className="grid gap-4">
@@ -177,14 +182,19 @@ const FutureExpenseForm: React.FC<FutureExpenseFormProps> = ({ expense = null, o
               {expenseCategories.map((cat) => (
                 <SelectItem key={cat.id} value={cat.id}>
                   <span className="flex items-center gap-2">
-                    <span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: cat.color }} />
+                    <span
+                      className="h-2.5 w-2.5 rounded-full"
+                      style={{ backgroundColor: cat.color }}
+                    />
                     {cat.name}
                   </span>
                 </SelectItem>
               ))}
             </SelectContent>
           </Select>
-          {errors.categoryId && <p className="text-xs font-medium text-red-500">{errors.categoryId}</p>}
+          {errors.categoryId && (
+            <p className="text-xs font-medium text-red-500">{errors.categoryId}</p>
+          )}
         </div>
 
         {/* Observações */}

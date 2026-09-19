@@ -31,7 +31,9 @@ export const budgetService = {
   },
 
   async create(budget: Omit<Budget, 'id'>): Promise<Budget> {
-    const { data: { user } } = await supabase.auth.getUser();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
     if (!user) throw new Error('Não autenticado');
 
     const id = crypto.randomUUID();
@@ -53,10 +55,7 @@ export const budgetService = {
   },
 
   async delete(id: string): Promise<void> {
-    const { error } = await supabase
-      .from('budgets')
-      .delete()
-      .eq('id', id);
+    const { error } = await supabase.from('budgets').delete().eq('id', id);
 
     if (error) throw error;
   },

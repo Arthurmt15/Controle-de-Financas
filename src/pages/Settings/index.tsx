@@ -31,7 +31,11 @@ const SettingsPage: React.FC = () => {
   return (
     <div className="w-full max-w-[1200px] mx-auto px-4 sm:px-6 py-6">
       {/* Cabeçalho com gradiente */}
-      <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.45 }}>
+      <motion.div
+        initial={{ opacity: 0, y: 8 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.45 }}
+      >
         <div className="flex items-center gap-3 mb-2">
           <span className="w-9 h-9 rounded-xl bg-primary/10 text-primary flex items-center justify-center border border-primary/10">
             <Settings2 className="h-4.5 w-4.5" size={18} />
@@ -46,7 +50,12 @@ const SettingsPage: React.FC = () => {
       </motion.div>
 
       {/* Navegação por abas — Card com Buttons */}
-      <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.08, duration: 0.45 }} className="mt-5">
+      <motion.div
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.08, duration: 0.45 }}
+        className="mt-5"
+      >
         <Card className="rounded-2xl">
           <CardContent className="p-1.5 sm:p-2 flex gap-1.5 overflow-x-auto">
             {TABS.map((tab) => {
@@ -79,7 +88,12 @@ const SettingsPage: React.FC = () => {
       </motion.div>
 
       {/* Conteúdo animado da aba */}
-      <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.12, duration: 0.4 }} className="mt-4">
+      <motion.div
+        initial={{ opacity: 0, y: 8 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.12, duration: 0.4 }}
+        className="mt-4"
+      >
         <Card className="rounded-2xl shadow-sm">
           <CardContent className="p-5 sm:p-6">
             <AnimatePresence mode="wait">

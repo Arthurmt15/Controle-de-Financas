@@ -13,8 +13,10 @@ export const stripeByTone: Record<string, string> = {
   slate: 'linear-gradient(180deg,#64748b,#475569)',
 };
 export const iconToneClass: Record<string, string> = {
-  emerald: 'bg-emerald-50 border-emerald-100 text-emerald-600 dark:bg-emerald-500/10 dark:border-transparent',
+  emerald:
+    'bg-emerald-50 border-emerald-100 text-emerald-600 dark:bg-emerald-500/10 dark:border-transparent',
   rose: 'bg-rose-50 border-rose-100 text-rose-600 dark:bg-rose-500/10 dark:border-transparent',
-  violet: 'bg-violet-50 border-violet-100 text-violet-600 dark:bg-violet-500/10 dark:border-transparent',
+  violet:
+    'bg-violet-50 border-violet-100 text-violet-600 dark:bg-violet-500/10 dark:border-transparent',
   slate: 'bg-slate-50 border-slate-200 text-slate-600 dark:bg-slate-500/10 dark:border-transparent',
 };

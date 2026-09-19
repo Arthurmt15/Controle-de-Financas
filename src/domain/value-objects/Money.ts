@@ -13,8 +13,12 @@ export class Money {
   }
 
   /** Valor bruto */
-  get amount(): number { return this._amount; }
-  get currency(): string { return this._currency; }
+  get amount(): number {
+    return this._amount;
+  }
+  get currency(): string {
+    return this._currency;
+  }
 
   /** Soma, retorna novo Money (imutável) */
   add(other: Money): Money {
@@ -35,7 +39,9 @@ export class Money {
 
   /** Formata para BRL */
   format(): string {
-    return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: this._currency }).format(this._amount);
+    return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: this._currency }).format(
+      this._amount
+    );
   }
 
   private assertSameCurrency(other: Money): void {

@@ -211,84 +211,97 @@ const TransactionChat: React.FC = () => {
 
     // 1b. Se for dúvida/pergunta clara, não tenta parsear como transação (evita "duvida de 2000" virar compra)
     const lowerForDoubt = text.toLowerCase();
-    const isDoubtLike = /d[uú]vida|\?|posso\b|vale a pena|como\b.*\?|quanto posso|me ajuda|me explica|estou com uma d/.test(lowerForDoubt) && !/\b(comprei|paguei|gastei|mercado|supermercado|recebi|parcelado)\b/.test(lowerForDoubt);
+    const isDoubtLike =
+      /d[uú]vida|\?|posso\b|vale a pena|como\b.*\?|quanto posso|me ajuda|me explica|estou com uma d/.test(
+        lowerForDoubt
+      ) && !/\b(comprei|paguei|gastei|mercado|supermercado|recebi|parcelado)\b/.test(lowerForDoubt);
     if (isDoubtLike) {
       // vai direto para IA (pula parse de transação)
     } else {
-    // 2. Tentar parsear como transação simples
-    const parsed = parseTransactionFromMessage(text);
-    if (parsed) {
-      let matchCat = categories.find((c) => c.name.toLowerCase() === parsed.categoria.toLowerCase());
-      if (!matchCat) {
-        matchCat = categories.find((c) => c.name.toLowerCase() === 'outros') || categories[0];
-      }
-      if (matchCat) {
-        const installmentCount = parsed.parcelas || 0;
-        const isDivided = /\b(dividid[ao]|d[ií]vida|racha|compartilhad[ao])\b/i.test(text);
-        const perInstallment = installmentCount > 0 ? parsed.valor / installmentCount : parsed.valor;
-        const installmentLabel = installmentCount > 0 ? `1/${installmentCount}` : '';
-        const descriptionWithInstallment = installmentLabel ? `${parsed.descricao} ${installmentLabel}` : parsed.descricao;
-        const transactionData: Omit<Transaction, 'id'> = {
-          description: descriptionWithInstallment + (isDivided ? ' [Dividida]' : ''),
-          amount: perInstallment,
-          type: parsed.tipo === 'despesa' ? 'expense' : 'income',
-          date: new Date(parsed.data + 'T12:00:00').toISOString(),
-          categoryId: matchCat.id,
-          notes: installmentCount > 0 ? `Parcelado em ${installmentCount}x - Total R$ ${parsed.valor.toFixed(2).replace('.', ',')}` : '',
-        };
-        await addTransaction(transactionData);
-        if (installmentCount > 0) {
-          try {
-            await addInstallment({
-              description: parsed.descricao,
-              totalAmount: parsed.valor,
-              installmentAmount: perInstallment,
-              totalInstallments: installmentCount,
-              currentInstallment: 1,
-              startDate: parsed.data,
-              categoryId: matchCat.id,
-              notes: `Criado via chat - Total R$ ${parsed.valor.toFixed(2).replace('.', ',')} em ${installmentCount}x`,
-              source: 'manual',
-            });
-          } catch (installmentError) {
-            console.error('Transação criada, mas falhou ao criar parcelado:', installmentError);
-          }
-        }
-        // Se mencionar dívida/dividida no chat, cria também em Dívidas (mesma lógica de parcelados)
-        if (isDivided) {
-          try {
-            const parcels = installmentCount > 1 ? installmentCount : 1;
-            await addDebt({
-              description: parsed.descricao,
-              totalAmount: parsed.valor,
-              installmentAmount: parsed.valor / parcels,
-              totalInstallments: parcels,
-              currentInstallment: parcels > 1 ? 1 : 0,
-              startDate: parsed.data,
-              categoryId: matchCat.id,
-              notes: `Criado via chat (dívida dividida) - Total R$ ${parsed.valor.toFixed(2).replace('.', ',')} ${parcels > 1 ? `em ${parcels}x` : 'à vista'}`,
-              source: 'manual',
-            });
-          } catch (debtError) {
-            console.error('Transação criada, mas falhou ao criar dívida:', debtError);
-          }
-        }
-        addMessage(
-          ` Transação registrada!\n` +
-            ` ${transactionData.description}\n` +
-            ` R$ ${transactionData.amount.toFixed(2).replace('.', ',')}\n` +
-            ` ${formatDateBR(transactionData.date)}\n` +
-            ` ${matchCat.name}` +
-            (installmentCount > 0
-              ? `\n Total: R$ ${parsed.valor.toFixed(2).replace('.', ',')} (${installmentCount}x)\n Parcelado criado em "Parcelados" (${installmentCount}x de R$ ${perInstallment.toFixed(2).replace('.', ',')})`
-              : '') +
-            (isDivided ? `\n Dívida criada em "Dívidas" (${installmentCount > 1 ? `${installmentCount}x` : 'à vista'})` : ''),
-          false
+      // 2. Tentar parsear como transação simples
+      const parsed = parseTransactionFromMessage(text);
+      if (parsed) {
+        let matchCat = categories.find(
+          (c) => c.name.toLowerCase() === parsed.categoria.toLowerCase()
         );
-        setIsProcessing(false);
-        return;
+        if (!matchCat) {
+          matchCat = categories.find((c) => c.name.toLowerCase() === 'outros') || categories[0];
+        }
+        if (matchCat) {
+          const installmentCount = parsed.parcelas || 0;
+          const isDivided = /\b(dividid[ao]|d[ií]vida|racha|compartilhad[ao])\b/i.test(text);
+          const perInstallment =
+            installmentCount > 0 ? parsed.valor / installmentCount : parsed.valor;
+          const installmentLabel = installmentCount > 0 ? `1/${installmentCount}` : '';
+          const descriptionWithInstallment = installmentLabel
+            ? `${parsed.descricao} ${installmentLabel}`
+            : parsed.descricao;
+          const transactionData: Omit<Transaction, 'id'> = {
+            description: descriptionWithInstallment + (isDivided ? ' [Dividida]' : ''),
+            amount: perInstallment,
+            type: parsed.tipo === 'despesa' ? 'expense' : 'income',
+            date: new Date(parsed.data + 'T12:00:00').toISOString(),
+            categoryId: matchCat.id,
+            notes:
+              installmentCount > 0
+                ? `Parcelado em ${installmentCount}x - Total R$ ${parsed.valor.toFixed(2).replace('.', ',')}`
+                : '',
+          };
+          await addTransaction(transactionData);
+          if (installmentCount > 0) {
+            try {
+              await addInstallment({
+                description: parsed.descricao,
+                totalAmount: parsed.valor,
+                installmentAmount: perInstallment,
+                totalInstallments: installmentCount,
+                currentInstallment: 1,
+                startDate: parsed.data,
+                categoryId: matchCat.id,
+                notes: `Criado via chat - Total R$ ${parsed.valor.toFixed(2).replace('.', ',')} em ${installmentCount}x`,
+                source: 'manual',
+              });
+            } catch (installmentError) {
+              console.error('Transação criada, mas falhou ao criar parcelado:', installmentError);
+            }
+          }
+          // Se mencionar dívida/dividida no chat, cria também em Dívidas (mesma lógica de parcelados)
+          if (isDivided) {
+            try {
+              const parcels = installmentCount > 1 ? installmentCount : 1;
+              await addDebt({
+                description: parsed.descricao,
+                totalAmount: parsed.valor,
+                installmentAmount: parsed.valor / parcels,
+                totalInstallments: parcels,
+                currentInstallment: parcels > 1 ? 1 : 0,
+                startDate: parsed.data,
+                categoryId: matchCat.id,
+                notes: `Criado via chat (dívida dividida) - Total R$ ${parsed.valor.toFixed(2).replace('.', ',')} ${parcels > 1 ? `em ${parcels}x` : 'à vista'}`,
+                source: 'manual',
+              });
+            } catch (debtError) {
+              console.error('Transação criada, mas falhou ao criar dívida:', debtError);
+            }
+          }
+          addMessage(
+            ` Transação registrada!\n` +
+              ` ${transactionData.description}\n` +
+              ` R$ ${transactionData.amount.toFixed(2).replace('.', ',')}\n` +
+              ` ${formatDateBR(transactionData.date)}\n` +
+              ` ${matchCat.name}` +
+              (installmentCount > 0
+                ? `\n Total: R$ ${parsed.valor.toFixed(2).replace('.', ',')} (${installmentCount}x)\n Parcelado criado em "Parcelados" (${installmentCount}x de R$ ${perInstallment.toFixed(2).replace('.', ',')})`
+                : '') +
+              (isDivided
+                ? `\n Dívida criada em "Dívidas" (${installmentCount > 1 ? `${installmentCount}x` : 'à vista'})`
+                : ''),
+            false
+          );
+          setIsProcessing(false);
+          return;
+        }
       }
-    }
     } // fecha else do isDoubtLike — dúvida vai direto para IA abaixo
 
     // 3. Tudo o resto vai para a IA advisor (streaming) — agora dinâmico, com contexto e follow-ups
@@ -315,7 +328,11 @@ const TransactionChat: React.FC = () => {
         updateAiMessage(accumulated);
       }
     } catch {
-      setMessages((prev) => prev.map((m) => (m.id === aiMsg.id ? { ...m, text: 'Erro ao conectar com a IA. Tente novamente.' } : m)));
+      setMessages((prev) =>
+        prev.map((m) =>
+          m.id === aiMsg.id ? { ...m, text: 'Erro ao conectar com a IA. Tente novamente.' } : m
+        )
+      );
     }
     setIsProcessing(false);
   };
@@ -354,10 +371,16 @@ const TransactionChat: React.FC = () => {
   return (
     <div className="flex flex-col h-[560px]">
       {/* Cabeçalho do chat - com CardHeader estilizado */}
-      <CardHeader className="p-4 border-b" style={{ background: `linear-gradient(90deg, ${theme.colors.primary}0d, transparent)` }}>
+      <CardHeader
+        className="p-4 border-b"
+        style={{ background: `linear-gradient(90deg, ${theme.colors.primary}0d, transparent)` }}
+      >
         <div className="flex items-center justify-between gap-2">
           <CardTitle className="text-[14px] font-semibold flex items-center gap-2">
-            <span className="w-7 h-7 rounded-lg text-white flex items-center justify-center" style={{ backgroundColor: theme.colors.primary }}>
+            <span
+              className="w-7 h-7 rounded-lg text-white flex items-center justify-center"
+              style={{ backgroundColor: theme.colors.primary }}
+            >
               <Bot className="h-4 w-4" />
             </span>
             Chat Rápido
@@ -367,7 +390,13 @@ const TransactionChat: React.FC = () => {
             </Badge>
           </CardTitle>
           {messages.length > 1 && (
-            <Button variant="ghost" size="sm" onClick={handleClearChat} className="h-7 rounded-lg gap-1 text-xs text-muted-foreground" title="Limpar histórico">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={handleClearChat}
+              className="h-7 rounded-lg gap-1 text-xs text-muted-foreground"
+              title="Limpar histórico"
+            >
               <Trash2 className="h-3.5 w-3.5" />
               Limpar
             </Button>
@@ -385,46 +414,69 @@ const TransactionChat: React.FC = () => {
       >
         {messages.map((message, idx) => {
           const isTyping = !message.isUser && isProcessing && !message.text;
-          const isStreamingThis = !message.isUser && isProcessing && !!message.text && idx === messages.length - 1;
+          const isStreamingThis =
+            !message.isUser && isProcessing && !!message.text && idx === messages.length - 1;
           return (
-          <motion.div
-            key={message.id}
-            initial={{ opacity: 0, y: 6 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: idx * 0.02, duration: 0.25 }}
-            className={`flex flex-col gap-1 ${message.isUser ? 'items-end' : 'items-start'}`}
-          >
-            {/* Badge de autor */}
-            <span className={`flex items-center gap-1 text-[11px] font-medium ${message.isUser ? '' : 'text-muted-foreground'}`} style={message.isUser ? { color: theme.colors.primary } : undefined}>
-              {message.isUser ? <User className="h-3 w-3" /> : <Bot className="h-3 w-3" />}
-              {message.isUser ? 'Você' : 'Assistente'}
-            </span>
-            {/* Balão — w-fit evita compressão, sem flex */}
-            <div
-              className={`${message.isUser ? 'w-fit max-w-[85%]' : 'w-fit max-w-[88%] min-w-[64px]'} rounded-2xl px-3.5 py-2.5 text-[13.5px] leading-6 shadow-sm break-words [overflow-wrap:anywhere] whitespace-pre-wrap ${
-                message.isUser
-                  ? 'text-white rounded-br-md'
-                  : 'bg-background border text-foreground rounded-bl-md'
-              }`}
-              style={message.isUser ? { backgroundColor: theme.colors.primary } : undefined}
+            <motion.div
+              key={message.id}
+              initial={{ opacity: 0, y: 6 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: idx * 0.02, duration: 0.25 }}
+              className={`flex flex-col gap-1 ${message.isUser ? 'items-end' : 'items-start'}`}
             >
-              {message.isUser ? (
-                <span className="whitespace-pre-wrap break-words [overflow-wrap:anywhere]">{message.text}</span>
-              ) : isTyping ? (
-                <span className="inline-flex items-center justify-center gap-1.5 min-h-[20px] py-0.5">
-                  <span className="w-1.5 h-1.5 rounded-full animate-bounce [animation-delay:-0.3s]" style={{ backgroundColor: theme.colors.primary }} />
-                  <span className="w-1.5 h-1.5 rounded-full animate-bounce [animation-delay:-0.15s]" style={{ backgroundColor: theme.colors.primary }} />
-                  <span className="w-1.5 h-1.5 rounded-full animate-bounce" style={{ backgroundColor: theme.colors.primary }} />
-                </span>
-              ) : (
-                <span className="block [&>strong]:font-semibold">
-                  <span dangerouslySetInnerHTML={{ __html: renderMarkdown(message.text) }} />
-                  {isStreamingThis && <span className="inline-block w-[2px] h-[14px] animate-pulse ml-1 align-text-bottom" style={{ backgroundColor: theme.colors.primary }} aria-hidden />}
-                </span>
-              )}
-            </div>
-            <span className="text-[11px] text-muted-foreground px-1">{formatTime(message.timestamp)}</span>
-          </motion.div>
+              {/* Badge de autor */}
+              <span
+                className={`flex items-center gap-1 text-[11px] font-medium ${message.isUser ? '' : 'text-muted-foreground'}`}
+                style={message.isUser ? { color: theme.colors.primary } : undefined}
+              >
+                {message.isUser ? <User className="h-3 w-3" /> : <Bot className="h-3 w-3" />}
+                {message.isUser ? 'Você' : 'Assistente'}
+              </span>
+              {/* Balão — w-fit evita compressão, sem flex */}
+              <div
+                className={`${message.isUser ? 'w-fit max-w-[85%]' : 'w-fit max-w-[88%] min-w-[64px]'} rounded-2xl px-3.5 py-2.5 text-[13.5px] leading-6 shadow-sm break-words [overflow-wrap:anywhere] whitespace-pre-wrap ${
+                  message.isUser
+                    ? 'text-white rounded-br-md'
+                    : 'bg-background border text-foreground rounded-bl-md'
+                }`}
+                style={message.isUser ? { backgroundColor: theme.colors.primary } : undefined}
+              >
+                {message.isUser ? (
+                  <span className="whitespace-pre-wrap break-words [overflow-wrap:anywhere]">
+                    {message.text}
+                  </span>
+                ) : isTyping ? (
+                  <span className="inline-flex items-center justify-center gap-1.5 min-h-[20px] py-0.5">
+                    <span
+                      className="w-1.5 h-1.5 rounded-full animate-bounce [animation-delay:-0.3s]"
+                      style={{ backgroundColor: theme.colors.primary }}
+                    />
+                    <span
+                      className="w-1.5 h-1.5 rounded-full animate-bounce [animation-delay:-0.15s]"
+                      style={{ backgroundColor: theme.colors.primary }}
+                    />
+                    <span
+                      className="w-1.5 h-1.5 rounded-full animate-bounce"
+                      style={{ backgroundColor: theme.colors.primary }}
+                    />
+                  </span>
+                ) : (
+                  <span className="block [&>strong]:font-semibold">
+                    <span dangerouslySetInnerHTML={{ __html: renderMarkdown(message.text) }} />
+                    {isStreamingThis && (
+                      <span
+                        className="inline-block w-[2px] h-[14px] animate-pulse ml-1 align-text-bottom"
+                        style={{ backgroundColor: theme.colors.primary }}
+                        aria-hidden
+                      />
+                    )}
+                  </span>
+                )}
+              </div>
+              <span className="text-[11px] text-muted-foreground px-1">
+                {formatTime(message.timestamp)}
+              </span>
+            </motion.div>
           );
         })}
         <div ref={messagesEndRef} />
@@ -443,21 +495,37 @@ const TransactionChat: React.FC = () => {
               handleSend();
             }
           }}
-          placeholder="Digite &quot;almoço 25&quot; ou pergunte à IA..."
+          placeholder='Digite "almoço 25" ou pergunte à IA...'
           disabled={isProcessing}
           aria-label="Digite sua mensagem"
           className="flex-1 h-9 rounded-xl"
         />
 
-        <Button onClick={handleSend} disabled={!inputValue.trim() || isProcessing} size="icon" className="h-9 w-9 rounded-xl shrink-0 text-white hover:opacity-90" style={{ backgroundColor: theme.colors.primary }} aria-label="Enviar mensagem">
+        <Button
+          onClick={handleSend}
+          disabled={!inputValue.trim() || isProcessing}
+          size="icon"
+          className="h-9 w-9 rounded-xl shrink-0 text-white hover:opacity-90"
+          style={{ backgroundColor: theme.colors.primary }}
+          aria-label="Enviar mensagem"
+        >
           <Send className="h-4 w-4" />
         </Button>
       </div>
 
       {/* Sugestões dinâmicas — aparecem após resposta da IA para manter conversa fluida */}
       {dynamicFollowUps.length > 0 && (
-        <div className="px-3 py-2.5 border-t" style={{ backgroundColor: `${theme.colors.primary}0a`, borderColor: `${theme.colors.primary}14` }}>
-          <p className="text-[11px] font-semibold tracking-widest uppercase mb-1.5 flex items-center gap-1" style={{ color: theme.colors.primary }}>
+        <div
+          className="px-3 py-2.5 border-t"
+          style={{
+            backgroundColor: `${theme.colors.primary}0a`,
+            borderColor: `${theme.colors.primary}14`,
+          }}
+        >
+          <p
+            className="text-[11px] font-semibold tracking-widest uppercase mb-1.5 flex items-center gap-1"
+            style={{ color: theme.colors.primary }}
+          >
             <Sparkles className="h-3 w-3" /> Continue a conversa
           </p>
           <div className="flex flex-wrap gap-1.5">
@@ -467,8 +535,16 @@ const TransactionChat: React.FC = () => {
                 variant="outline"
                 className="rounded-full px-2.5 py-1 text-xs font-medium cursor-pointer bg-card hover:text-white transition-colors"
                 style={{ borderColor: `${theme.colors.primary}30` } as any}
-                onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.backgroundColor = theme.colors.primary; (e.currentTarget as HTMLElement).style.borderColor = theme.colors.primary; (e.currentTarget as HTMLElement).style.color = 'white'; }}
-                onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.backgroundColor = ''; (e.currentTarget as HTMLElement).style.borderColor = `${theme.colors.primary}30`; (e.currentTarget as HTMLElement).style.color = ''; }}
+                onMouseEnter={(e) => {
+                  (e.currentTarget as HTMLElement).style.backgroundColor = theme.colors.primary;
+                  (e.currentTarget as HTMLElement).style.borderColor = theme.colors.primary;
+                  (e.currentTarget as HTMLElement).style.color = 'white';
+                }}
+                onMouseLeave={(e) => {
+                  (e.currentTarget as HTMLElement).style.backgroundColor = '';
+                  (e.currentTarget as HTMLElement).style.borderColor = `${theme.colors.primary}30`;
+                  (e.currentTarget as HTMLElement).style.color = '';
+                }}
                 onClick={() => handleExampleClick(s)}
               >
                 {s}

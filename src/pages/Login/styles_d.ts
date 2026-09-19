@@ -8,7 +8,11 @@ export const LoginButton = styled.button`
   height: 54px;
   border: none;
   border-radius: 9px;
-  background: linear-gradient(90deg, ${({ theme }) => theme.colors.primaryHover}, ${({ theme }) => theme.colors.primary});
+  background: linear-gradient(
+    90deg,
+    ${({ theme }) => theme.colors.primaryHover},
+    ${({ theme }) => theme.colors.primary}
+  );
   color: white;
   font-size: 15px;
   font-weight: 600;

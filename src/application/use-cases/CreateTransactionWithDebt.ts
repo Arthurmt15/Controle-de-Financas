@@ -1,15 +1,18 @@
 import type { Transaction, Debt } from '../../types';
 import { InstallmentPlan } from '../../domain/value-objects/InstallmentPlan';
-import type { ITransactionRepository, IDebtRepository } from '../../domain/repositories/IRepository';
+import type {
+  ITransactionRepository,
+  IDebtRepository,
+} from '../../domain/repositories/IRepository';
 
 export class CreateTransactionWithDebt {
   constructor(
     private readonly txRepo: ITransactionRepository,
-    private readonly debtRepo: IDebtRepository,
+    private readonly debtRepo: IDebtRepository
   ) {}
   async execute(
     tx: Omit<Transaction, 'id'>,
-    debtOpt?: { totalInstallments: number },
+    debtOpt?: { totalInstallments: number }
   ): Promise<{ transaction: Transaction; debt: Debt | null }> {
     const transaction = await this.txRepo.create(tx);
     let debt: Debt | null = null;

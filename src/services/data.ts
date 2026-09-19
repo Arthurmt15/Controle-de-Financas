@@ -11,7 +11,15 @@ import * as legacyRecurring from './supabase/recurringBills';
 import * as legacyBudget from './supabase/budgets';
 import * as legacyFuture from './supabase/futureExpenses';
 import * as legacyAuth from './supabase/auth';
-import type { Transaction, Category, RecurringBill, Installment, Debt, EmergencyReserve, FutureExpense } from '../types';
+import type {
+  Transaction,
+  Category,
+  RecurringBill,
+  Installment,
+  Debt,
+  EmergencyReserve,
+  FutureExpense,
+} from '../types';
 import type { Budget } from '../types/dashboard';
 
 // Re-exporta OOP para novos fluxos (parcelado)
@@ -22,8 +30,10 @@ export { Money } from '../domain/value-objects/Money';
 export { InstallmentPlan } from '../domain/value-objects/InstallmentPlan';
 
 export const transactionService = {
-  getAll: (userId: string, page?: number, limit?: number) => financeService.listTransactions(page, limit),
-  create: (transaction: Omit<Transaction, 'id'>, userId: string) => financeService.createTransaction(transaction),
+  getAll: (userId: string, page?: number, limit?: number) =>
+    financeService.listTransactions(page, limit),
+  create: (transaction: Omit<Transaction, 'id'>, userId: string) =>
+    financeService.createTransaction(transaction),
   createParcelled: (tx: Omit<Transaction, 'id'>, totalInstallments: number) =>
     financeService.createParcelledTransaction(tx, totalInstallments),
   update: (transaction: Transaction) => financeService.updateTransaction(transaction),
@@ -32,13 +42,15 @@ export const transactionService = {
 
 export const categoryService = {
   getAll: (userId: string) => legacyCategory.categoryService.getAll(),
-  create: (category: Omit<Category, 'id'>, userId: string) => legacyCategory.categoryService.create(category),
+  create: (category: Omit<Category, 'id'>, userId: string) =>
+    legacyCategory.categoryService.create(category),
   delete: (id: string) => legacyCategory.categoryService.delete(id),
 };
 
 export const recurringBillService = {
   getAll: (userId: string) => legacyRecurring.recurringBillService.getAll(),
-  create: (bill: Omit<RecurringBill, 'id'>, userId: string) => legacyRecurring.recurringBillService.create(bill),
+  create: (bill: Omit<RecurringBill, 'id'>, userId: string) =>
+    legacyRecurring.recurringBillService.create(bill),
   update: (bill: RecurringBill) => legacyRecurring.recurringBillService.update(bill),
   delete: (id: string) => legacyRecurring.recurringBillService.delete(id),
   generate: (userId: string) => legacyRecurring.recurringBillService.generate(),
@@ -52,7 +64,8 @@ export const budgetService = {
 
 export const installmentService = {
   getAll: (userId: string) => financeService.listInstallments(),
-  create: (installment: Omit<Installment, 'id'>, userId: string) => financeService.createInstallment(installment),
+  create: (installment: Omit<Installment, 'id'>, userId: string) =>
+    financeService.createInstallment(installment),
   update: (installment: Installment) => financeService.updateInstallment(installment),
   delete: (id: string) => financeService.deleteInstallment(id),
   advance: (id: string) => financeService.advanceInstallment(id),
@@ -61,7 +74,8 @@ export const installmentService = {
 export const debtService = {
   getAll: (userId: string) => financeService.listDebts(),
   create: (debt: Omit<Debt, 'id'>, userId: string) => financeService.createDebt(debt),
-  createDivided: (tx: Omit<Transaction, 'id'>, totalInstallments: number) => financeService.createDividedTransaction(tx, totalInstallments),
+  createDivided: (tx: Omit<Transaction, 'id'>, totalInstallments: number) =>
+    financeService.createDividedTransaction(tx, totalInstallments),
   createSingle: (tx: Omit<Transaction, 'id'>) => financeService.createDividedTransaction(tx, 1),
   update: (debt: Debt) => financeService.updateDebt(debt),
   delete: (id: string) => financeService.deleteDebt(id),
@@ -81,7 +95,8 @@ export const emergencyReserveService = {
 
 export const futureExpenseService = {
   getAll: (userId: string) => legacyFuture.futureExpenseService.getAll(),
-  create: (expense: Omit<FutureExpense, 'id'>, userId: string) => legacyFuture.futureExpenseService.create(expense),
+  create: (expense: Omit<FutureExpense, 'id'>, userId: string) =>
+    legacyFuture.futureExpenseService.create(expense),
   update: (expense: FutureExpense) => legacyFuture.futureExpenseService.update(expense),
   delete: (id: string) => legacyFuture.futureExpenseService.delete(id),
   markAsPaid: (id: string) => legacyFuture.futureExpenseService.markAsPaid(id),
@@ -94,7 +109,12 @@ export const authService = {
   getUser: (..._args: unknown[]) => legacyAuth.authService.getUser(),
   onAuthStateChange: (callback: (user: import('../types').User | null) => void) =>
     legacyAuth.authService.onAuthStateChange(callback),
-  createOrFind: async (user: { googleId: string; name: string; email: string; avatar?: string }) => {
+  createOrFind: async (user: {
+    googleId: string;
+    name: string;
+    email: string;
+    avatar?: string;
+  }) => {
     const supabaseUser = await legacyAuth.authService.getUser();
     return supabaseUser;
   },

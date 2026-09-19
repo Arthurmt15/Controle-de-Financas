@@ -104,7 +104,10 @@ const CategoryBreakdown: React.FC<CategoryBreakdownProps> = ({ transactions, cat
           >
             {/* Nome da categoria com bolinha de cor */}
             <div className="flex items-center gap-2 min-w-0 col-span-2 sm:col-span-1">
-              <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: cat.color }} />
+              <span
+                className="w-2.5 h-2.5 rounded-full shrink-0"
+                style={{ backgroundColor: cat.color }}
+              />
               <span className="text-[13px] font-medium truncate">{cat.name}</span>
             </div>
             {/* Barra de progresso */}
@@ -118,9 +121,13 @@ const CategoryBreakdown: React.FC<CategoryBreakdownProps> = ({ transactions, cat
               />
             </div>
             {/* Valor */}
-            <span className="text-[13px] font-semibold text-right whitespace-nowrap">{formatCurrency(cat.total)}</span>
+            <span className="text-[13px] font-semibold text-right whitespace-nowrap">
+              {formatCurrency(cat.total)}
+            </span>
             {/* Percentual (oculto no mobile) */}
-            <span className="hidden sm:block text-xs text-muted-foreground text-right min-w-[36px]">{cat.percent.toFixed(0)}%</span>
+            <span className="hidden sm:block text-xs text-muted-foreground text-right min-w-[36px]">
+              {cat.percent.toFixed(0)}%
+            </span>
           </motion.div>
         ))}
       </CardContent>

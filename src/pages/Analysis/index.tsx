@@ -6,7 +6,16 @@
 
 import React, { useMemo } from 'react';
 import { motion } from 'framer-motion';
-import { TrendingUp, TrendingDown, Wallet, CalendarRange, BarChart3, Sparkles, ArrowUpRight, ArrowDownRight } from 'lucide-react';
+import {
+  TrendingUp,
+  TrendingDown,
+  Wallet,
+  CalendarRange,
+  BarChart3,
+  Sparkles,
+  ArrowUpRight,
+  ArrowDownRight,
+} from 'lucide-react';
 import { useTransactions } from '../../hooks/useTransactions';
 import { formatCurrency } from '../../utils/formatters';
 import { filterByCurrentMonth, filterByCurrentYear } from '../../utils/transactionFilters';
@@ -14,7 +23,13 @@ import MonthlyComparison from '../../components/features/Analysis/components/Mon
 import SpendingInsights from '../../components/features/Analysis/components/SpendingInsights';
 import CategoryBreakdown from '../../components/features/Analysis/components/CategoryBreakdown';
 import MonthlyChart from '../../components/features/Analysis/components/MonthlyChart';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../../components/ui/card';
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+} from '../../components/ui/card';
 import { Badge } from '../../components/ui/badge';
 import { Button } from '../../components/ui/button';
 import { Bot } from 'lucide-react';
@@ -25,18 +40,61 @@ const AnalysisPage: React.FC = () => {
   const metrics = useMemo(() => {
     const monthly = filterByCurrentMonth(transactions);
     const yearly = filterByCurrentYear(transactions);
-    const monthlyIncome = monthly.filter((t) => t.type === 'income').reduce((s, t) => s + t.amount, 0);
-    const monthlyExpense = monthly.filter((t) => t.type === 'expense').reduce((s, t) => s + t.amount, 0);
-    const yearlyIncome = yearly.filter((t) => t.type === 'income').reduce((s, t) => s + t.amount, 0);
-    const yearlyExpense = yearly.filter((t) => t.type === 'expense').reduce((s, t) => s + t.amount, 0);
-    return { monthlyIncome, monthlyExpense, monthlyBalance: monthlyIncome - monthlyExpense, yearlyBalance: yearlyIncome - yearlyExpense };
+    const monthlyIncome = monthly
+      .filter((t) => t.type === 'income')
+      .reduce((s, t) => s + t.amount, 0);
+    const monthlyExpense = monthly
+      .filter((t) => t.type === 'expense')
+      .reduce((s, t) => s + t.amount, 0);
+    const yearlyIncome = yearly
+      .filter((t) => t.type === 'income')
+      .reduce((s, t) => s + t.amount, 0);
+    const yearlyExpense = yearly
+      .filter((t) => t.type === 'expense')
+      .reduce((s, t) => s + t.amount, 0);
+    return {
+      monthlyIncome,
+      monthlyExpense,
+      monthlyBalance: monthlyIncome - monthlyExpense,
+      yearlyBalance: yearlyIncome - yearlyExpense,
+    };
   }, [transactions]);
 
   const summaryCards = [
-    { key: 'income', tone: 'emerald' as const, icon: TrendingUp, label: 'Entradas do Mês', value: formatCurrency(metrics.monthlyIncome), sub: metrics.monthlyIncome > 0 ? 'Receitas do mês' : 'Sem receitas' },
-    { key: 'expense', tone: 'red' as const, icon: TrendingDown, label: 'Saídas do Mês', value: formatCurrency(metrics.monthlyExpense), sub: metrics.monthlyExpense > 0 ? 'Despesas do mês' : 'Sem despesas' },
-    { key: 'balance', tone: 'violet' as const, icon: Wallet, label: 'Saldo do Mês', value: formatCurrency(metrics.monthlyBalance), sub: metrics.monthlyBalance >= 0 ? 'Saldo positivo' : 'Saldo negativo', positive: metrics.monthlyBalance >= 0 },
-    { key: 'annual', tone: 'slate' as const, icon: CalendarRange, label: 'Saldo Anual', value: formatCurrency(metrics.yearlyBalance), sub: `Ano ${new Date().getFullYear()}`, positive: metrics.yearlyBalance >= 0 },
+    {
+      key: 'income',
+      tone: 'emerald' as const,
+      icon: TrendingUp,
+      label: 'Entradas do Mês',
+      value: formatCurrency(metrics.monthlyIncome),
+      sub: metrics.monthlyIncome > 0 ? 'Receitas do mês' : 'Sem receitas',
+    },
+    {
+      key: 'expense',
+      tone: 'red' as const,
+      icon: TrendingDown,
+      label: 'Saídas do Mês',
+      value: formatCurrency(metrics.monthlyExpense),
+      sub: metrics.monthlyExpense > 0 ? 'Despesas do mês' : 'Sem despesas',
+    },
+    {
+      key: 'balance',
+      tone: 'violet' as const,
+      icon: Wallet,
+      label: 'Saldo do Mês',
+      value: formatCurrency(metrics.monthlyBalance),
+      sub: metrics.monthlyBalance >= 0 ? 'Saldo positivo' : 'Saldo negativo',
+      positive: metrics.monthlyBalance >= 0,
+    },
+    {
+      key: 'annual',
+      tone: 'slate' as const,
+      icon: CalendarRange,
+      label: 'Saldo Anual',
+      value: formatCurrency(metrics.yearlyBalance),
+      sub: `Ano ${new Date().getFullYear()}`,
+      positive: metrics.yearlyBalance >= 0,
+    },
   ];
 
   const accentByTone: Record<string, string> = {
@@ -46,25 +104,37 @@ const AnalysisPage: React.FC = () => {
     slate: 'linear-gradient(180deg,#64748b,#475569)',
   };
   const iconWrapByTone: Record<string, string> = {
-    emerald: 'bg-emerald-50 border-emerald-100 text-emerald-600 dark:bg-emerald-500/10 dark:border-transparent',
+    emerald:
+      'bg-emerald-50 border-emerald-100 text-emerald-600 dark:bg-emerald-500/10 dark:border-transparent',
     red: 'bg-red-50 border-red-100 text-red-600 dark:bg-red-500/10 dark:border-transparent',
-    violet: 'bg-violet-50 border-violet-100 text-violet-600 dark:bg-violet-500/10 dark:border-transparent',
-    slate: 'bg-slate-50 border-slate-200 text-slate-600 dark:bg-slate-500/10 dark:border-transparent',
+    violet:
+      'bg-violet-50 border-violet-100 text-violet-600 dark:bg-violet-500/10 dark:border-transparent',
+    slate:
+      'bg-slate-50 border-slate-200 text-slate-600 dark:bg-slate-500/10 dark:border-transparent',
   };
 
   return (
     <div className="w-full max-w-[1280px] mx-auto px-4 sm:px-6 py-5 sm:py-6">
       {/* HEADER - desktop alinhado à esquerda com badge, mobile centrado */}
-      <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }}>
+      <motion.div
+        initial={{ opacity: 0, y: 8 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4 }}
+      >
         {/* Desktop header */}
         <div className="hidden lg:flex items-end justify-between gap-4">
           <div>
             <h1 className="text-[30px] font-bold tracking-tight leading-none bg-gradient-to-r from-foreground to-muted-foreground bg-clip-text text-transparent">
               Análise
             </h1>
-            <p className="mt-2 text-[13.5px] text-muted-foreground leading-relaxed">Como estão suas finanças e como melhorar</p>
+            <p className="mt-2 text-[13.5px] text-muted-foreground leading-relaxed">
+              Como estão suas finanças e como melhorar
+            </p>
           </div>
-          <Badge variant="outline" className="rounded-full gap-1.5 px-3 py-1.5 bg-card shadow-sm hidden xl:flex">
+          <Badge
+            variant="outline"
+            className="rounded-full gap-1.5 px-3 py-1.5 bg-card shadow-sm hidden xl:flex"
+          >
             <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
             Atualizado agora
           </Badge>
@@ -87,95 +157,163 @@ const AnalysisPage: React.FC = () => {
 
       {/* ================= DESKTOP LAYOUT (lg+) — bento premium (chat agora flutuante) ================= */}
       <div className="hidden lg:flex flex-col gap-5 mt-7">
-          {/* Summary 2x2 desktop — 2 em cima / 2 embaixo */}
-          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.08 }} className="grid grid-cols-2 gap-4">
-            {summaryCards.map((card, idx) => (
-              <motion.div key={card.key} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.08 + idx * 0.04 }}>
-                <Card className="relative overflow-hidden rounded-2xl border bg-card shadow-sm hover:shadow-md transition-all hover:-translate-y-1 min-h-[164px] group">
-                  <span className="absolute left-0 top-0 bottom-0 w-[3.5px] opacity-90 group-hover:opacity-100 transition-opacity" style={{ background: accentByTone[card.tone] }} />
-                  <CardContent className="p-5 pt-6 flex flex-col gap-3">
-                    <div className="flex items-center gap-3">
-                      <span className={`w-10 h-10 shrink-0 flex items-center justify-center rounded-xl border shadow-sm ${iconWrapByTone[card.tone]}`}>
-                        <card.icon size={17} />
-                      </span>
-                      <span className="text-[11px] font-semibold tracking-widest uppercase text-muted-foreground leading-tight">{card.label}</span>
-                    </div>
-                    <div className="space-y-2">
-                      <strong className="block text-[22px] font-bold tracking-tight leading-none">{card.value}</strong>
-                      <span
-                        className={`inline-flex items-center gap-1 text-[11px] font-medium px-2.5 py-1 rounded-full border leading-none ${
-                          card.key === 'balance' || card.key === 'annual'
-                            ? card.positive
-                              ? 'text-emerald-700 bg-emerald-50 border-emerald-100 dark:text-emerald-300 dark:bg-emerald-500/10 dark:border-emerald-500/20'
-                              : 'text-red-700 bg-red-50 border-red-100 dark:text-red-300 dark:bg-red-500/10 dark:border-red-500/20'
-                            : 'text-muted-foreground bg-muted border-transparent'
-                        }`}
-                      >
-                        {(card.key === 'balance' || card.key === 'annual') && (card.positive ? <ArrowUpRight className="h-3 w-3" /> : <ArrowDownRight className="h-3 w-3" />)}
-                        {card.sub}
-                      </span>
-                    </div>
-                  </CardContent>
-                </Card>
-              </motion.div>
-            ))}
-          </motion.div>
+        {/* Summary 2x2 desktop — 2 em cima / 2 embaixo */}
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.08 }}
+          className="grid grid-cols-2 gap-4"
+        >
+          {summaryCards.map((card, idx) => (
+            <motion.div
+              key={card.key}
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.08 + idx * 0.04 }}
+            >
+              <Card className="relative overflow-hidden rounded-2xl border bg-card shadow-sm hover:shadow-md transition-all hover:-translate-y-1 min-h-[164px] group">
+                <span
+                  className="absolute left-0 top-0 bottom-0 w-[3.5px] opacity-90 group-hover:opacity-100 transition-opacity"
+                  style={{ background: accentByTone[card.tone] }}
+                />
+                <CardContent className="p-5 pt-6 flex flex-col gap-3">
+                  <div className="flex items-center gap-3">
+                    <span
+                      className={`w-10 h-10 shrink-0 flex items-center justify-center rounded-xl border shadow-sm ${iconWrapByTone[card.tone]}`}
+                    >
+                      <card.icon size={17} />
+                    </span>
+                    <span className="text-[11px] font-semibold tracking-widest uppercase text-muted-foreground leading-tight">
+                      {card.label}
+                    </span>
+                  </div>
+                  <div className="space-y-2">
+                    <strong className="block text-[22px] font-bold tracking-tight leading-none">
+                      {card.value}
+                    </strong>
+                    <span
+                      className={`inline-flex items-center gap-1 text-[11px] font-medium px-2.5 py-1 rounded-full border leading-none ${
+                        card.key === 'balance' || card.key === 'annual'
+                          ? card.positive
+                            ? 'text-emerald-700 bg-emerald-50 border-emerald-100 dark:text-emerald-300 dark:bg-emerald-500/10 dark:border-emerald-500/20'
+                            : 'text-red-700 bg-red-50 border-red-100 dark:text-red-300 dark:bg-red-500/10 dark:border-red-500/20'
+                          : 'text-muted-foreground bg-muted border-transparent'
+                      }`}
+                    >
+                      {(card.key === 'balance' || card.key === 'annual') &&
+                        (card.positive ? (
+                          <ArrowUpRight className="h-3 w-3" />
+                        ) : (
+                          <ArrowDownRight className="h-3 w-3" />
+                        ))}
+                      {card.sub}
+                    </span>
+                  </div>
+                </CardContent>
+              </Card>
+            </motion.div>
+          ))}
+        </motion.div>
 
-          <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.14 }}>
-            <Card className="rounded-2xl overflow-hidden">
-              <CardHeader className="pb-3">
-                <div className="flex items-center gap-2">
-                  <span className="p-1.5 rounded-lg bg-violet-50 border border-violet-100 text-violet-600 dark:bg-violet-500/10 dark:border-transparent">
-                    <BarChart3 className="h-4 w-4" />
-                  </span>
-                  <CardTitle className="text-[15px] font-semibold">Evolução Mensal</CardTitle>
-                </div>
-                <CardDescription className="text-[13px] mt-1">Últimos 12 meses — entradas vs saídas</CardDescription>
-              </CardHeader>
-              <CardContent className="pt-0">
-                <MonthlyChart transactions={transactions} height={320} />
-              </CardContent>
-            </Card>
-          </motion.div>
-
-          <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.18 }} className="grid grid-cols-2 gap-5">
-            <MonthlyComparison transactions={transactions} />
-            <CategoryBreakdown transactions={transactions} categories={categories} />
-          </motion.div>
-
-          <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.22 }}>
-            <SpendingInsights transactions={transactions} categories={categories} />
-          </motion.div>
-
-          <Card className="rounded-2xl border-dashed bg-gradient-to-r from-violet-500/5 via-primary/5 to-transparent">
-            <CardContent className="p-4 flex items-center gap-3">
-              <span className="w-9 h-9 rounded-xl bg-violet-600 text-white flex items-center justify-center shrink-0"><Bot className="h-5 w-5" /></span>
-              <div className="min-w-0 flex-1">
-                <p className="text-sm font-semibold">Consultor no chat flutuante</p>
-                <p className="text-xs text-muted-foreground">Clique no botão no canto inferior direito — o guia faz tudo que o consultor fazia.</p>
+        <motion.div
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.14 }}
+        >
+          <Card className="rounded-2xl overflow-hidden">
+            <CardHeader className="pb-3">
+              <div className="flex items-center gap-2">
+                <span className="p-1.5 rounded-lg bg-violet-50 border border-violet-100 text-violet-600 dark:bg-violet-500/10 dark:border-transparent">
+                  <BarChart3 className="h-4 w-4" />
+                </span>
+                <CardTitle className="text-[15px] font-semibold">Evolução Mensal</CardTitle>
               </div>
-              <Button size="sm" className="rounded-full shrink-0 bg-violet-600 hover:bg-violet-700" onClick={() => window.dispatchEvent(new CustomEvent('open-floating-chat'))}>Abrir guia</Button>
+              <CardDescription className="text-[13px] mt-1">
+                Últimos 12 meses — entradas vs saídas
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="pt-0">
+              <MonthlyChart transactions={transactions} height={320} />
             </CardContent>
           </Card>
-        </div>
+        </motion.div>
+
+        <motion.div
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.18 }}
+          className="grid grid-cols-2 gap-5"
+        >
+          <MonthlyComparison transactions={transactions} />
+          <CategoryBreakdown transactions={transactions} categories={categories} />
+        </motion.div>
+
+        <motion.div
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.22 }}
+        >
+          <SpendingInsights transactions={transactions} categories={categories} />
+        </motion.div>
+
+        <Card className="rounded-2xl border-dashed bg-gradient-to-r from-violet-500/5 via-primary/5 to-transparent">
+          <CardContent className="p-4 flex items-center gap-3">
+            <span className="w-9 h-9 rounded-xl bg-violet-600 text-white flex items-center justify-center shrink-0">
+              <Bot className="h-5 w-5" />
+            </span>
+            <div className="min-w-0 flex-1">
+              <p className="text-sm font-semibold">Consultor no chat flutuante</p>
+              <p className="text-xs text-muted-foreground">
+                Clique no botão no canto inferior direito — o guia faz tudo que o consultor fazia.
+              </p>
+            </div>
+            <Button
+              size="sm"
+              className="rounded-full shrink-0 bg-violet-600 hover:bg-violet-700"
+              onClick={() => window.dispatchEvent(new CustomEvent('open-floating-chat'))}
+            >
+              Abrir guia
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
 
       {/* ================= MOBILE LAYOUT (base→lg) — stack compacto ================= */}
       <div className="lg:hidden flex flex-col gap-4 mt-6">
         {/* Summary 2x2 mobile — respiro corrigido */}
-        <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.08 }} className="grid grid-cols-2 gap-3.5">
+        <motion.div
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.08 }}
+          className="grid grid-cols-2 gap-3.5"
+        >
           {summaryCards.map((card, idx) => (
-            <motion.div key={card.key} initial={{ opacity: 0, scale: 0.97 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.08 + idx * 0.04 }}>
+            <motion.div
+              key={card.key}
+              initial={{ opacity: 0, scale: 0.97 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ delay: 0.08 + idx * 0.04 }}
+            >
               <Card className="relative overflow-hidden rounded-2xl border bg-card shadow-sm active:scale-[0.98] transition-transform min-h-[138px]">
-                <span className="absolute left-0 top-0 bottom-0 w-[3px]" style={{ background: accentByTone[card.tone] }} />
+                <span
+                  className="absolute left-0 top-0 bottom-0 w-[3px]"
+                  style={{ background: accentByTone[card.tone] }}
+                />
                 <CardContent className="p-4 flex flex-col gap-2.5 h-full">
                   <div className="flex items-center gap-2.5">
-                    <span className={`w-9 h-9 flex items-center justify-center rounded-xl border shadow-sm ${iconWrapByTone[card.tone]}`}>
+                    <span
+                      className={`w-9 h-9 flex items-center justify-center rounded-xl border shadow-sm ${iconWrapByTone[card.tone]}`}
+                    >
                       <card.icon size={15} />
                     </span>
-                    <span className="text-[10.5px] font-semibold tracking-widest uppercase text-muted-foreground leading-tight flex-1">{card.label}</span>
+                    <span className="text-[10.5px] font-semibold tracking-widest uppercase text-muted-foreground leading-tight flex-1">
+                      {card.label}
+                    </span>
                   </div>
                   <div className="mt-1 space-y-1.5">
-                    <strong className="block text-[17px] font-bold tracking-tight leading-none">{card.value}</strong>
+                    <strong className="block text-[17px] font-bold tracking-tight leading-none">
+                      {card.value}
+                    </strong>
                     <span
                       className={`inline-flex text-[10px] font-medium px-2 py-1 rounded-full border leading-none ${
                         card.key === 'balance' || card.key === 'annual'
@@ -195,7 +333,11 @@ const AnalysisPage: React.FC = () => {
         </motion.div>
 
         {/* Evolução — card full-width com chart menor */}
-        <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.14 }}>
+        <motion.div
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.14 }}
+        >
           <Card className="rounded-2xl overflow-hidden">
             <CardHeader className="pb-2 px-4 pt-4">
               <div className="flex items-center gap-2">
@@ -204,7 +346,9 @@ const AnalysisPage: React.FC = () => {
                 </span>
                 <CardTitle className="text-[14px] font-semibold">Evolução Mensal</CardTitle>
               </div>
-              <CardDescription className="text-[12px]">12 meses • entradas vs saídas</CardDescription>
+              <CardDescription className="text-[12px]">
+                12 meses • entradas vs saídas
+              </CardDescription>
             </CardHeader>
             <CardContent className="pt-0 px-2 pb-3">
               <MonthlyChart transactions={transactions} height={220} />
@@ -213,24 +357,47 @@ const AnalysisPage: React.FC = () => {
         </motion.div>
 
         {/* Comparativo + Breakdown empilhados full-width */}
-        <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.16 }}>
+        <motion.div
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.16 }}
+        >
           <MonthlyComparison transactions={transactions} />
         </motion.div>
-        <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.18 }}>
+        <motion.div
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.18 }}
+        >
           <CategoryBreakdown transactions={transactions} categories={categories} />
         </motion.div>
-        <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}>
+        <motion.div
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.2 }}
+        >
           <SpendingInsights transactions={transactions} categories={categories} />
         </motion.div>
 
         <Card className="rounded-2xl border-dashed bg-gradient-to-r from-violet-500/5 via-primary/5 to-transparent">
           <CardContent className="p-4 flex items-center gap-3">
-            <span className="w-9 h-9 rounded-xl bg-violet-600 text-white flex items-center justify-center shrink-0"><Bot className="h-5 w-5" /></span>
+            <span className="w-9 h-9 rounded-xl bg-violet-600 text-white flex items-center justify-center shrink-0">
+              <Bot className="h-5 w-5" />
+            </span>
             <div className="min-w-0 flex-1">
               <p className="text-sm font-semibold">Guia no canto da tela</p>
-              <p className="text-xs text-muted-foreground">Toque no botão flutuante para falar com o guia — mesmo consultor, agora sempre visível.</p>
+              <p className="text-xs text-muted-foreground">
+                Toque no botão flutuante para falar com o guia — mesmo consultor, agora sempre
+                visível.
+              </p>
             </div>
-            <Button size="sm" className="rounded-full shrink-0 bg-violet-600 hover:bg-violet-700" onClick={() => window.dispatchEvent(new CustomEvent('open-floating-chat'))}>Abrir</Button>
+            <Button
+              size="sm"
+              className="rounded-full shrink-0 bg-violet-600 hover:bg-violet-700"
+              onClick={() => window.dispatchEvent(new CustomEvent('open-floating-chat'))}
+            >
+              Abrir
+            </Button>
           </CardContent>
         </Card>
       </div>

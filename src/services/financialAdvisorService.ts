@@ -13,10 +13,7 @@ interface ChatMessage {
 }
 
 /** Constrói um resumo textual dos dados financeiros do usuário para enviar como contexto ao modelo de IA. */
-export function buildFinancialContext(
-  transactions: Transaction[],
-  categories: Category[]
-): string {
+export function buildFinancialContext(transactions: Transaction[], categories: Category[]): string {
   const now = new Date();
   const currentMonth = now.getMonth();
   const currentYear = now.getFullYear();
@@ -58,8 +55,18 @@ export function buildFinancialContext(
     .join('\n');
 
   const monthNames = [
-    'Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun',
-    'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez',
+    'Jan',
+    'Fev',
+    'Mar',
+    'Abr',
+    'Mai',
+    'Jun',
+    'Jul',
+    'Ago',
+    'Set',
+    'Out',
+    'Nov',
+    'Dez',
   ];
   const last3Months: string[] = [];
   for (let i = 0; i < 3; i++) {
@@ -109,20 +116,23 @@ export async function* streamAdvisor(
   financialContext: string,
   history: ChatMessage[]
 ): AsyncGenerator<string> {
-  const { data: { session } } = await supabase.auth.getSession();
+  const {
+    data: { session },
+  } = await supabase.auth.getSession();
   const url = `${process.env.REACT_APP_SUPABASE_URL}/functions/v1/ai-chat`;
-  
+
   const response = await fetch(url, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      'Authorization': `Bearer ${session?.access_token || ''}`,
-      'apikey': process.env.REACT_APP_SUPABASE_ANON_KEY || '',
+      Authorization: `Bearer ${session?.access_token || ''}`,
+      apikey: process.env.REACT_APP_SUPABASE_ANON_KEY || '',
     },
-    body: JSON.stringify({ messages: [
-      {
-        role: 'system',
-        content: `Você é um consultor financeiro pessoal experiente e direto. Analise os dados reais do usuário abaixo para dar conselhos personalizados.
+    body: JSON.stringify({
+      messages: [
+        {
+          role: 'system',
+          content: `Você é um consultor financeiro pessoal experiente e direto. Analise os dados reais do usuário abaixo para dar conselhos personalizados.
 
 DADOS FINANCEIROS DO USUÁRIO:
 ${financialContext || 'Nenhum dado financeiro disponível'}
@@ -136,10 +146,11 @@ REGRAS:
 - Se não tiver dados suficientes, peça mais informações
 - Formatando: use **negrito** para valores e listas para recomendações
 - Máximo de 200 palavras por resposta`,
-      },
-      ...history,
-      { role: 'user', content: userMessage },
-    ]}),
+        },
+        ...history,
+        { role: 'user', content: userMessage },
+      ],
+    }),
   });
 
   if (!response.ok) {

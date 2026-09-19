@@ -51,7 +51,11 @@ export const Logo = styled.div`
   align-items: center;
   justify-content: center;
   border-radius: 18px;
-  background: linear-gradient(145deg, ${({ theme }) => theme.colors.primary}, ${({ theme }) => theme.colors.secondary});
+  background: linear-gradient(
+    145deg,
+    ${({ theme }) => theme.colors.primary},
+    ${({ theme }) => theme.colors.secondary}
+  );
   box-shadow: 0 0 35px ${({ theme }) => `${theme.colors.primary}59`};
   margin-bottom: 35px;
 `;
@@ -80,7 +84,11 @@ export const HeroTitle = styled.h1`
  * Texto com gradiente
  */
 export const GradientText = styled.strong`
-  background: linear-gradient(90deg, ${({ theme }) => theme.colors.secondary}, ${({ theme }) => theme.colors.info});
+  background: linear-gradient(
+    90deg,
+    ${({ theme }) => theme.colors.secondary},
+    ${({ theme }) => theme.colors.info}
+  );
   background-clip: text;
   -webkit-background-clip: text;
   color: transparent;

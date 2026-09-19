@@ -62,7 +62,9 @@ export const futureExpenseService = {
 
   /** Cria uma nova despesa futura */
   async create(expense: Omit<FutureExpense, 'id'>): Promise<FutureExpense> {
-    const { data: { user } } = await supabase.auth.getUser();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
     if (!user) throw new Error('Não autenticado');
 
     const id = crypto.randomUUID();
@@ -108,10 +110,7 @@ export const futureExpenseService = {
 
   /** Remove uma despesa futura */
   async delete(id: string): Promise<void> {
-    const { error } = await supabase
-      .from('future_expenses')
-      .delete()
-      .eq('id', id);
+    const { error } = await supabase.from('future_expenses').delete().eq('id', id);
 
     if (error) throw error;
   },

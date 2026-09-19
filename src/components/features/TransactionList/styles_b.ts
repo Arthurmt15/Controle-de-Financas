@@ -48,8 +48,7 @@ export const TypeIndicator = styled.span<{ $type: 'income' | 'expense' }>`
  */
 export const Amount = styled.span<{ $type: 'income' | 'expense' }>`
   font-weight: 600;
-  color: ${({ theme, $type }) =>
-    $type === 'income' ? theme.colors.success : theme.colors.error};
+  color: ${({ theme, $type }) => ($type === 'income' ? theme.colors.success : theme.colors.error)};
 `;
 
 /**

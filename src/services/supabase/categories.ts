@@ -23,17 +23,16 @@ function mapCategory(row: CategoryRow): Category {
 
 export const categoryService = {
   async getAll(): Promise<Category[]> {
-    const { data, error } = await supabase
-      .from('categories')
-      .select('*')
-      .order('name');
+    const { data, error } = await supabase.from('categories').select('*').order('name');
 
     if (error) throw error;
     return (data as CategoryRow[]).map(mapCategory);
   },
 
   async create(category: Omit<Category, 'id'>): Promise<Category> {
-    const { data: { user } } = await supabase.auth.getUser();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
     if (!user) throw new Error('Não autenticado');
 
     const id = crypto.randomUUID();
@@ -56,10 +55,7 @@ export const categoryService = {
   },
 
   async delete(id: string): Promise<void> {
-    const { error } = await supabase
-      .from('categories')
-      .delete()
-      .eq('id', id);
+    const { error } = await supabase.from('categories').delete().eq('id', id);
 
     if (error) throw error;
   },

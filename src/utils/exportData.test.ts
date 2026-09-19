@@ -64,7 +64,10 @@ describe('exportData - convertToCSV', () => {
   it('previne injection para +, -, @', () => {
     const cases = ['+2+3', '-2-3', '@malicious'];
     for (const desc of cases) {
-      const csv = convertToCSV({ transactions: [makeTx({ description: desc })], categories: mockCategories });
+      const csv = convertToCSV({
+        transactions: [makeTx({ description: desc })],
+        categories: mockCategories,
+      });
       expect(csv).toContain(`'${desc}`);
     }
   });
@@ -77,7 +80,10 @@ describe('exportData - convertToCSV', () => {
   });
 
   it('formata valores com 2 casas decimais', () => {
-    const csv = convertToCSV({ transactions: [makeTx({ amount: 100 })], categories: mockCategories });
+    const csv = convertToCSV({
+      transactions: [makeTx({ amount: 100 })],
+      categories: mockCategories,
+    });
     expect(csv).toContain('100.00');
   });
 

@@ -56,7 +56,9 @@ export const installmentService = {
 
   /** Cria um novo parcelado */
   async create(installment: Omit<Installment, 'id'>): Promise<Installment> {
-    const { data: { user } } = await supabase.auth.getUser();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
     if (!user) throw new Error('Não autenticado');
 
     const id = crypto.randomUUID();
@@ -108,21 +110,14 @@ export const installmentService = {
 
   /** Remove um parcelado */
   async delete(id: string): Promise<void> {
-    const { error } = await supabase
-      .from('installments')
-      .delete()
-      .eq('id', id);
+    const { error } = await supabase.from('installments').delete().eq('id', id);
 
     if (error) throw error;
   },
 
   /** Avança para a próxima parcela */
   async advanceInstallment(id: string): Promise<Installment> {
-    const { data: current } = await supabase
-      .from('installments')
-      .select('*')
-      .eq('id', id)
-      .single();
+    const { data: current } = await supabase.from('installments').select('*').eq('id', id).single();
 
     if (!current) throw new Error('Parcelado não encontrado');
 

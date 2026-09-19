@@ -25,9 +25,7 @@ export const ProgressFill = styled.div<{ $progress: number; $isCompleted: boolea
   height: 100%;
   width: ${({ $progress }) => $progress}%;
   background-color: ${({ $isCompleted, theme }) =>
-    $isCompleted
-      ? theme.colors?.success || '#10b981'
-      : theme.colors?.primary || '#6366f1'};
+    $isCompleted ? theme.colors?.success || '#10b981' : theme.colors?.primary || '#6366f1'};
   border-radius: 3px;
   transition: width 0.3s ease;
 `;
@@ -68,21 +66,9 @@ export const NextDue = styled.div<{ $days: number }>`
   border-radius: 10px;
   border: 1px solid
     ${({ $days }) =>
-      $days < 0
-        ? '#fecaca'
-        : $days === 0
-          ? '#fde68a'
-          : $days <= 7
-            ? '#bfdbfe'
-            : '#e5e7eb'};
+      $days < 0 ? '#fecaca' : $days === 0 ? '#fde68a' : $days <= 7 ? '#bfdbfe' : '#e5e7eb'};
   background: ${({ $days }) =>
-    $days < 0
-      ? '#fef2f2'
-      : $days === 0
-        ? '#fffbeb'
-        : $days <= 7
-          ? '#eff6ff'
-          : '#f9fafb'};
+    $days < 0 ? '#fef2f2' : $days === 0 ? '#fffbeb' : $days <= 7 ? '#eff6ff' : '#f9fafb'};
   display: flex;
   flex-direction: column;
   gap: 2px;
@@ -107,4 +93,3 @@ export const NextDueDays = styled.span<{ $overdue?: boolean }>`
   font-weight: 500;
   color: ${({ theme }) => theme.colors?.textSecondary || '#6b7280'};
 `;
-

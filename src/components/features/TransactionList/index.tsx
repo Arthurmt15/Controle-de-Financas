@@ -7,7 +7,15 @@
 
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Pencil, Trash2, Search, Inbox, FileSpreadsheet, FileText, SlidersHorizontal } from 'lucide-react';
+import {
+  Pencil,
+  Trash2,
+  Search,
+  Inbox,
+  FileSpreadsheet,
+  FileText,
+  SlidersHorizontal,
+} from 'lucide-react';
 import { useTransactions } from '../../../hooks/useTransactions';
 import { formatCurrency, formatDate } from '../../../utils/formatters';
 import { exportTransactionsCSV, exportTransactionsPDF } from '../../../utils/exportData';
@@ -16,7 +24,13 @@ import { Card, CardContent, CardHeader, CardTitle } from '../../ui/card';
 import { Button } from '../../ui/button';
 import { Input } from '../../ui/input';
 import { Badge } from '../../ui/badge';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '../../ui/dialog';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from '../../ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../ui/select';
 import type { Transaction } from '../../../types';
 
@@ -25,7 +39,8 @@ import type { Transaction } from '../../../types';
  */
 const TransactionList: React.FC = () => {
   // Dados e filtros do contexto
-  const { filteredTransactions, categories, filters, setFilters, deleteTransaction } = useTransactions();
+  const { filteredTransactions, categories, filters, setFilters, deleteTransaction } =
+    useTransactions();
 
   // Estado para edição
   const [editingTransaction, setEditingTransaction] = useState<Transaction | null>(null);
@@ -65,7 +80,8 @@ const TransactionList: React.FC = () => {
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <CardTitle className="text-[13px] font-semibold tracking-wide uppercase text-muted-foreground flex items-center gap-2">
               <SlidersHorizontal className="h-4 w-4" />
-              Transações • {filteredTransactions.length} {filteredTransactions.length === 1 ? 'item' : 'itens'}
+              Transações • {filteredTransactions.length}{' '}
+              {filteredTransactions.length === 1 ? 'item' : 'itens'}
             </CardTitle>
             {/* Botões de exportação */}
             <div className="flex items-center gap-2">
@@ -73,7 +89,9 @@ const TransactionList: React.FC = () => {
                 variant="outline"
                 size="sm"
                 className="rounded-xl gap-1.5 h-8 text-xs"
-                onClick={() => exportTransactionsCSV({ transactions: filteredTransactions, categories })}
+                onClick={() =>
+                  exportTransactionsCSV({ transactions: filteredTransactions, categories })
+                }
                 aria-label="Exportar como CSV"
               >
                 <FileSpreadsheet className="h-3.5 w-3.5" />
@@ -83,7 +101,9 @@ const TransactionList: React.FC = () => {
                 variant="outline"
                 size="sm"
                 className="rounded-xl gap-1.5 h-8 text-xs"
-                onClick={() => exportTransactionsPDF({ transactions: filteredTransactions, categories })}
+                onClick={() =>
+                  exportTransactionsPDF({ transactions: filteredTransactions, categories })
+                }
                 aria-label="Exportar como PDF"
               >
                 <FileText className="h-3.5 w-3.5" />
@@ -108,7 +128,10 @@ const TransactionList: React.FC = () => {
               />
             </div>
             {/* Filtro por tipo - Select shadcn */}
-            <Select value={filters.type} onValueChange={(v) => setFilters({ type: v as 'income' | 'expense' | 'both' })}>
+            <Select
+              value={filters.type}
+              onValueChange={(v) => setFilters({ type: v as 'income' | 'expense' | 'both' })}
+            >
               <SelectTrigger className="w-full sm:w-[160px] h-10 rounded-xl">
                 <SelectValue placeholder="Tipo" />
               </SelectTrigger>
@@ -119,7 +142,10 @@ const TransactionList: React.FC = () => {
               </SelectContent>
             </Select>
             {/* Filtro por categoria - Select shadcn */}
-            <Select value={filters.categoryId || 'all'} onValueChange={(v) => setFilters({ categoryId: v === 'all' ? null : v })}>
+            <Select
+              value={filters.categoryId || 'all'}
+              onValueChange={(v) => setFilters({ categoryId: v === 'all' ? null : v })}
+            >
               <SelectTrigger className="w-full sm:w-[180px] h-10 rounded-xl">
                 <SelectValue placeholder="Categoria" />
               </SelectTrigger>
@@ -143,11 +169,21 @@ const TransactionList: React.FC = () => {
             {/* Cabeçalho da tabela */}
             <thead className="bg-muted/50 border-b">
               <tr>
-                <th className="text-left text-xs font-semibold tracking-widest uppercase text-muted-foreground px-5 py-3">Descrição</th>
-                <th className="text-left text-xs font-semibold tracking-widest uppercase text-muted-foreground px-5 py-3">Valor</th>
-                <th className="text-left text-xs font-semibold tracking-widest uppercase text-muted-foreground px-5 py-3">Categoria</th>
-                <th className="text-left text-xs font-semibold tracking-widest uppercase text-muted-foreground px-5 py-3">Data</th>
-                <th className="text-right text-xs font-semibold tracking-widest uppercase text-muted-foreground px-5 py-3">Ações</th>
+                <th className="text-left text-xs font-semibold tracking-widest uppercase text-muted-foreground px-5 py-3">
+                  Descrição
+                </th>
+                <th className="text-left text-xs font-semibold tracking-widest uppercase text-muted-foreground px-5 py-3">
+                  Valor
+                </th>
+                <th className="text-left text-xs font-semibold tracking-widest uppercase text-muted-foreground px-5 py-3">
+                  Categoria
+                </th>
+                <th className="text-left text-xs font-semibold tracking-widest uppercase text-muted-foreground px-5 py-3">
+                  Data
+                </th>
+                <th className="text-right text-xs font-semibold tracking-widest uppercase text-muted-foreground px-5 py-3">
+                  Ações
+                </th>
               </tr>
             </thead>
             <tbody className="divide-y">
@@ -173,14 +209,22 @@ const TransactionList: React.FC = () => {
                     {/* Descrição com indicador de tipo */}
                     <td className="px-5 py-3.5">
                       <div className="flex items-center gap-2.5">
-                        <span className={`w-2 h-2 rounded-full shrink-0 ${transaction.type === 'expense' ? 'bg-red-500' : 'bg-emerald-500'}`} aria-hidden />
-                        <span className="text-sm font-medium truncate max-w-[220px]">{transaction.description}</span>
+                        <span
+                          className={`w-2 h-2 rounded-full shrink-0 ${transaction.type === 'expense' ? 'bg-red-500' : 'bg-emerald-500'}`}
+                          aria-hidden
+                        />
+                        <span className="text-sm font-medium truncate max-w-[220px]">
+                          {transaction.description}
+                        </span>
                       </div>
                     </td>
                     {/* Valor com cor por tipo */}
                     <td className="px-5 py-3.5">
-                      <span className={`text-sm font-semibold ${transaction.type === 'expense' ? 'text-red-600 dark:text-red-400' : 'text-emerald-600 dark:text-emerald-400'}`}>
-                        {transaction.type === 'expense' ? '-' : '+'} {formatCurrency(transaction.amount)}
+                      <span
+                        className={`text-sm font-semibold ${transaction.type === 'expense' ? 'text-red-600 dark:text-red-400' : 'text-emerald-600 dark:text-emerald-400'}`}
+                      >
+                        {transaction.type === 'expense' ? '-' : '+'}{' '}
+                        {formatCurrency(transaction.amount)}
                       </span>
                     </td>
                     {/* Badge categoria com cor */}
@@ -192,11 +236,20 @@ const TransactionList: React.FC = () => {
                         {getCategoryName(transaction.categoryId)}
                       </Badge>
                     </td>
-                    <td className="px-5 py-3.5 text-sm text-muted-foreground">{formatDate(transaction.date)}</td>
+                    <td className="px-5 py-3.5 text-sm text-muted-foreground">
+                      {formatDate(transaction.date)}
+                    </td>
                     {/* Ações editar/excluir */}
                     <td className="px-5 py-3.5">
                       <div className="flex items-center justify-end gap-1">
-                        <Button variant="ghost" size="icon" className="h-7 w-7 rounded-lg" onClick={() => handleEdit(transaction)} aria-label={`Editar ${transaction.description}`} title="Editar">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-7 w-7 rounded-lg"
+                          onClick={() => handleEdit(transaction)}
+                          aria-label={`Editar ${transaction.description}`}
+                          title="Editar"
+                        >
                           <Pencil className="h-3.5 w-3.5" />
                         </Button>
                         <Button
@@ -243,26 +296,50 @@ const TransactionList: React.FC = () => {
                     {/* Topo: descrição + valor */}
                     <div className="flex items-start justify-between gap-2">
                       <div className="flex items-center gap-2 min-w-0">
-                        <span className={`w-2 h-2 rounded-full shrink-0 ${transaction.type === 'expense' ? 'bg-red-500' : 'bg-emerald-500'}`} />
-                        <span className="text-sm font-semibold truncate">{transaction.description}</span>
+                        <span
+                          className={`w-2 h-2 rounded-full shrink-0 ${transaction.type === 'expense' ? 'bg-red-500' : 'bg-emerald-500'}`}
+                        />
+                        <span className="text-sm font-semibold truncate">
+                          {transaction.description}
+                        </span>
                       </div>
-                      <span className={`text-sm font-bold shrink-0 ${transaction.type === 'expense' ? 'text-red-600 dark:text-red-400' : 'text-emerald-600 dark:text-emerald-400'}`}>
-                        {transaction.type === 'expense' ? '-' : '+'} {formatCurrency(transaction.amount)}
+                      <span
+                        className={`text-sm font-bold shrink-0 ${transaction.type === 'expense' ? 'text-red-600 dark:text-red-400' : 'text-emerald-600 dark:text-emerald-400'}`}
+                      >
+                        {transaction.type === 'expense' ? '-' : '+'}{' '}
+                        {formatCurrency(transaction.amount)}
                       </span>
                     </div>
                     {/* Rodapé: categoria + data + ações */}
                     <div className="flex items-center justify-between gap-2">
                       <div className="flex items-center gap-2 min-w-0">
-                        <Badge className="rounded-full px-2 py-0.5 text-[11px] font-semibold text-white border-0 shrink-0" style={{ backgroundColor: getCategoryColor(transaction.categoryId) }}>
+                        <Badge
+                          className="rounded-full px-2 py-0.5 text-[11px] font-semibold text-white border-0 shrink-0"
+                          style={{ backgroundColor: getCategoryColor(transaction.categoryId) }}
+                        >
                           {getCategoryName(transaction.categoryId)}
                         </Badge>
-                        <span className="text-xs text-muted-foreground truncate">{formatDate(transaction.date)}</span>
+                        <span className="text-xs text-muted-foreground truncate">
+                          {formatDate(transaction.date)}
+                        </span>
                       </div>
                       <div className="flex items-center gap-1 shrink-0">
-                        <Button variant="ghost" size="icon" className="h-7 w-7 rounded-lg" onClick={() => handleEdit(transaction)} aria-label={`Editar ${transaction.description}`}>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-7 w-7 rounded-lg"
+                          onClick={() => handleEdit(transaction)}
+                          aria-label={`Editar ${transaction.description}`}
+                        >
                           <Pencil className="h-3.5 w-3.5" />
                         </Button>
-                        <Button variant="ghost" size="icon" className="h-7 w-7 rounded-lg hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-500/10" onClick={() => setDeletingId(transaction.id)} aria-label={`Excluir ${transaction.description}`}>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-7 w-7 rounded-lg hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-500/10"
+                          onClick={() => setDeletingId(transaction.id)}
+                          aria-label={`Excluir ${transaction.description}`}
+                        >
                           <Trash2 className="h-3.5 w-3.5" />
                         </Button>
                       </div>
@@ -279,13 +356,23 @@ const TransactionList: React.FC = () => {
       {/* Para desktop grid adicional, oculto por padrão - tabela já cobre desktop */}
 
       {/* Modal de edição - Dialog shadcn */}
-      <Dialog open={!!editingTransaction} onOpenChange={(open) => !open && setEditingTransaction(null)}>
+      <Dialog
+        open={!!editingTransaction}
+        onOpenChange={(open) => !open && setEditingTransaction(null)}
+      >
         <DialogContent className="sm:max-w-[560px] max-h-[90vh] overflow-y-auto rounded-2xl">
           <DialogHeader>
             <DialogTitle>Editar Transação</DialogTitle>
-            <DialogDescription>Atualize os dados da transação e salve as alterações.</DialogDescription>
+            <DialogDescription>
+              Atualize os dados da transação e salve as alterações.
+            </DialogDescription>
           </DialogHeader>
-          {editingTransaction && <TransactionForm editingTransaction={editingTransaction} onClose={() => setEditingTransaction(null)} />}
+          {editingTransaction && (
+            <TransactionForm
+              editingTransaction={editingTransaction}
+              onClose={() => setEditingTransaction(null)}
+            />
+          )}
         </DialogContent>
       </Dialog>
 
@@ -294,13 +381,19 @@ const TransactionList: React.FC = () => {
         <DialogContent className="sm:max-w-[420px] rounded-2xl">
           <DialogHeader>
             <DialogTitle>Confirmar Exclusão</DialogTitle>
-            <DialogDescription>Tem certeza que deseja excluir esta transação? Esta ação não pode ser desfeita.</DialogDescription>
+            <DialogDescription>
+              Tem certeza que deseja excluir esta transação? Esta ação não pode ser desfeita.
+            </DialogDescription>
           </DialogHeader>
           <div className="flex justify-end gap-2 mt-2">
             <Button variant="outline" className="rounded-xl" onClick={() => setDeletingId(null)}>
               Cancelar
             </Button>
-            <Button variant="destructive" className="rounded-xl gap-1.5" onClick={handleConfirmDelete}>
+            <Button
+              variant="destructive"
+              className="rounded-xl gap-1.5"
+              onClick={handleConfirmDelete}
+            >
               <Trash2 className="h-4 w-4" />
               Excluir
             </Button>

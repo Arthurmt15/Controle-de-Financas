@@ -21,7 +21,12 @@ interface BudgetFormProps {
 }
 
 /** Formulário de novo orçamento — shadcn */
-const BudgetForm: React.FC<BudgetFormProps> = ({ selectedMonth, categories, currentBudgets, onAddBudget }) => {
+const BudgetForm: React.FC<BudgetFormProps> = ({
+  selectedMonth,
+  categories,
+  currentBudgets,
+  onAddBudget,
+}) => {
   // Estado do formulário
   const [newBudget, setNewBudget] = useState({ categoryId: '', limit: '' });
   const [error, setError] = useState('');
@@ -29,8 +34,12 @@ const BudgetForm: React.FC<BudgetFormProps> = ({ selectedMonth, categories, curr
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Categorias de despesa e disponíveis
-  const expenseCategories = categories.filter((c) => c.defaultType === 'expense' || c.defaultType === 'both');
-  const availableCategories = expenseCategories.filter((c) => !currentBudgets.some((b) => b.categoryId === c.id));
+  const expenseCategories = categories.filter(
+    (c) => c.defaultType === 'expense' || c.defaultType === 'both'
+  );
+  const availableCategories = expenseCategories.filter(
+    (c) => !currentBudgets.some((b) => b.categoryId === c.id)
+  );
 
   /** Valida e envia novo orçamento */
   const handleAddBudget = async () => {
@@ -96,7 +105,12 @@ const BudgetForm: React.FC<BudgetFormProps> = ({ selectedMonth, categories, curr
 
   return (
     <AnimatePresence mode="wait">
-      <motion.div initial={{ opacity: 0, y: -6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -6 }} transition={{ duration: 0.25 }}>
+      <motion.div
+        initial={{ opacity: 0, y: -6 }}
+        animate={{ opacity: 1, y: 0 }}
+        exit={{ opacity: 0, y: -6 }}
+        transition={{ duration: 0.25 }}
+      >
         <h4 className="text-sm font-semibold mb-3 flex items-center gap-2">
           <Plus className="h-4 w-4 text-primary" />
           Novo orçamento
@@ -149,7 +163,11 @@ const BudgetForm: React.FC<BudgetFormProps> = ({ selectedMonth, categories, curr
 
         {/* Erro */}
         {error && (
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="mt-3 flex gap-2 items-center text-sm text-red-600 bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-900 rounded-xl px-3 py-2">
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="mt-3 flex gap-2 items-center text-sm text-red-600 bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-900 rounded-xl px-3 py-2"
+          >
             <AlertCircle className="h-4 w-4 shrink-0" />
             {error}
           </motion.div>

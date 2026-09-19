@@ -204,7 +204,13 @@ const FloatingChat: React.FC = () => {
   const generateMessageId = () => `msg_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
 
   const addMessage = (text: string, isUser: boolean, transaction?: Transaction): ChatMessage => {
-    const m: ChatMessage = { id: generateMessageId(), text, isUser, timestamp: new Date(), transaction };
+    const m: ChatMessage = {
+      id: generateMessageId(),
+      text,
+      isUser,
+      timestamp: new Date(),
+      transaction,
+    };
     setMessages((prev) => [...prev, m]);
     return m;
   };
@@ -236,35 +242,59 @@ const FloatingChat: React.FC = () => {
 
     // 1b. Guia do site — perguntas sobre navegação vão para IA com contexto do site
     const lowerGuide = text.toLowerCase();
-    const isGuideQuestion = /\b(onde|como|o que|quais|me mostre|me leva|guia|tutorial|usar|funciona).*\b(dashboard|transa[çc]|parcelad|d[ií]vida|gastos futuros|an[aá]lise|configura|categoria|consultor)/i.test(lowerGuide)
-      || /\b(o que posso fazer|como navego|me ajuda a usar)\b/i.test(lowerGuide);
+    const isGuideQuestion =
+      /\b(onde|como|o que|quais|me mostre|me leva|guia|tutorial|usar|funciona).*\b(dashboard|transa[çc]|parcelad|d[ií]vida|gastos futuros|an[aá]lise|configura|categoria|consultor)/i.test(
+        lowerGuide
+      ) || /\b(o que posso fazer|como navego|me ajuda a usar)\b/i.test(lowerGuide);
     // isGuideQuestion também vai para IA, mas com contexto extra abaixo
 
     // 1c. Dúvida/pergunta clara → não tenta parsear como transação (inclui planejamento de investimento)
     const lowerForDoubt = text.toLowerCase();
-    const isPlanningDoubt = /\b(pretendo|planejo|quero)\s+(investir|aplicar|guardar)\b/i.test(lowerForDoubt) || /\bquanto.*ganho\b/i.test(lowerForDoubt) || /\blucro\b.*%.*ao ano\b/i.test(lowerForDoubt);
-    const isDoubtLike = isPlanningDoubt || (/d[uú]vida|\?|posso\b|vale a pena|como\b.*\?|quanto posso|quanto ganho|me ajuda|me explica|estou com uma d|pretendo/.test(lowerForDoubt) && !/\b(comprei|paguei|gastei|mercado|supermercado|recebi|parcelado|investi|apliquei)\b/.test(lowerForDoubt));
+    const isPlanningDoubt =
+      /\b(pretendo|planejo|quero)\s+(investir|aplicar|guardar)\b/i.test(lowerForDoubt) ||
+      /\bquanto.*ganho\b/i.test(lowerForDoubt) ||
+      /\blucro\b.*%.*ao ano\b/i.test(lowerForDoubt);
+    const isDoubtLike =
+      isPlanningDoubt ||
+      (/d[uú]vida|\?|posso\b|vale a pena|como\b.*\?|quanto posso|quanto ganho|me ajuda|me explica|estou com uma d|pretendo/.test(
+        lowerForDoubt
+      ) &&
+        !/\b(comprei|paguei|gastei|mercado|supermercado|recebi|parcelado|investi|apliquei)\b/.test(
+          lowerForDoubt
+        ));
     if (isDoubtLike && !isGuideQuestion) {
       // vai direto para IA
-    } else if (!isGuideQuestion || /\b(R\$|reais|mercado|comprei|paguei|gastei|recebi)\b/i.test(lowerGuide)) {
+    } else if (
+      !isGuideQuestion ||
+      /\b(R\$|reais|mercado|comprei|paguei|gastei|recebi)\b/i.test(lowerGuide)
+    ) {
       // 2. Tentar parsear como transação (se não for só pergunta de guia)
       const parsed = parseTransactionFromMessage(text);
       if (parsed) {
-        let matchCat = categories.find((c) => c.name.toLowerCase() === parsed.categoria.toLowerCase());
-        if (!matchCat) matchCat = categories.find((c) => c.name.toLowerCase() === 'outros') || categories[0];
+        let matchCat = categories.find(
+          (c) => c.name.toLowerCase() === parsed.categoria.toLowerCase()
+        );
+        if (!matchCat)
+          matchCat = categories.find((c) => c.name.toLowerCase() === 'outros') || categories[0];
         if (matchCat) {
           const installmentCount = parsed.parcelas || 0;
           const isDivided = /\b(dividid[ao]|d[ií]vida|racha|compartilhad[ao])\b/i.test(text);
-          const perInstallment = installmentCount > 0 ? parsed.valor / installmentCount : parsed.valor;
+          const perInstallment =
+            installmentCount > 0 ? parsed.valor / installmentCount : parsed.valor;
           const installmentLabel = installmentCount > 0 ? `1/${installmentCount}` : '';
-          const descriptionWithInstallment = installmentLabel ? `${parsed.descricao} ${installmentLabel}` : parsed.descricao;
+          const descriptionWithInstallment = installmentLabel
+            ? `${parsed.descricao} ${installmentLabel}`
+            : parsed.descricao;
           const transactionData: Omit<Transaction, 'id'> = {
             description: descriptionWithInstallment + (isDivided ? ' [Dividida]' : ''),
             amount: perInstallment,
             type: parsed.tipo === 'despesa' ? 'expense' : 'income',
             date: new Date(parsed.data + 'T12:00:00').toISOString(),
             categoryId: matchCat.id,
-            notes: installmentCount > 0 ? `Parcelado em ${installmentCount}x - Total R$ ${parsed.valor.toFixed(2).replace('.', ',')}` : '',
+            notes:
+              installmentCount > 0
+                ? `Parcelado em ${installmentCount}x - Total R$ ${parsed.valor.toFixed(2).replace('.', ',')}`
+                : '',
           };
           await addTransaction(transactionData);
           if (installmentCount > 0) {
@@ -298,7 +328,12 @@ const FloatingChat: React.FC = () => {
               });
             } catch {}
           }
-          const successMsg = ` Transação registrada!\n ${transactionData.description}\n R$ ${transactionData.amount.toFixed(2).replace('.', ',')}\n ${new Date(transactionData.date).toLocaleDateString('pt-BR')}\n ${matchCat.name}` + (installmentCount > 0 ? `\n Total: R$ ${parsed.valor.toFixed(2).replace('.', ',')} (${installmentCount}x)` : '') + (isDivided ? `\n Dívida criada em Dívidas` : '');
+          const successMsg =
+            ` Transação registrada!\n ${transactionData.description}\n R$ ${transactionData.amount.toFixed(2).replace('.', ',')}\n ${new Date(transactionData.date).toLocaleDateString('pt-BR')}\n ${matchCat.name}` +
+            (installmentCount > 0
+              ? `\n Total: R$ ${parsed.valor.toFixed(2).replace('.', ',')} (${installmentCount}x)`
+              : '') +
+            (isDivided ? `\n Dívida criada em Dívidas` : '');
           addMessage(successMsg, false);
           setIsProcessing(false);
           return;
@@ -307,7 +342,12 @@ const FloatingChat: React.FC = () => {
     }
 
     // 3. IA — Consultor + Guia (streaming)
-    const aiMsg: ChatMessage = { id: generateMessageId(), text: '', isUser: false, timestamp: new Date() };
+    const aiMsg: ChatMessage = {
+      id: generateMessageId(),
+      text: '',
+      isUser: false,
+      timestamp: new Date(),
+    };
     setMessages((prev) => [...prev, aiMsg]);
     try {
       const financialContext = buildFinancialContext(transactions, categories);
@@ -322,16 +362,24 @@ GUIA DO SITE:
 - Configurações: categorias, orçamentos
 Responda como guia quando pergunta for sobre navegação.`;
       const context = financialContext + '\n' + siteGuide;
-      const history = messages.slice(-20).map((m) => ({ role: m.isUser ? ('user' as const) : ('assistant' as const), content: m.text }));
+      const history = messages.slice(-20).map((m) => ({
+        role: m.isUser ? ('user' as const) : ('assistant' as const),
+        content: m.text,
+      }));
       let accumulated = '';
       const chunks = streamAdvisor(text, context, history);
-      const updateAiMessage = (t: string) => setMessages((prev) => prev.map((m) => (m.id === aiMsg.id ? { ...m, text: t } : m)));
+      const updateAiMessage = (t: string) =>
+        setMessages((prev) => prev.map((m) => (m.id === aiMsg.id ? { ...m, text: t } : m)));
       for await (const chunk of chunks) {
         accumulated += chunk;
         updateAiMessage(accumulated);
       }
     } catch {
-      setMessages((prev) => prev.map((m) => (m.id === aiMsg.id ? { ...m, text: 'Erro ao conectar com a IA. Tente novamente.' } : m)));
+      setMessages((prev) =>
+        prev.map((m) =>
+          m.id === aiMsg.id ? { ...m, text: 'Erro ao conectar com a IA. Tente novamente.' } : m
+        )
+      );
     }
     setIsProcessing(false);
   };
@@ -348,7 +396,8 @@ Responda como guia quando pergunta for sobre navegação.`;
     inputRef.current?.focus();
   };
 
-  const formatTime = (date: Date) => date.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+  const formatTime = (date: Date) =>
+    date.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
 
   if (isLogin) return null;
 
@@ -366,7 +415,27 @@ Responda como guia quando pergunta for sobre navegação.`;
         title={isOpen ? 'Fechar' : 'Guia Inteligente — pergunte qualquer coisa'}
       >
         <AnimatePresence mode="wait">
-          {isOpen ? <motion.div key="close" initial={{ rotate: -90, opacity: 0 }} animate={{ rotate: 0, opacity: 1 }} exit={{ rotate: 90, opacity: 0 }}><X className="h-6 w-6" /></motion.div> : <motion.div key="open" initial={{ scale: 0 }} animate={{ scale: 1 }} exit={{ scale: 0 }} className="relative"><Bot className="h-6 w-6" /><span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-emerald-500 rounded-full border-2 border-white animate-pulse" /></motion.div>}
+          {isOpen ? (
+            <motion.div
+              key="close"
+              initial={{ rotate: -90, opacity: 0 }}
+              animate={{ rotate: 0, opacity: 1 }}
+              exit={{ rotate: 90, opacity: 0 }}
+            >
+              <X className="h-6 w-6" />
+            </motion.div>
+          ) : (
+            <motion.div
+              key="open"
+              initial={{ scale: 0 }}
+              animate={{ scale: 1 }}
+              exit={{ scale: 0 }}
+              className="relative"
+            >
+              <Bot className="h-6 w-6" />
+              <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-emerald-500 rounded-full border-2 border-white animate-pulse" />
+            </motion.div>
+          )}
         </AnimatePresence>
       </motion.button>
 
@@ -382,46 +451,118 @@ Responda como guia quando pergunta for sobre navegação.`;
             className="fixed bottom-[76px] right-4 sm:right-6 z-[60] w-[360px] sm:w-[400px] max-w-[calc(100vw-32px)]"
           >
             <Card className="rounded-2xl overflow-hidden shadow-2xl border flex flex-col h-[520px] sm:h-[560px] max-h-[70vh] bg-card">
-              <CardHeader className="p-3.5 border-b text-white shrink-0 flex flex-row items-center justify-between gap-2 space-y-0" style={{ background: `linear-gradient(90deg, ${theme.colors.primary}, ${theme.colors.secondary})` }}>
+              <CardHeader
+                className="p-3.5 border-b text-white shrink-0 flex flex-row items-center justify-between gap-2 space-y-0"
+                style={{
+                  background: `linear-gradient(90deg, ${theme.colors.primary}, ${theme.colors.secondary})`,
+                }}
+              >
                 <div className="flex items-center gap-2.5">
-                  <span className="w-8 h-8 rounded-xl bg-white/15 backdrop-blur flex items-center justify-center"><Bot className="h-4 w-4" /></span>
+                  <span className="w-8 h-8 rounded-xl bg-white/15 backdrop-blur flex items-center justify-center">
+                    <Bot className="h-4 w-4" />
+                  </span>
                   <div>
-                    <CardTitle className="text-[14px] font-semibold text-white leading-none flex items-center gap-1.5">Guia Inteligente <Sparkles className="h-3 w-3 text-white/80" /></CardTitle>
-                    <p className="text-[11px] text-white/80 leading-none mt-1 flex items-center gap-1.5"><span className="w-1.5 h-1.5 bg-emerald-400 rounded-full animate-pulse" /> Online • faz tudo</p>
+                    <CardTitle className="text-[14px] font-semibold text-white leading-none flex items-center gap-1.5">
+                      Guia Inteligente <Sparkles className="h-3 w-3 text-white/80" />
+                    </CardTitle>
+                    <p className="text-[11px] text-white/80 leading-none mt-1 flex items-center gap-1.5">
+                      <span className="w-1.5 h-1.5 bg-emerald-400 rounded-full animate-pulse" />{' '}
+                      Online • faz tudo
+                    </p>
                   </div>
                 </div>
                 <div className="flex items-center gap-1">
-                  <Button variant="ghost" size="icon" onClick={() => setIsOpen(false)} className="h-7 w-7 rounded-full bg-white/10 hover:bg-white/20 text-white"><X className="h-3.5 w-3.5" /></Button>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => setIsOpen(false)}
+                    className="h-7 w-7 rounded-full bg-white/10 hover:bg-white/20 text-white"
+                  >
+                    <X className="h-3.5 w-3.5" />
+                  </Button>
                 </div>
               </CardHeader>
 
-              <div ref={scrollRef} role="log" aria-live="polite" aria-label="Mensagens do guia" className="flex-1 min-h-0 overflow-y-auto p-3 flex flex-col gap-3 bg-muted/20 scroll-smooth">
+              <div
+                ref={scrollRef}
+                role="log"
+                aria-live="polite"
+                aria-label="Mensagens do guia"
+                className="flex-1 min-h-0 overflow-y-auto p-3 flex flex-col gap-3 bg-muted/20 scroll-smooth"
+              >
                 {messages.map((message, idx) => {
                   const isTyping = !message.isUser && isProcessing && !message.text;
-                  const isStreaming = !message.isUser && isProcessing && !!message.text && idx === messages.length - 1;
+                  const isStreaming =
+                    !message.isUser &&
+                    isProcessing &&
+                    !!message.text &&
+                    idx === messages.length - 1;
                   return (
-                  <motion.div key={message.id} initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: idx * 0.01 }} className={`flex flex-col gap-1 ${message.isUser ? 'items-end' : 'items-start'}`}>
-                    <span className={`flex items-center gap-1 text-[10px] font-semibold tracking-widest uppercase px-1 ${message.isUser ? '' : 'text-muted-foreground'}`} style={message.isUser ? { color: theme.colors.primary } : undefined}>
-                      {message.isUser ? <><User className="h-3 w-3" /> Você</> : <><Bot className="h-3 w-3" /> Guia</>}
-                    </span>
-                    <div className={`${message.isUser ? 'w-fit max-w-[85%]' : 'w-fit max-w-[88%] min-w-[64px]'} px-3.5 py-2.5 rounded-2xl text-[13px] leading-6 shadow-sm break-words [overflow-wrap:anywhere] whitespace-pre-wrap ${message.isUser ? 'text-white rounded-br-md' : 'bg-card border rounded-bl-md'}`} style={message.isUser ? { backgroundColor: theme.colors.primary } : undefined}>
-                      {message.isUser ? (
-                        <span className="whitespace-pre-wrap break-words [overflow-wrap:anywhere]">{message.text}</span>
-                      ) : isTyping ? (
-                        <span className="inline-flex items-center justify-center gap-1.5 min-h-[20px] py-0.5">
-                          <span className="w-1.5 h-1.5 rounded-full animate-bounce [animation-delay:-0.3s]" style={{ backgroundColor: theme.colors.primary }} />
-                          <span className="w-1.5 h-1.5 rounded-full animate-bounce [animation-delay:-0.15s]" style={{ backgroundColor: theme.colors.primary }} />
-                          <span className="w-1.5 h-1.5 rounded-full animate-bounce" style={{ backgroundColor: theme.colors.primary }} />
-                        </span>
-                      ) : (
-                        <span className="block [&>strong]:font-semibold [&>strong]:text-foreground">
-                          <span dangerouslySetInnerHTML={{ __html: renderMarkdown(message.text) }} />
-                          {isStreaming && <span className="inline-block w-[2px] h-[14px] animate-pulse ml-1 align-text-bottom" style={{ backgroundColor: theme.colors.primary }} aria-hidden />}
-                        </span>
-                      )}
-                    </div>
-                    <span className="text-[10px] text-muted-foreground px-1">{formatTime(message.timestamp)}</span>
-                  </motion.div>
+                    <motion.div
+                      key={message.id}
+                      initial={{ opacity: 0, y: 6 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: idx * 0.01 }}
+                      className={`flex flex-col gap-1 ${message.isUser ? 'items-end' : 'items-start'}`}
+                    >
+                      <span
+                        className={`flex items-center gap-1 text-[10px] font-semibold tracking-widest uppercase px-1 ${message.isUser ? '' : 'text-muted-foreground'}`}
+                        style={message.isUser ? { color: theme.colors.primary } : undefined}
+                      >
+                        {message.isUser ? (
+                          <>
+                            <User className="h-3 w-3" /> Você
+                          </>
+                        ) : (
+                          <>
+                            <Bot className="h-3 w-3" /> Guia
+                          </>
+                        )}
+                      </span>
+                      <div
+                        className={`${message.isUser ? 'w-fit max-w-[85%]' : 'w-fit max-w-[88%] min-w-[64px]'} px-3.5 py-2.5 rounded-2xl text-[13px] leading-6 shadow-sm break-words [overflow-wrap:anywhere] whitespace-pre-wrap ${message.isUser ? 'text-white rounded-br-md' : 'bg-card border rounded-bl-md'}`}
+                        style={
+                          message.isUser ? { backgroundColor: theme.colors.primary } : undefined
+                        }
+                      >
+                        {message.isUser ? (
+                          <span className="whitespace-pre-wrap break-words [overflow-wrap:anywhere]">
+                            {message.text}
+                          </span>
+                        ) : isTyping ? (
+                          <span className="inline-flex items-center justify-center gap-1.5 min-h-[20px] py-0.5">
+                            <span
+                              className="w-1.5 h-1.5 rounded-full animate-bounce [animation-delay:-0.3s]"
+                              style={{ backgroundColor: theme.colors.primary }}
+                            />
+                            <span
+                              className="w-1.5 h-1.5 rounded-full animate-bounce [animation-delay:-0.15s]"
+                              style={{ backgroundColor: theme.colors.primary }}
+                            />
+                            <span
+                              className="w-1.5 h-1.5 rounded-full animate-bounce"
+                              style={{ backgroundColor: theme.colors.primary }}
+                            />
+                          </span>
+                        ) : (
+                          <span className="block [&>strong]:font-semibold [&>strong]:text-foreground">
+                            <span
+                              dangerouslySetInnerHTML={{ __html: renderMarkdown(message.text) }}
+                            />
+                            {isStreaming && (
+                              <span
+                                className="inline-block w-[2px] h-[14px] animate-pulse ml-1 align-text-bottom"
+                                style={{ backgroundColor: theme.colors.primary }}
+                                aria-hidden
+                              />
+                            )}
+                          </span>
+                        )}
+                      </div>
+                      <span className="text-[10px] text-muted-foreground px-1">
+                        {formatTime(message.timestamp)}
+                      </span>
+                    </motion.div>
                   );
                 })}
                 <div ref={endRef} aria-hidden className="h-0" />
@@ -429,8 +570,31 @@ Responda como guia quando pergunta for sobre navegação.`;
 
               {/* Input */}
               <div className="p-2.5 border-t bg-card shrink-0 flex items-center gap-2">
-                <Input ref={inputRef} value={inputValue} onChange={(e) => setInputValue(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend(); } }} placeholder="Pergunte ou digite 'almoço 25'..." disabled={isProcessing} aria-label="Digite sua mensagem" className="flex-1 h-9 rounded-full bg-muted/50" />
-                <Button onClick={handleSend} disabled={!inputValue.trim() || isProcessing} size="icon" className="h-9 w-9 rounded-full shrink-0 text-white hover:opacity-90" style={{ backgroundColor: theme.colors.primary }} aria-label="Enviar"><Send className="h-4 w-4" /></Button>
+                <Input
+                  ref={inputRef}
+                  value={inputValue}
+                  onChange={(e) => setInputValue(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' && !e.shiftKey) {
+                      e.preventDefault();
+                      handleSend();
+                    }
+                  }}
+                  placeholder="Pergunte ou digite 'almoço 25'..."
+                  disabled={isProcessing}
+                  aria-label="Digite sua mensagem"
+                  className="flex-1 h-9 rounded-full bg-muted/50"
+                />
+                <Button
+                  onClick={handleSend}
+                  disabled={!inputValue.trim() || isProcessing}
+                  size="icon"
+                  className="h-9 w-9 rounded-full shrink-0 text-white hover:opacity-90"
+                  style={{ backgroundColor: theme.colors.primary }}
+                  aria-label="Enviar"
+                >
+                  <Send className="h-4 w-4" />
+                </Button>
               </div>
 
               {/* Atalhos resumidos — 2 a 3 chips apenas */}
@@ -442,8 +606,17 @@ Responda como guia quando pergunta for sobre navegação.`;
                       variant="outline"
                       className="rounded-full px-2.5 py-1 text-[11px] font-medium cursor-pointer bg-card hover:text-white transition-colors"
                       style={{ borderColor: theme.colors.border } as any}
-                      onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.backgroundColor = theme.colors.primary; (e.currentTarget as HTMLElement).style.borderColor = theme.colors.primary; (e.currentTarget as HTMLElement).style.color = 'white'; }}
-                      onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.backgroundColor = ''; (e.currentTarget as HTMLElement).style.borderColor = theme.colors.border; (e.currentTarget as HTMLElement).style.color = ''; }}
+                      onMouseEnter={(e) => {
+                        (e.currentTarget as HTMLElement).style.backgroundColor =
+                          theme.colors.primary;
+                        (e.currentTarget as HTMLElement).style.borderColor = theme.colors.primary;
+                        (e.currentTarget as HTMLElement).style.color = 'white';
+                      }}
+                      onMouseLeave={(e) => {
+                        (e.currentTarget as HTMLElement).style.backgroundColor = '';
+                        (e.currentTarget as HTMLElement).style.borderColor = theme.colors.border;
+                        (e.currentTarget as HTMLElement).style.color = '';
+                      }}
                       onClick={() => handleExampleClick(s)}
                     >
                       {s}

@@ -15,14 +15,22 @@ export class InstallmentPlan {
   }
 
   /** Valor por parcela */
-  get installmentAmount(): Money { return this.total.divide(this.count); }
+  get installmentAmount(): Money {
+    return this.total.divide(this.count);
+  }
 
   /** Total */
-  get totalAmount(): Money { return this.total; }
+  get totalAmount(): Money {
+    return this.total;
+  }
 
   /** Quantidade */
-  get totalInstallments(): number { return this.count; }
+  get totalInstallments(): number {
+    return this.count;
+  }
 
   /** Valida se plano é consistente */
-  isValid(): boolean { return this.count > 1 && this.total.amount > 0; }
+  isValid(): boolean {
+    return this.count > 1 && this.total.amount > 0;
+  }
 }

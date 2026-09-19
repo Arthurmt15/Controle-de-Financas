@@ -35,13 +35,22 @@ const MonthlyComparison: React.FC<MonthlyComparisonProps> = ({ transactions }) =
       return d.getMonth() === prevMonth && d.getFullYear() === prevYear;
     });
 
-    const currentIncome = currentMonthTx.filter((t) => t.type === 'income').reduce((s, t) => s + t.amount, 0);
-    const currentExpense = currentMonthTx.filter((t) => t.type === 'expense').reduce((s, t) => s + t.amount, 0);
-    const prevIncome = prevMonthTx.filter((t) => t.type === 'income').reduce((s, t) => s + t.amount, 0);
-    const prevExpense = prevMonthTx.filter((t) => t.type === 'expense').reduce((s, t) => s + t.amount, 0);
+    const currentIncome = currentMonthTx
+      .filter((t) => t.type === 'income')
+      .reduce((s, t) => s + t.amount, 0);
+    const currentExpense = currentMonthTx
+      .filter((t) => t.type === 'expense')
+      .reduce((s, t) => s + t.amount, 0);
+    const prevIncome = prevMonthTx
+      .filter((t) => t.type === 'income')
+      .reduce((s, t) => s + t.amount, 0);
+    const prevExpense = prevMonthTx
+      .filter((t) => t.type === 'expense')
+      .reduce((s, t) => s + t.amount, 0);
 
     const incomeChange = prevIncome > 0 ? ((currentIncome - prevIncome) / prevIncome) * 100 : 0;
-    const expenseChange = prevExpense > 0 ? ((currentExpense - prevExpense) / prevExpense) * 100 : 0;
+    const expenseChange =
+      prevExpense > 0 ? ((currentExpense - prevExpense) / prevExpense) * 100 : 0;
 
     return {
       currentMonthName: getMonthAbbreviation(currentMonth),
@@ -95,8 +104,12 @@ const MonthlyComparison: React.FC<MonthlyComparisonProps> = ({ transactions }) =
                 transition={{ delay: idx * 0.06 }}
                 className="rounded-xl border bg-muted/30 p-4 text-center flex flex-col items-center gap-1"
               >
-                <span className="text-[11px] font-semibold tracking-widest uppercase text-muted-foreground">{c.label}</span>
-                <span className="text-[20px] font-bold tracking-tight">{formatCurrency(c.value)}</span>
+                <span className="text-[11px] font-semibold tracking-widest uppercase text-muted-foreground">
+                  {c.label}
+                </span>
+                <span className="text-[20px] font-bold tracking-tight">
+                  {formatCurrency(c.value)}
+                </span>
                 <Badge
                   variant="outline"
                   className={`mt-1 gap-1 rounded-full px-2.5 py-0.5 text-xs font-semibold border ${
@@ -105,7 +118,11 @@ const MonthlyComparison: React.FC<MonthlyComparisonProps> = ({ transactions }) =
                       : 'bg-red-50 text-red-700 border-red-200 dark:bg-red-500/10 dark:text-red-300 dark:border-red-500/20'
                   }`}
                 >
-                  {isPositive ? <ArrowUpRight className="h-3 w-3" /> : <ArrowDownRight className="h-3 w-3" />}
+                  {isPositive ? (
+                    <ArrowUpRight className="h-3 w-3" />
+                  ) : (
+                    <ArrowDownRight className="h-3 w-3" />
+                  )}
                   {Math.abs(c.change).toFixed(1)}% vs {comparison.prevMonthName}
                 </Badge>
               </motion.div>

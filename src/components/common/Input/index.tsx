@@ -97,7 +97,11 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
             hasError={!!error}
             aria-invalid={!!error}
             aria-describedby={
-              error ? `${inputIdGenerated}-error` : helperText ? `${inputIdGenerated}-helper` : undefined
+              error
+                ? `${inputIdGenerated}-error`
+                : helperText
+                  ? `${inputIdGenerated}-helper`
+                  : undefined
             }
           />
         </C.InputWrapper>

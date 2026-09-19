@@ -33,10 +33,14 @@ export class TransactionEntity extends BaseEntity {
   }
 
   /** É despesa? */
-  isExpense(): boolean { return this.type === 'expense'; }
+  isExpense(): boolean {
+    return this.type === 'expense';
+  }
 
   /** É receita? */
-  isIncome(): boolean { return this.type === 'income'; }
+  isIncome(): boolean {
+    return this.type === 'income';
+  }
 
   /** Converte para DTO puro (para persistência) */
   toDTO(): Transaction {

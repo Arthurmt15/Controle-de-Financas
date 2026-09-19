@@ -37,7 +37,11 @@ const FutureExpensesPage: React.FC = () => {
   return (
     <div className="w-full max-w-[1200px] mx-auto px-4 sm:px-6 py-6">
       {/* Cabeçalho bento */}
-      <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.45 }}>
+      <motion.div
+        initial={{ opacity: 0, y: 8 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.45 }}
+      >
         <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-4">
           <div className="min-w-0">
             <h1 className="text-[28px] sm:text-[30px] font-bold tracking-tight leading-none bg-gradient-to-r from-foreground to-muted-foreground bg-clip-text text-transparent">
@@ -60,7 +64,8 @@ const FutureExpensesPage: React.FC = () => {
               <Info className="h-3.5 w-3.5" />
             </span>
             <p className="text-[13px] leading-relaxed text-muted-foreground">
-              Cadastre gastos previstos (ex: IPVA, matrícula, viagem) e acompanhe por status: pendente, pago ou cancelado.
+              Cadastre gastos previstos (ex: IPVA, matrícula, viagem) e acompanhe por status:
+              pendente, pago ou cancelado.
             </p>
           </CardContent>
         </Card>
@@ -84,7 +89,9 @@ const FutureExpensesPage: React.FC = () => {
               <span className="block text-[11px] font-semibold tracking-widest uppercase text-muted-foreground">
                 Pendente
               </span>
-              <strong className="block mt-1.5 text-[18px] font-bold tracking-tight">{formatCurrency(metrics.totalPending)}</strong>
+              <strong className="block mt-1.5 text-[18px] font-bold tracking-tight">
+                {formatCurrency(metrics.totalPending)}
+              </strong>
               <span className="mt-1.5 inline-block text-[11px] font-medium text-muted-foreground bg-muted px-2 py-0.5 rounded-full">
                 {metrics.pendingCount} itens
               </span>
@@ -100,8 +107,12 @@ const FutureExpensesPage: React.FC = () => {
               <CheckCircle2 size={16} />
             </span>
             <div className="min-w-0 flex-1">
-              <span className="block text-[11px] font-semibold tracking-widest uppercase text-muted-foreground">Pago</span>
-              <strong className="block mt-1.5 text-[18px] font-bold tracking-tight">{formatCurrency(metrics.totalPaid)}</strong>
+              <span className="block text-[11px] font-semibold tracking-widest uppercase text-muted-foreground">
+                Pago
+              </span>
+              <strong className="block mt-1.5 text-[18px] font-bold tracking-tight">
+                {formatCurrency(metrics.totalPaid)}
+              </strong>
               <span className="mt-1.5 inline-block text-[11px] font-medium text-muted-foreground bg-muted px-2 py-0.5 rounded-full">
                 {metrics.paidCount} itens
               </span>
@@ -117,8 +128,12 @@ const FutureExpensesPage: React.FC = () => {
               <Info size={16} />
             </span>
             <div className="min-w-0 flex-1">
-              <span className="block text-[11px] font-semibold tracking-widest uppercase text-muted-foreground">Total cadastrado</span>
-              <strong className="block mt-1.5 text-[18px] font-bold tracking-tight">{metrics.total} despesas</strong>
+              <span className="block text-[11px] font-semibold tracking-widest uppercase text-muted-foreground">
+                Total cadastrado
+              </span>
+              <strong className="block mt-1.5 text-[18px] font-bold tracking-tight">
+                {metrics.total} despesas
+              </strong>
               <span className="mt-1.5 inline-block text-[11px] font-medium text-muted-foreground bg-muted px-2 py-0.5 rounded-full">
                 Gerencie por abas abaixo
               </span>
@@ -147,7 +162,12 @@ const FutureExpensesPage: React.FC = () => {
       </AnimatePresence>
 
       {/* Lista */}
-      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.18 }} className="mt-5">
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 0.18 }}
+        className="mt-5"
+      >
         <FutureExpenseList />
       </motion.div>
     </div>

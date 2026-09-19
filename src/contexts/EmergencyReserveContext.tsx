@@ -43,8 +43,17 @@ export function EmergencyReserveProvider({ children }: { children: React.ReactNo
         return;
       }
       // Tabela ainda não existe (migration pendente) — trata como sem reserva, sem erro bloqueante e sem spam no console
-      if (e instanceof Error && (e.message.includes('Tabela') || e.message.toLowerCase().includes('does not exist') || e.message.toLowerCase().includes('could not find the table') || e.message.includes('Não foi possível salvar'))) {
-        console.debug('[EmergencyReserve] tabela não existe ainda - ignorado no refresh', e.message);
+      if (
+        e instanceof Error &&
+        (e.message.includes('Tabela') ||
+          e.message.toLowerCase().includes('does not exist') ||
+          e.message.toLowerCase().includes('could not find the table') ||
+          e.message.includes('Não foi possível salvar'))
+      ) {
+        console.debug(
+          '[EmergencyReserve] tabela não existe ainda - ignorado no refresh',
+          e.message
+        );
         setReserve(null);
         setError(null);
         return;
@@ -65,12 +74,15 @@ export function EmergencyReserveProvider({ children }: { children: React.ReactNo
     return created;
   }, []);
 
-  const updateGoal = useCallback(async (goalAmount: number) => {
-    if (!reserve) throw new Error('Sem reserva');
-    const updated = await emergencyReserveService.update({ ...reserve, goalAmount });
-    setReserve(updated);
-    return updated;
-  }, [reserve]);
+  const updateGoal = useCallback(
+    async (goalAmount: number) => {
+      if (!reserve) throw new Error('Sem reserva');
+      const updated = await emergencyReserveService.update({ ...reserve, goalAmount });
+      setReserve(updated);
+      return updated;
+    },
+    [reserve]
+  );
 
   const updateCurrentAmount = useCallback(async (amount: number) => {
     const updated = await emergencyReserveService.setCurrentAmount(amount);
@@ -97,7 +109,20 @@ export function EmergencyReserveProvider({ children }: { children: React.ReactNo
   }, [reserve]);
 
   return (
-    <EmergencyReserveContext.Provider value={{ reserve, isLoading, error, refresh, create, updateGoal, updateCurrentAmount, deposit, withdraw, remove }}>
+    <EmergencyReserveContext.Provider
+      value={{
+        reserve,
+        isLoading,
+        error,
+        refresh,
+        create,
+        updateGoal,
+        updateCurrentAmount,
+        deposit,
+        withdraw,
+        remove,
+      }}
+    >
       {children}
     </EmergencyReserveContext.Provider>
   );
@@ -105,6 +130,7 @@ export function EmergencyReserveProvider({ children }: { children: React.ReactNo
 
 export function useEmergencyReserve(): EmergencyReserveContextValue {
   const ctx = useContext(EmergencyReserveContext);
-  if (!ctx) throw new Error('useEmergencyReserve deve ser usado dentro de EmergencyReserveProvider');
+  if (!ctx)
+    throw new Error('useEmergencyReserve deve ser usado dentro de EmergencyReserveProvider');
   return ctx;
 }

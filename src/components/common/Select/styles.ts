@@ -26,11 +26,7 @@ export const Label = styled.label<{
   font-size: 14px;
   font-weight: 500;
   color: ${({ theme, hasError, isDisabled }) =>
-    isDisabled
-      ? theme.colors.placeholder
-      : hasError
-      ? theme.colors.error
-      : theme.colors.text};
+    isDisabled ? theme.colors.placeholder : hasError ? theme.colors.error : theme.colors.text};
 `;
 
 /**
@@ -60,8 +56,8 @@ export const StyledSelect = styled.select<{ hasError: boolean }>`
   font-family: inherit;
   color: ${({ theme }) => theme.colors.text};
   background-color: ${({ theme }) => theme.colors.inputBackground};
-  border: 2px solid ${({ theme, hasError }) =>
-    hasError ? theme.colors.error : theme.colors.border};
+  border: 2px solid
+    ${({ theme, hasError }) => (hasError ? theme.colors.error : theme.colors.border)};
   border-radius: ${({ theme }) => theme.borderRadius};
   appearance: none;
   cursor: pointer;
@@ -76,8 +72,9 @@ export const StyledSelect = styled.select<{ hasError: boolean }>`
     outline: none;
     border-color: ${({ theme, hasError }) =>
       hasError ? theme.colors.error : theme.colors.primary};
-    box-shadow: 0 0 0 3px ${({ theme, hasError }) =>
-      hasError ? `${theme.colors.error}20` : `${theme.colors.primary}20`};
+    box-shadow: 0 0 0 3px
+      ${({ theme, hasError }) =>
+        hasError ? `${theme.colors.error}20` : `${theme.colors.primary}20`};
   }
 
   &:disabled {

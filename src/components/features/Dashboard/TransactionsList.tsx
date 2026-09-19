@@ -43,7 +43,10 @@ const TransactionRow: React.FC<{
         </div>
       </div>
       <div className="flex items-center gap-2 shrink-0">
-        <Badge variant={isIncome ? 'success' : 'destructive'} className="font-semibold tabular-nums px-2.5 py-1 rounded-full">
+        <Badge
+          variant={isIncome ? 'success' : 'destructive'}
+          className="font-semibold tabular-nums px-2.5 py-1 rounded-full"
+        >
           {isIncome ? '+' : '-'}
           {formatCurrency(tx.amount)}
         </Badge>
@@ -59,11 +62,15 @@ const TransactionsList: React.FC = () => {
   /** Últimas 5 por data de criação/data */
   const recentTransactions = useMemo(() => {
     return [...transactions]
-      .sort((a, b) => new Date(b.createdAt || b.date).getTime() - new Date(a.createdAt || a.date).getTime())
+      .sort(
+        (a, b) =>
+          new Date(b.createdAt || b.date).getTime() - new Date(a.createdAt || a.date).getTime()
+      )
       .slice(0, 5);
   }, [transactions]);
 
-  const formatDate = (dateString: string): string => new Date(dateString).toLocaleDateString('pt-BR');
+  const formatDate = (dateString: string): string =>
+    new Date(dateString).toLocaleDateString('pt-BR');
 
   // Estado vazio
   if (recentTransactions.length === 0) {
@@ -83,7 +90,10 @@ const TransactionsList: React.FC = () => {
           </span>
           <p className="text-sm font-semibold">Nenhuma transação</p>
           <p className="text-xs text-muted-foreground">Adicione sua primeira transação</p>
-          <Link to="/transactions" className={cn(buttonVariants({ variant: 'outline', size: 'sm' }), 'mt-1 rounded-xl')}>
+          <Link
+            to="/transactions"
+            className={cn(buttonVariants({ variant: 'outline', size: 'sm' }), 'mt-1 rounded-xl')}
+          >
             Ir para transações
             <ChevronRight className="ml-1 h-3.5 w-3.5" />
           </Link>
@@ -103,7 +113,10 @@ const TransactionsList: React.FC = () => {
         </CardTitle>
         <Link
           to="/transactions"
-          className={cn(buttonVariants({ variant: 'ghost', size: 'sm' }), 'h-8 rounded-xl text-xs font-medium')}
+          className={cn(
+            buttonVariants({ variant: 'ghost', size: 'sm' }),
+            'h-8 rounded-xl text-xs font-medium'
+          )}
         >
           Ver todas
           <ChevronRight className="ml-1 h-3.5 w-3.5" />
@@ -111,9 +124,18 @@ const TransactionsList: React.FC = () => {
       </CardHeader>
       <CardContent className="px-5 py-1">
         {/* Stagger suave nas linhas */}
-        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.3 }}>
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.3 }}
+        >
           {recentTransactions.map((tx, idx) => (
-            <motion.div key={tx.id} initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: idx * 0.04 }}>
+            <motion.div
+              key={tx.id}
+              initial={{ opacity: 0, y: 6 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: idx * 0.04 }}
+            >
               <TransactionRow tx={tx} formatDate={formatDate} />
             </motion.div>
           ))}

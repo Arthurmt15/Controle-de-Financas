@@ -24,7 +24,11 @@ const Dashboard: React.FC = () => {
   return (
     <div className="w-full max-w-[1200px] mx-auto px-4 sm:px-6 py-6">
       {/* Cabeçalho bento — título com gradiente e meta pill */}
-      <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.45 }}>
+      <motion.div
+        initial={{ opacity: 0, y: 8 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.45 }}
+      >
         <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-5">
           <div className="min-w-0">
             {/* Título com gradiente sutil (igual Installments) */}
@@ -49,7 +53,11 @@ const Dashboard: React.FC = () => {
       </motion.div>
 
       {/* KPIs — stagger */}
-      <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.45, delay: 0.08 }}>
+      <motion.div
+        initial={{ opacity: 0, y: 12 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.45, delay: 0.08 }}
+      >
         <SummaryCards />
       </motion.div>
 
@@ -66,7 +74,12 @@ const Dashboard: React.FC = () => {
       </div>
 
       {/* Transações recentes */}
-      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.26 }} className="mt-4">
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 0.26 }}
+        className="mt-4"
+      >
         <TransactionsList />
       </motion.div>
     </div>

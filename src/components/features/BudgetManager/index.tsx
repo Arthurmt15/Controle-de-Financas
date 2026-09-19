@@ -67,7 +67,10 @@ const BudgetManager: React.FC = () => {
   }, [userId, logout]);
 
   /** Filtra orçamentos do mês selecionado */
-  const currentBudgets = useMemo(() => budgets.filter((b) => b.month === selectedMonth), [budgets, selectedMonth]);
+  const currentBudgets = useMemo(
+    () => budgets.filter((b) => b.month === selectedMonth),
+    [budgets, selectedMonth]
+  );
 
   /** Calcula gastos por categoria no mês */
   const categorySpending = useMemo(() => {
@@ -140,7 +143,9 @@ const BudgetManager: React.FC = () => {
             <Wallet className="h-4 w-4" />
           </span>
           <div>
-            <h2 className="text-[15px] font-semibold tracking-tight leading-none">Orçamento mensal</h2>
+            <h2 className="text-[15px] font-semibold tracking-tight leading-none">
+              Orçamento mensal
+            </h2>
             <p className="text-xs text-muted-foreground mt-1">Controle de limites por categoria</p>
           </div>
         </div>
@@ -166,7 +171,11 @@ const BudgetManager: React.FC = () => {
       </div>
 
       {/* Resumo geral */}
-      <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.35 }}>
+      <motion.div
+        initial={{ opacity: 0, y: 6 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.35 }}
+      >
         <BudgetSummary totalBudget={totalBudget} totalSpent={totalSpent} />
       </motion.div>
 
@@ -183,7 +192,12 @@ const BudgetManager: React.FC = () => {
       </Card>
 
       {/* Cards por categoria */}
-      <BudgetCards budgets={currentBudgets} categorySpending={categorySpending} categories={categories} onDelete={handleDeleteBudget} />
+      <BudgetCards
+        budgets={currentBudgets}
+        categorySpending={categorySpending}
+        categories={categories}
+        onDelete={handleDeleteBudget}
+      />
     </div>
   );
 };

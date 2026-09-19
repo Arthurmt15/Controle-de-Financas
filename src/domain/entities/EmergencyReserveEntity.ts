@@ -31,13 +31,19 @@ export class EmergencyReserveEntity extends BaseEntity {
 
   deposit(amount: number): EmergencyReserveEntity {
     if (amount <= 0) throw new Error('Valor deve ser positivo');
-    return new EmergencyReserveEntity({ ...this.toDTO(), currentAmount: this.currentAmount + amount });
+    return new EmergencyReserveEntity({
+      ...this.toDTO(),
+      currentAmount: this.currentAmount + amount,
+    });
   }
 
   withdraw(amount: number): EmergencyReserveEntity {
     if (amount <= 0) throw new Error('Valor deve ser positivo');
     if (amount > this.currentAmount) throw new Error('Saldo insuficiente');
-    return new EmergencyReserveEntity({ ...this.toDTO(), currentAmount: this.currentAmount - amount });
+    return new EmergencyReserveEntity({
+      ...this.toDTO(),
+      currentAmount: this.currentAmount - amount,
+    });
   }
 
   updateGoal(newGoal: number): EmergencyReserveEntity {

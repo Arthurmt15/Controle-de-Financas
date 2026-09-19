@@ -14,7 +14,13 @@ import { formatCurrency, formatDate } from '../../../../utils/formatters';
 import InstallmentForm from '../Form';
 import { Card, CardContent, CardHeader, CardTitle } from '../../../ui/card';
 import { Button } from '../../../ui/button';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '../../../ui/dialog';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from '../../../ui/dialog';
 import type { Installment } from '../../../../types';
 
 interface InstallmentListProps {
@@ -25,7 +31,12 @@ interface InstallmentListProps {
 /** Lista de compras parceladas com novo visual */
 const InstallmentList: React.FC<InstallmentListProps> = ({ installments: propInstallments }) => {
   // Dados do contexto e categorias para resolver nomes/cores
-  const { installments: ctxInstallments, isLoading, deleteInstallment, advanceInstallment } = useInstallments();
+  const {
+    installments: ctxInstallments,
+    isLoading,
+    deleteInstallment,
+    advanceInstallment,
+  } = useInstallments();
   const installments = propInstallments ?? ctxInstallments;
   const { categories } = useTransactions();
 
@@ -52,7 +63,10 @@ const InstallmentList: React.FC<InstallmentListProps> = ({ installments: propIns
 
   /** Valor restante a pagar */
   const getRemainingAmount = (installment: Installment): number => {
-    return (installment.totalInstallments - installment.currentInstallment) * installment.installmentAmount;
+    return (
+      (installment.totalInstallments - installment.currentInstallment) *
+      installment.installmentAmount
+    );
   };
 
   /** Soma meses preservando último dia do mês */
@@ -143,7 +157,8 @@ const InstallmentList: React.FC<InstallmentListProps> = ({ installments: propIns
       <Card className="rounded-2xl">
         <CardHeader className="py-4 px-5">
           <CardTitle className="text-[13px] font-semibold tracking-wide uppercase text-muted-foreground">
-            Todos os parcelados • {installments.length} {installments.length === 1 ? 'item' : 'itens'}
+            Todos os parcelados • {installments.length}{' '}
+            {installments.length === 1 ? 'item' : 'itens'}
           </CardTitle>
         </CardHeader>
       </Card>
@@ -175,7 +190,9 @@ const InstallmentList: React.FC<InstallmentListProps> = ({ installments: propIns
                     <div className="flex items-center gap-2 min-w-0 flex-1">
                       {/* Indicador de tipo (bolinha) */}
                       <span className="w-2 h-2 rounded-full bg-red-500 shrink-0" aria-hidden />
-                      <span className="text-[15px] font-semibold leading-tight truncate">{installment.description}</span>
+                      <span className="text-[15px] font-semibold leading-tight truncate">
+                        {installment.description}
+                      </span>
                     </div>
                     {/* Botões de ação */}
                     <div className="flex items-center gap-1 shrink-0">
@@ -219,8 +236,9 @@ const InstallmentList: React.FC<InstallmentListProps> = ({ installments: propIns
                     >
                       {getCategoryName(installment.categoryId)}
                     </span>
-                    <span className="text-xs text-muted-foreground">{formatDate(installment.startDate)}</span>
-
+                    <span className="text-xs text-muted-foreground">
+                      {formatDate(installment.startDate)}
+                    </span>
                   </div>
 
                   {/* Barra de progresso */}
@@ -239,16 +257,26 @@ const InstallmentList: React.FC<InstallmentListProps> = ({ installments: propIns
                   {/* Valores financeiros */}
                   <div className="grid grid-cols-3 gap-2 pt-3 border-t text-center">
                     <div>
-                      <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">Total</p>
-                      <p className="text-sm font-semibold mt-1">{formatCurrency(installment.totalAmount)}</p>
+                      <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+                        Total
+                      </p>
+                      <p className="text-sm font-semibold mt-1">
+                        {formatCurrency(installment.totalAmount)}
+                      </p>
                     </div>
                     <div className="border-x px-2">
-                      <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">Restante</p>
+                      <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+                        Restante
+                      </p>
                       <p className="text-sm font-semibold mt-1">{formatCurrency(remaining)}</p>
                     </div>
                     <div>
-                      <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">Parcela</p>
-                      <p className="text-sm font-semibold mt-1">{formatCurrency(installment.installmentAmount)}</p>
+                      <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+                        Parcela
+                      </p>
+                      <p className="text-sm font-semibold mt-1">
+                        {formatCurrency(installment.installmentAmount)}
+                      </p>
                     </div>
                   </div>
 
@@ -293,7 +321,8 @@ const InstallmentList: React.FC<InstallmentListProps> = ({ installments: propIns
                           {formatDate(nextDue.toISOString().split('T')[0])}
                         </span>
                         <span className="text-[12px] font-medium text-muted-foreground bg-background/60 border px-2 py-0.5 rounded-full">
-                          {installment.currentInstallment + 1}/{installment.totalInstallments} • {formatCurrency(installment.installmentAmount)}
+                          {installment.currentInstallment + 1}/{installment.totalInstallments} •{' '}
+                          {formatCurrency(installment.installmentAmount)}
                         </span>
                       </div>
                     </div>
@@ -302,7 +331,9 @@ const InstallmentList: React.FC<InstallmentListProps> = ({ installments: propIns
                       <span className="text-[10px] font-semibold tracking-widest uppercase text-emerald-700 dark:text-emerald-400">
                         Concluído
                       </span>
-                      <p className="text-[13px] font-semibold text-emerald-800 dark:text-emerald-300">Todas as parcelas pagas</p>
+                      <p className="text-[13px] font-semibold text-emerald-800 dark:text-emerald-300">
+                        Todas as parcelas pagas
+                      </p>
                     </div>
                   )}
                 </CardContent>
@@ -313,14 +344,22 @@ const InstallmentList: React.FC<InstallmentListProps> = ({ installments: propIns
       </div>
 
       {/* Modal de edição com Dialog shadcn */}
-      <Dialog open={!!editingInstallment} onOpenChange={(open) => !open && setEditingInstallment(null)}>
+      <Dialog
+        open={!!editingInstallment}
+        onOpenChange={(open) => !open && setEditingInstallment(null)}
+      >
         <DialogContent className="sm:max-w-[560px] max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Editar Parcelado</DialogTitle>
-            <DialogDescription>Atualize os dados do parcelado e salve as alterações.</DialogDescription>
+            <DialogDescription>
+              Atualize os dados do parcelado e salve as alterações.
+            </DialogDescription>
           </DialogHeader>
           {editingInstallment && (
-            <InstallmentForm installment={editingInstallment} onClose={() => setEditingInstallment(null)} />
+            <InstallmentForm
+              installment={editingInstallment}
+              onClose={() => setEditingInstallment(null)}
+            />
           )}
         </DialogContent>
       </Dialog>
@@ -330,7 +369,9 @@ const InstallmentList: React.FC<InstallmentListProps> = ({ installments: propIns
         <DialogContent className="sm:max-w-[420px]">
           <DialogHeader>
             <DialogTitle>Confirmar exclusão</DialogTitle>
-            <DialogDescription>Tem certeza que deseja excluir este parcelado? Esta ação não pode ser desfeita.</DialogDescription>
+            <DialogDescription>
+              Tem certeza que deseja excluir este parcelado? Esta ação não pode ser desfeita.
+            </DialogDescription>
           </DialogHeader>
           <div className="flex justify-end gap-2 mt-2">
             <Button variant="outline" onClick={() => setDeletingId(null)}>
