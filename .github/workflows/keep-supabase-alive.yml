@@ -1,0 +1,59 @@
+# @file .github/workflows/keep-supabase-alive.yml
+# @description Keep-alive do Supabase (plano free pausa após ~7 dias sem atividade).
+# Faz um SELECT leve via PostgREST + healthcheck do Auth a cada 2 dias.
+# Requer os secrets: SUPABASE_URL e SUPABASE_ANON_KEY
+# (Settings do repo → Secrets and variables → Actions → New repository secret)
+
+name: Keep Supabase Alive
+
+on:
+  schedule:
+    # 08:00 UTC a cada 2 dias do mês (suficiente contra o pause de 7 dias)
+    - cron: '0 8 */2 * *'
+  workflow_dispatch: {}
+
+jobs:
+  ping:
+    name: Ping Supabase
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - name: Check secrets
+        run: |
+          if [ -z "${{ secrets.SUPABASE_URL }}" ] || [ -z "${{ secrets.SUPABASE_ANON_KEY }}" ]; then
+            echo "::error::Configure os secrets SUPABASE_URL e SUPABASE_ANON_KEY em Settings → Secrets → Actions."
+            exit 1
+          fi
+
+      - name: Ping PostgREST (SELECT leve)
+        run: |
+          set -e
+          CODE=$(curl -s -o /tmp/rest.json -w "%{http_code}" \
+            "${{ secrets.SUPABASE_URL }}/rest/v1/transactions?select=id&limit=1" \
+            -H "apikey: ${{ secrets.SUPABASE_ANON_KEY }}" \
+            -H "Authorization: Bearer ${{ secrets.SUPABASE_ANON_KEY }}")
+          echo "PostgREST HTTP $CODE"
+          cat /tmp/rest.json
+          echo ""
+          if [ "$CODE" -lt 200 ] || [ "$CODE" -ge 500 ]; then
+            echo "::error::PostgREST retornou $CODE"
+            exit 1
+          fi
+
+      - name: Ping Auth health
+        run: |
+          set -e
+          CODE=$(curl -s -o /tmp/auth.json -w "%{http_code}" \
+            "${{ secrets.SUPABASE_URL }}/auth/v1/health" \
+            -H "apikey: ${{ secrets.SUPABASE_ANON_KEY }}")
+          echo "Auth HTTP $CODE"
+          cat /tmp/auth.json
+          echo ""
+          if [ "$CODE" -lt 200 ] || [ "$CODE" -ge 500 ]; then
+            echo "::error::Auth health retornou $CODE"
+            exit 1
+          fi
+
+      - name: Done
+        run: echo "Supabase keep-alive OK em $(date -u '+%Y-%m-%dT%H:%M:%SZ')"
