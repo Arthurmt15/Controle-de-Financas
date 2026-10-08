@@ -70,12 +70,17 @@ export const DELETE_RECURRING_PATTERNS = [
   /(?:excluir?|deletar?|remover?|apagar?)\s+(?:conta\s+)?recorrente\s+(.+)/i,
 ];
 
+const TX_UPDATE_VERBS =
+  'editar?|edite|atualizar?|atualize|alterar?|altere|mudar?|mude|trocar?|troque|corrigir?|corrija|corrige|renomear?|renomeia|renomeie|modificar?|modifique|ajustar?|ajuste';
+const TX_DELETE_VERBS =
+  'excluir?|exclua|deletar?|delete|remover?|remova|apagar?|apague';
+
 export const UPDATE_TRANSACTION_PATTERNS = [
-  /(?:editar?|atualizar?|alterar?|mudar?|trocar?|corrigir?|corrige|renomear?|renomeia)\s+(?!categori[ao]\b|recorrente\b)(.+)/i,
+  new RegExp(`(?:${TX_UPDATE_VERBS})\\s+(?!categori[ao]\\b|recorrente\\b)(.+)`, 'i'),
 ];
 
 export const DELETE_TRANSACTION_PATTERNS = [
-  /(?:excluir?|deletar?|remover?|apagar?|apaga)\s+(?!categori[ao]\b|recorrente\b)(.+)/i,
+  new RegExp(`(?:${TX_DELETE_VERBS})\\s+(?!categori[ao]\\b|recorrente\\b)(.+)`, 'i'),
 ];
 
 export const GENERATE_BILLS_PATTERNS = [

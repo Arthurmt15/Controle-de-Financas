@@ -59,6 +59,25 @@ describe('chatCommands - update_transaction', () => {
     }
   });
 
+  it('detecta "altere" (imperativo) com alvo por data+valor e renomeia', () => {
+    const cmd = detectCommand('altere a despesa de 08/10/2026 de R$ 70 para festa rave');
+    expect(cmd.type).toBe('update_transaction');
+    if (cmd.type === 'update_transaction') {
+      expect(cmd.patch.filterDate).toBe('2026-10-08');
+      expect(cmd.patch.filterAmount).toBe(70);
+      expect(cmd.patch.txType).toBe('expense');
+      expect(cmd.patch.newDescription?.toLowerCase()).toContain('festa rave');
+    }
+  });
+
+  it('detecta "mude" (imperativo)', () => {
+    const cmd = detectCommand('mude o lanche para 50');
+    expect(cmd.type).toBe('update_transaction');
+    if (cmd.type === 'update_transaction') {
+      expect(cmd.patch.amount).toBe(50);
+    }
+  });
+
   it('não rouba "excluir categoria"', () => {
     expect(detectCommand('excluir categoria Lazer').type).toBe('delete_category');
   });
@@ -145,6 +164,46 @@ describe('chatCommands - executeCommand transações', () => {
       async () => {}
     );
     expect(msg).toContain('Nenhuma transação parecida');
+  });
+
+  it('localiza por data+valor e renomeia (cenário festa rave)', async () => {
+    const txs = [
+      makeTx({ id: 'a', description: 'Lanche', amount: 70, date: '2026-10-08T12:00:00.000Z' }),
+      makeTx({ id: 'b', description: 'Uber', amount: 70, date: '2026-10-08T12:00:00.000Z' }),
+      makeTx({ id: 'c', description: 'Lanche', amount: 30, date: '2026-10-01T12:00:00.000Z' }),
+    ];
+    const updated: Transaction[] = [];
+    const msg = await executeCommand(
+      {
+        type: 'update_transaction',
+        patch: {
+          target: '',
+          filterAmount: 70,
+          filterDate: '2026-10-08',
+          txType: 'expense',
+          newDescription: 'Festa Rave',
+        },
+      },
+      mockCategories,
+      minimal.createCategory,
+      minimal.deleteCategory,
+      noopAsync,
+      noopAsync,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      txs,
+      async (t) => {
+        updated.push(t);
+        return t;
+      },
+      async () => {}
+    );
+    expect(updated).toHaveLength(2);
+    expect(updated.every((t) => t.description === 'Festa Rave')).toBe(true);
+    expect(msg).toContain('2 transações atualizadas');
   });
 
   it('recusa categoria inexistente sem aplicar nada', async () => {

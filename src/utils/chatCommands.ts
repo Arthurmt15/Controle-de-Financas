@@ -21,7 +21,7 @@ import {
   parseRecurringBillInput,
   parseRecurringBillUpdate,
   parseTransactionUpdate,
-  cleanTransactionTarget,
+  parseTransactionTarget,
   capitalizeFirst,
 } from './chatCommandsParser';
 import type { CommandType } from './chatCommandsExecutor';
@@ -78,8 +78,10 @@ export function detectCommand(text: string): CommandType {
   for (const pattern of DELETE_TRANSACTION_PATTERNS) {
     const match = trimmed.match(pattern);
     if (match) {
-      const target = cleanTransactionTarget(match[1].trim());
-      if (target.length >= 2) return { type: 'delete_transaction', target };
+      const target = parseTransactionTarget(match[1].trim());
+      if (target.target.length >= 2 || target.filterAmount !== undefined || target.filterDate) {
+        return { type: 'delete_transaction', ...target };
+      }
     }
   }
   for (const pattern of SUMMARY_PATTERNS) if (pattern.test(trimmed)) return { type: 'summary' };

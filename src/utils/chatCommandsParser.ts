@@ -72,13 +72,44 @@ export function parseRecurringBillInput(
 }
 
 export interface TransactionUpdatePatch {
-  /** Descrição-alvo para localizar as transações */
+  /** Descrição-alvo para localizar as transações (pode ser vazio se houver filtros) */
   target: string;
+  /** Filtros do alvo: só altera quem combinar com todos os informados */
+  filterAmount?: number;
+  filterDate?: string;
+  txType?: 'income' | 'expense';
   amount?: number;
   categoryName?: string;
   /** Data no formato yyyy-mm-dd */
   date?: string;
   newDescription?: string;
+}
+
+export interface TransactionTarget {
+  target: string;
+  filterAmount?: number;
+  filterDate?: string;
+  txType?: 'income' | 'expense';
+}
+
+/** Palavras genéricas que indicam tipo em vez de descrição ("a despesa de 70"). */
+function detectTxType(text: string): 'income' | 'expense' | undefined {
+  const lower = text.toLowerCase();
+  if (/\b(despesa|despesas|gasto|gastos|sa[ií]da|conta|contas|d[ií]vida)\b/.test(lower))
+    return 'expense';
+  if (/\b(entrada|entradas|receita|receitas|ganho|sal[aá]rio)\b/.test(lower)) return 'income';
+  return undefined;
+}
+
+const GENERIC_TARGET_WORDS = new Set(
+  'despesa despesas gasto gastos saída saida conta contas lançamento lancamento transação transacao item itens valor lançamento despesa conta entrada entradas receita receitas ganho salario salário'.split(
+    ' '
+  )
+);
+
+function isGenericTarget(target: string): boolean {
+  const words = target.toLowerCase().split(/\s+/).filter(Boolean);
+  return words.length > 0 && words.every((w) => GENERIC_TARGET_WORDS.has(w));
 }
 
 const AMOUNT_PATTERNS = [
@@ -170,35 +201,66 @@ function cleanTarget(text: string): string {
 }
 
 /**
- * Interpreta o trecho após o verbo de edição.
- * Ex.: "o lanche para 50" → { target: "lanche", amount: 50 }
- * Ex.: "mercado pra categoria alimentação" → { target: "mercado", categoryName: "Alimentação" }
- * Ex.: "uber de ontem para hoje" → { target: "uber", date: "<hoje>" }
- * Ex.: "mercado para supermercado" → { target: "mercado", newDescription: "supermercado" }
+ * Interpreta o trecho após o verbo de edição/exclusão.
+ * Divide em "alvo" (esquerda do para) e "novo valor" (direita do para):
+ *  - Esquerda: descrição + filtros (valor após "de", data, tipo "despesa/entrada").
+ *    Ex.: "a despesa de 08/10/2026 de R$ 70" → filtros {expense, 2026-10-08, 70}
+ *  - Direita: patch (valor, categoria, data ou nova descrição).
+ *    Ex.: "para 50" → amount; "para categoria X" → categoria; "para festa rave" → descrição.
  */
-export function parseTransactionUpdate(text: string): TransactionUpdatePatch | null {
+export function parseTransactionTarget(text: string): TransactionTarget {
   const amountRes = extractAmount(text);
   const dateRes = extractDate(amountRes.rest);
-  const catRes = extractCategory(dateRes.rest);
+  const txType = detectTxType(dateRes.rest);
+  let target = cleanTarget(dateRes.rest);
+  if (isGenericTarget(target)) target = '';
+  const result: TransactionTarget = { target };
+  if (amountRes.amount !== undefined) result.filterAmount = amountRes.amount;
+  if (dateRes.date) result.filterDate = dateRes.date;
+  if (txType) result.txType = txType;
+  return result;
+}
 
-  let rest = catRes.rest;
-  let newDescription: string | undefined;
+/**
+ * Interpreta o trecho após o verbo de edição.
+ * Ex.: "o lanche para 50" → { target: "lanche", amount: 50 }
+ * Ex.: "a despesa de 08/10/2026 de R$ 70 para festa rave" → filtros + { newDescription }
+ */
+export function parseTransactionUpdate(text: string): TransactionUpdatePatch | null {
+  const split = text.match(/^(.*?)\s+(?:para|pra)\s+(.+)$/i);
+  const left = (split ? split[1] : text).trim();
+  const right = (split ? split[2] : '').trim();
 
-  // "X para Y" restante (Y não é valor/categoria/data) = nova descrição
-  const paraMatch = rest.match(/^(.+?)\s+(?:para|pra)\s+(.+)$/i);
-  if (paraMatch && paraMatch[2].trim().length >= 2) {
-    rest = paraMatch[1];
-    newDescription = capitalizeFirst(cleanTarget(paraMatch[2]));
+  const target = parseTransactionTarget(left);
+
+  const patch: TransactionUpdatePatch = { target: target.target };
+  if (target.filterAmount !== undefined) patch.filterAmount = target.filterAmount;
+  if (target.filterDate) patch.filterDate = target.filterDate;
+  if (target.txType) patch.txType = target.txType;
+
+  if (right) {
+    // "para categoria X" (com ou sem preposição, pois o split já consumiu o "para")
+    const bareCat = right.match(/^categori[ao]s?\s+(.+)$/i);
+    if (bareCat && bareCat[1].trim().length >= 2) {
+      patch.categoryName = capitalizeFirst(cleanTarget(bareCat[1]));
+    } else {
+      const amountRes = extractAmount(right);
+      const dateRes = extractDate(amountRes.rest);
+      const catRes = extractCategory(dateRes.rest);
+      if (amountRes.amount !== undefined) patch.amount = amountRes.amount;
+      if (dateRes.date) patch.date = dateRes.date;
+      if (catRes.categoryName) patch.categoryName = catRes.categoryName;
+      const leftover = cleanTarget(catRes.rest);
+      if (leftover.length >= 2) patch.newDescription = capitalizeFirst(leftover);
+    }
+  } else {
+    // Sem "para": valor/data no próprio alvo (ex.: "corrige o lanche 50")
+    const amountRes = extractAmount(left);
+    if (amountRes.amount !== undefined) patch.amount = amountRes.amount;
   }
 
-  const target = cleanTarget(rest);
-  if (target.length < 2) return null;
-
-  const patch: TransactionUpdatePatch = { target };
-  if (amountRes.amount !== undefined) patch.amount = amountRes.amount;
-  if (dateRes.date) patch.date = dateRes.date;
-  if (catRes.categoryName) patch.categoryName = catRes.categoryName;
-  if (newDescription) patch.newDescription = newDescription;
+  // Sem alvo nem filtros, nada a localizar
+  if (!patch.target && patch.filterAmount === undefined && !patch.filterDate) return null;
 
   // Sem nenhuma mudança identificada, não é um comando de edição válido
   if (

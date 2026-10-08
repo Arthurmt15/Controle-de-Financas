@@ -15,7 +15,7 @@ export type CommandType =
   | { type: 'delete_recurring'; name: string }
   | { type: 'generate_bills' }
   | { type: 'update_transaction'; patch: TransactionUpdatePatch }
-  | { type: 'delete_transaction'; target: string }
+  | { type: 'delete_transaction'; target: string; filterAmount?: number; filterDate?: string; txType?: 'income' | 'expense' }
   | { type: null };
 
 function formatBRL(value: number): string {
@@ -24,10 +24,18 @@ function formatBRL(value: number): string {
 
 function findTransactionsByDescription(
   transactions: Transaction[],
-  target: string
+  target: string,
+  filters?: { filterAmount?: number; filterDate?: string; txType?: 'income' | 'expense' }
 ): Transaction[] {
   const needle = target.toLowerCase();
-  return transactions.filter((t) => t.description.toLowerCase().includes(needle));
+  return transactions.filter((t) => {
+    if (target && !t.description.toLowerCase().includes(needle)) return false;
+    if (filters?.txType && t.type !== filters.txType) return false;
+    if (filters?.filterAmount !== undefined && Math.abs(t.amount - filters.filterAmount) > 0.005)
+      return false;
+    if (filters?.filterDate && t.date.slice(0, 10) !== filters.filterDate) return false;
+    return true;
+  });
 }
 
 function describeTransaction(t: Transaction, categories: Category[]): string {
@@ -184,8 +192,9 @@ export async function executeCommand(
       if (!updateTransaction || !transactions)
         return ' Função de edição de transação não disponível.';
       const { patch } = command;
-      const matches = findTransactionsByDescription(transactions, patch.target);
+      const matches = findTransactionsByDescription(transactions, patch.target, patch);
       if (matches.length === 0) {
+        const label = patch.target || 'os filtros informados';
         const recent = [...transactions]
           .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
           .slice(0, 8);
@@ -193,7 +202,7 @@ export async function executeCommand(
           recent.length > 0
             ? `\n\nÚltimos lançamentos:\n${recent.map((t) => `• ${describeTransaction(t, categories)}`).join('\n')}`
             : '\n\nNenhuma transação cadastrada ainda.';
-        return ` Nenhuma transação parecida com "${patch.target}".${hint}`;
+        return ` Nenhuma transação parecida com "${label}".${hint}`;
       }
       let categoryId: string | undefined;
       if (patch.categoryName) {
@@ -227,9 +236,9 @@ export async function executeCommand(
     case 'delete_transaction': {
       if (!deleteTransaction || !transactions)
         return ' Função de exclusão de transação não disponível.';
-      const matches = findTransactionsByDescription(transactions, command.target);
+      const matches = findTransactionsByDescription(transactions, command.target, command);
       if (matches.length === 0)
-        return ` Nenhuma transação parecida com "${command.target}".\n\nUse "resumo" para ver seus lançamentos.`;
+        return ` Nenhuma transação parecida com "${command.target || 'os filtros informados'}".\n\nUse "resumo" para ver seus lançamentos.`;
       try {
         for (const t of matches) {
           await deleteTransaction(t.id);
