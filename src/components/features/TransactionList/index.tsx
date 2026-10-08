@@ -20,6 +20,7 @@ import { useTransactions } from '../../../hooks/useTransactions';
 import { formatCurrency, formatDate } from '../../../utils/formatters';
 import { exportTransactionsCSV, exportTransactionsPDF } from '../../../utils/exportData';
 import TransactionForm from '../TransactionForm';
+import MobileDownloadBar from './MobileDownloadBar';
 import { Card, CardContent, CardHeader, CardTitle } from '../../ui/card';
 import { Button } from '../../ui/button';
 import { Input } from '../../ui/input';
@@ -354,6 +355,9 @@ const TransactionList: React.FC = () => {
 
       {/* Grid alternativo desktop quando quiser visual de cards (mantém tabela acima, grid abaixo é opcional para mobile-first) */}
       {/* Para desktop grid adicional, oculto por padrão - tabela já cobre desktop */}
+
+      {/* Barra de download — só no mobile, fixa ao rolar a lista */}
+      <MobileDownloadBar transactions={filteredTransactions} categories={categories} />
 
       {/* Modal de edição - Dialog shadcn */}
       <Dialog

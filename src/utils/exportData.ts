@@ -67,7 +67,7 @@ export function convertToCSV(config: ExportConfig): string {
 }
 
 /**
- * Faz download de um arquivo CSV
+ * Faz download de um arquivo CSV (usa menu nativo de compartilhar no celular).
  * @param {string} csvContent - Conteúdo CSV
  * @param {string} filename - Nome do arquivo
  *
@@ -78,15 +78,56 @@ export function downloadCSV(csvContent: string, filename: string): void {
   // Adiciona BOM para caracteres especiais no Excel
   const BOM = '\uFEFF';
   const blob = new Blob([BOM + csvContent], { type: 'text/csv;charset=utf-8;' });
-  const link = document.createElement('a');
-  const url = URL.createObjectURL(blob);
+  shareOrDownloadFile(blob, filename);
+}
 
+/**
+ * Faz download tradicional via âncora temporária (desktop e fallback mobile).
+ */
+function anchorDownload(url: string, filename: string): void {
+  const link = document.createElement('a');
   link.setAttribute('href', url);
   link.setAttribute('download', filename);
   link.style.visibility = 'hidden';
   document.body.appendChild(link);
   link.click();
   document.body.removeChild(link);
+  // Revoga com atraso para não interromper o download em alguns browsers
+  setTimeout(() => URL.revokeObjectURL(url), 60_000);
+}
+
+/**
+ * Compartilha o arquivo via Web Share API (menu nativo do celular) quando
+ * disponível; senão faz download tradicional. Ideal para o botão mobile.
+ */
+export function shareOrDownloadFile(blob: Blob, filename: string): void {
+  try {
+    const nav = navigator as Navigator & {
+      canShare?: (data: { files: File[] }) => boolean;
+      share?: (data: { files: File[]; title?: string }) => Promise<void>;
+    };
+    const file = new File([blob], filename, { type: blob.type || 'application/octet-stream' });
+    if (typeof nav.canShare === 'function' && typeof nav.share === 'function') {
+      try {
+        if (nav.canShare({ files: [file] })) {
+          const url = URL.createObjectURL(blob);
+          nav
+            .share({ files: [file], title: filename })
+            .catch((err: unknown) => {
+              // Cancelamento pelo usuário não deve disparar download
+              if ((err as Error)?.name !== 'AbortError') anchorDownload(url, filename);
+              else URL.revokeObjectURL(url);
+            });
+          return;
+        }
+      } catch {
+        // canShare/share falhou de forma síncrona — cai para download tradicional
+      }
+    }
+  } catch {
+    // File/Blob indisponível — cai para download tradicional
+  }
+  anchorDownload(URL.createObjectURL(blob), filename);
 }
 
 /**
@@ -147,8 +188,18 @@ export function generatePDF(config: ExportConfig): void {
     alternateRowStyles: { fillColor: [245, 245, 245] },
   });
 
-  // Salva o PDF
-  doc.save('relatorio_financeiro.pdf');
+  // Salva o PDF (menu nativo de compartilhar no celular, download no desktop)
+  const filename = 'relatorio_financeiro.pdf';
+  try {
+    const pdfBlob = doc.output('blob') as Blob;
+    const blob =
+      pdfBlob instanceof Blob
+        ? new Blob([pdfBlob], { type: 'application/pdf' })
+        : pdfBlob;
+    shareOrDownloadFile(blob, filename);
+  } catch {
+    doc.save(filename);
+  }
 }
 
 /**
