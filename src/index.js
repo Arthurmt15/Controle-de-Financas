@@ -3,6 +3,7 @@
  * @description Ponto de entrada da aplicação React.
  * Renderiza o componente raiz no DOM.
  */
+/* eslint-disable no-console -- este arquivo envolve o console para filtrar ruído do GSI */
 
 import { createRoot } from 'react-dom/client';
 import './index.css';
