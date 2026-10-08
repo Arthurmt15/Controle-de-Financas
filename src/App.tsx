@@ -4,7 +4,7 @@
  * Implementa code splitting para melhor performance.
  */
 
-import React, { Suspense, lazy } from 'react';
+import React, { Suspense, useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { ThemeProvider, useTheme } from './contexts/ThemeContext';
@@ -20,6 +20,7 @@ import SkipLink from './components/common/SkipLink';
 import FloatingChat from './components/features/FloatingChat';
 import ErrorBoundary from './components/common/ErrorBoundary';
 import GlobalStyle from './Styles/global';
+import { lazyWithRetry, clearChunkReloadFlag } from './utils/lazyWithRetry';
 
 const Main = styled.main`
   padding: 24px;
@@ -35,16 +36,16 @@ const Main = styled.main`
   }
 `;
 
-// Lazy loading das páginas (code splitting)
-const LoginPage = lazy(() => import('./pages/Login'));
-const DashboardPage = lazy(() => import('./pages/Dashboard'));
-const TransactionsPage = lazy(() => import('./pages/Transactions'));
-const AnalysisPage = lazy(() => import('./pages/Analysis'));
-const SettingsPage = lazy(() => import('./pages/Settings'));
-const InstallmentsPage = lazy(() => import('./pages/Installments'));
-const DebtsPage = lazy(() => import('./pages/Debts'));
-const EmergencyReservePage = lazy(() => import('./pages/EmergencyReserve'));
-const FutureExpensesPage = lazy(() => import('./pages/FutureExpenses'));
+// Lazy loading das páginas (code splitting) com retry anti-ChunkLoadError pós-deploy
+const LoginPage = lazyWithRetry(() => import('./pages/Login'));
+const DashboardPage = lazyWithRetry(() => import('./pages/Dashboard'));
+const TransactionsPage = lazyWithRetry(() => import('./pages/Transactions'));
+const AnalysisPage = lazyWithRetry(() => import('./pages/Analysis'));
+const SettingsPage = lazyWithRetry(() => import('./pages/Settings'));
+const InstallmentsPage = lazyWithRetry(() => import('./pages/Installments'));
+const DebtsPage = lazyWithRetry(() => import('./pages/Debts'));
+const EmergencyReservePage = lazyWithRetry(() => import('./pages/EmergencyReserve'));
+const FutureExpensesPage = lazyWithRetry(() => import('./pages/FutureExpenses'));
 
 /**
  * Componente de carregamento exibido durante lazy load
@@ -157,6 +158,11 @@ const StyledThemeWrapper: React.FC<{ children: React.ReactNode }> = ({ children 
  * Componente raiz da aplicação
  */
 const App: React.FC = () => {
+  // Boot ok com o bundle atual — libera futuros auto-reloads de chunk obsoleto
+  useEffect(() => {
+    clearChunkReloadFlag();
+  }, []);
+
   return (
     <BrowserRouter>
       <ThemeProvider>
