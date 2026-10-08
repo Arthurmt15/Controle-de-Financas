@@ -40,7 +40,10 @@
     "lint:fix": "eslint src --ext .ts,.tsx --fix",
     "format": "prettier --write \"src/**/*.{ts,tsx,css,json}\"",
     "format:check": "prettier --check \"src/**/*.{ts,tsx,css,json}\"",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "keepalive": "node scripts/supabase-keepalive.mjs",
+    "supabase:status": "node scripts/supabase-keepalive.mjs --status-only",
+    "supabase:reactivate": "node scripts/supabase-keepalive.mjs --restore"
   },
   "eslintConfig": {
     "extends": [

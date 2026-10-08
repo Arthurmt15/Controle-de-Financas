@@ -1,0 +1,49 @@
+# @file .github/workflows/supabase-keepalive.yml
+# @description Job anti-congelamento: pinga o Supabase a cada 3 dias (free tier pausa após ~7 dias sem tráfego)
+#   + permite reativação manual via workflow_dispatch com restore=true.
+#
+# Secrets necessários (Settings → Secrets and variables → Actions):
+#   SUPABASE_URL        → https://igefdzesaftjrqedssmi.supabase.co
+#   SUPABASE_ANON_KEY   → anon/public key (publishable)
+#   SUPABASE_ACCESS_TOKEN (opcional, só p/ restore) → token sbp_... de https://supabase.com/dashboard/account/tokens
+#   SUPABASE_PROJECT_REF (opcional, padrão: igefdzesaftjrqedssmi)
+
+name: Supabase Keep-Alive
+
+on:
+  schedule:
+    # A cada 3 dias às 09:00 UTC (folga segura antes dos 7 dias do free tier)
+    - cron: '0 9 */3 * *'
+  workflow_dispatch:
+    inputs:
+      restore:
+        description: 'Tentar restaurar projeto pausado via Management API'
+        required: false
+        default: 'false'
+
+jobs:
+  keepalive:
+    name: Ping Supabase (anti-pause)
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Keep-alive ping
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+          SUPABASE_PROJECT_REF: ${{ secrets.SUPABASE_PROJECT_REF }}
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+        run: |
+          if [ "${{ github.event.inputs.restore }}" = "true" ]; then
+            node scripts/supabase-keepalive.mjs --restore
+          else
+            node scripts/supabase-keepalive.mjs
+          fi
