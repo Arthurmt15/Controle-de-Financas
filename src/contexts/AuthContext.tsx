@@ -104,6 +104,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             };
             dispatch({ type: 'LOGIN_SUCCESS', payload: user });
             setStoredUser(user);
+          } else if (storedUser) {
+            // Sessão Supabase ausente/expirada (ex.: projeto pausado por dias):
+            // o usuário do localStorage é obsoleto e todas as chamadas (incluindo
+            // a edge function ai-chat) falhariam com 401. Força novo login.
+            dispatch({ type: 'LOGOUT' });
+            removeStoredUser();
           }
         })
         .catch(() => {});

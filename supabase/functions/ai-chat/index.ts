@@ -83,7 +83,7 @@ serve(async (req) => {
       )
     }
 
-    const { messages, model = "qwen/qwen3.8-27b" } = await req.json()
+    const { messages, model = Deno.env.get("GROQ_MODEL") || "qwen/qwen3.8-27b" } = await req.json()
 
     if (!messages || !Array.isArray(messages) || messages.length === 0) {
       return new Response(

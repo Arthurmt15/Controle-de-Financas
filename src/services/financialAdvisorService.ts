@@ -119,13 +119,16 @@ export async function* streamAdvisor(
   const {
     data: { session },
   } = await supabase.auth.getSession();
+  if (!session?.access_token) {
+    throw new Error('Sessão expirada. Saia e entre novamente para usar a IA.');
+  }
   const url = `${process.env.REACT_APP_SUPABASE_URL}/functions/v1/ai-chat`;
 
   const response = await fetch(url, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      Authorization: `Bearer ${session?.access_token || ''}`,
+      Authorization: `Bearer ${session.access_token}`,
       apikey: process.env.REACT_APP_SUPABASE_ANON_KEY || '',
     },
     body: JSON.stringify({
@@ -155,6 +158,9 @@ REGRAS:
 
   if (!response.ok) {
     const error = await response.json().catch(() => ({}));
+    if (response.status === 401) {
+      throw new Error('Não autenticado na IA. Saia e entre novamente.');
+    }
     throw new Error(error.error || `Erro na IA: ${response.status}`);
   }
 
