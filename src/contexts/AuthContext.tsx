@@ -93,8 +93,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (isSupabase) {
       authService
         .getSession()
-        .then((session) => {
+        .then(async (session) => {
           if (session?.user) {
+            // Auto-cura: sessão local pode estar morta no servidor (refresh 400
+            // após pausa do projeto). Valida e purga sozinha, sem ação do usuário.
+            const valid = await authService.validateSession().catch(() => true);
+            if (!valid) {
+              dispatch({ type: 'LOGOUT' });
+              removeStoredUser();
+              return;
+            }
             const user: User = {
               id: session.user.id,
               name:

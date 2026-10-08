@@ -106,6 +106,7 @@ export const authService = {
   signInWithGoogle: (..._args: unknown[]) => legacyAuth.authService.signInWithGoogle(),
   signOut: (..._args: unknown[]) => legacyAuth.authService.signOut(),
   getSession: (..._args: unknown[]) => legacyAuth.authService.getSession(),
+  validateSession: (..._args: unknown[]) => legacyAuth.authService.validateSession(),
   getUser: (..._args: unknown[]) => legacyAuth.authService.getUser(),
   onAuthStateChange: (callback: (user: import('../types').User | null) => void) =>
     legacyAuth.authService.onAuthStateChange(callback),
