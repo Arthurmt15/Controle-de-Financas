@@ -62,6 +62,8 @@ const FloatingChat: React.FC = () => {
   const {
     transactions,
     addTransaction,
+    updateTransaction,
+    deleteTransaction,
     addCategory,
     deleteCategory,
     categories,
@@ -233,7 +235,10 @@ const FloatingChat: React.FC = () => {
         updateRecurringBill,
         deleteRecurringBill,
         generateRecurringTransactions,
-        recurringBills
+        recurringBills,
+        transactions,
+        updateTransaction,
+        deleteTransaction
       );
       addMessage(response, false);
       setIsProcessing(false);

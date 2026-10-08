@@ -70,6 +70,14 @@ export const DELETE_RECURRING_PATTERNS = [
   /(?:excluir?|deletar?|remover?|apagar?)\s+(?:conta\s+)?recorrente\s+(.+)/i,
 ];
 
+export const UPDATE_TRANSACTION_PATTERNS = [
+  /(?:editar?|atualizar?|alterar?|mudar?|trocar?|corrigir?|corrige|renomear?|renomeia)\s+(?!categori[ao]\b|recorrente\b)(.+)/i,
+];
+
+export const DELETE_TRANSACTION_PATTERNS = [
+  /(?:excluir?|deletar?|remover?|apagar?|apaga)\s+(?!categori[ao]\b|recorrente\b)(.+)/i,
+];
+
 export const GENERATE_BILLS_PATTERNS = [
   /\bgerar?\s+contas?\b/i,
   /\bcriar?\s+transações?\s+(?:das\s+)?contas?\b/i,

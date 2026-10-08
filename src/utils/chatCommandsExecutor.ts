@@ -1,5 +1,6 @@
-import type { Category, RecurringBill } from '../types';
+import type { Category, RecurringBill, Transaction } from '../types';
 import { getCategoryStyle } from './chatCommandsParser';
+import type { TransactionUpdatePatch } from './chatCommandsParser';
 
 export type CommandType =
   | { type: 'create_category'; name: string }
@@ -13,7 +14,27 @@ export type CommandType =
   | { type: 'update_recurring'; name: string; amount?: number; day?: number }
   | { type: 'delete_recurring'; name: string }
   | { type: 'generate_bills' }
+  | { type: 'update_transaction'; patch: TransactionUpdatePatch }
+  | { type: 'delete_transaction'; target: string }
   | { type: null };
+
+function formatBRL(value: number): string {
+  return `R$ ${value.toFixed(2).replace('.', ',')}`;
+}
+
+function findTransactionsByDescription(
+  transactions: Transaction[],
+  target: string
+): Transaction[] {
+  const needle = target.toLowerCase();
+  return transactions.filter((t) => t.description.toLowerCase().includes(needle));
+}
+
+function describeTransaction(t: Transaction, categories: Category[]): string {
+  const cat = categories.find((c) => c.id === t.categoryId);
+  const date = new Date(t.date).toLocaleDateString('pt-BR');
+  return `${t.description} • ${formatBRL(t.amount)} • ${cat?.name || '?'} • ${date}`;
+}
 
 export async function executeCommand(
   command: CommandType,
@@ -26,7 +47,10 @@ export async function executeCommand(
   updateRecurringBill?: (bill: RecurringBill) => Promise<RecurringBill>,
   deleteRecurringBill?: (id: string) => Promise<void>,
   generateRecurringTransactions?: () => Promise<unknown[]>,
-  recurringBills?: RecurringBill[]
+  recurringBills?: RecurringBill[],
+  transactions?: Transaction[],
+  updateTransaction?: (transaction: Transaction) => Promise<Transaction>,
+  deleteTransaction?: (transactionId: string) => Promise<void>
 ): Promise<string> {
   switch (command.type) {
     case 'create_category': {
@@ -156,9 +180,68 @@ export async function executeCommand(
             ` Erro ao gerar transações: ${err instanceof Error ? err.message : 'desconhecido'}`
         );
     }
+    case 'update_transaction': {
+      if (!updateTransaction || !transactions)
+        return ' Função de edição de transação não disponível.';
+      const { patch } = command;
+      const matches = findTransactionsByDescription(transactions, patch.target);
+      if (matches.length === 0) {
+        const recent = [...transactions]
+          .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+          .slice(0, 8);
+        const hint =
+          recent.length > 0
+            ? `\n\nÚltimos lançamentos:\n${recent.map((t) => `• ${describeTransaction(t, categories)}`).join('\n')}`
+            : '\n\nNenhuma transação cadastrada ainda.';
+        return ` Nenhuma transação parecida com "${patch.target}".${hint}`;
+      }
+      let categoryId: string | undefined;
+      if (patch.categoryName) {
+        const needle = patch.categoryName.toLowerCase();
+        const cat =
+          categories.find((c) => c.name.toLowerCase() === needle) ||
+          categories.find((c) => c.name.toLowerCase().includes(needle));
+        if (!cat)
+          return ` Categoria "${patch.categoryName}" não encontrada.\n\nCategorias existentes:\n${categories.map((c) => `• ${c.name}`).join('\n')}`;
+        categoryId = cat.id;
+      }
+      try {
+        const lines: string[] = [];
+        for (const t of matches) {
+          const before = describeTransaction(t, categories);
+          const updated: Transaction = {
+            ...t,
+            ...(patch.amount !== undefined && { amount: patch.amount }),
+            ...(categoryId && { categoryId }),
+            ...(patch.date && { date: new Date(`${patch.date}T12:00:00`).toISOString() }),
+            ...(patch.newDescription && { description: patch.newDescription }),
+          };
+          await updateTransaction(updated);
+          lines.push(`• ${before}\n  → ${describeTransaction(updated, categories)}`);
+        }
+        return ` ${matches.length === 1 ? 'Transação atualizada!' : `${matches.length} transações atualizadas!`}\n\n${lines.join('\n')}`;
+      } catch (err: unknown) {
+        return ` Erro ao atualizar: ${err instanceof Error ? err.message : 'desconhecido'}`;
+      }
+    }
+    case 'delete_transaction': {
+      if (!deleteTransaction || !transactions)
+        return ' Função de exclusão de transação não disponível.';
+      const matches = findTransactionsByDescription(transactions, command.target);
+      if (matches.length === 0)
+        return ` Nenhuma transação parecida com "${command.target}".\n\nUse "resumo" para ver seus lançamentos.`;
+      try {
+        for (const t of matches) {
+          await deleteTransaction(t.id);
+        }
+        return ` ${matches.length === 1 ? 'Transação removida!' : `${matches.length} transações removidas!`}\n\n${matches.map((t) => `• ${describeTransaction(t, categories)}`).join('\n')}`;
+      } catch (err: unknown) {
+        return ` Erro ao remover: ${err instanceof Error ? err.message : 'desconhecido'}`;
+      }
+    }
     case 'help': {
       return Promise.resolve(
-        ` Comandos disponíveis:\n\n Transações:\n• "Mercado 150,50" — cria despesa\n• "Entrada 4k salário" — cria entrada\n\n Categorias:\n• "criar categoria [nome]" — nova categoria\n• "categorias" — listar todas\n• "excluir categoria [nome]" — remover\n\n Contas Recorrentes:\n• "conta recorrente [nome] [valor] dia [dia]" — criar\n• "contas recorrentes" — listar todas\n• "editar conta [nome] [novo valor]" — atualizar\n• "excluir conta [nome]" — remover\n• "gerar contas" — criar transações do mês\n\n Análise:\n• "resumo" — resumo do mês\n• "análise" — análise completa\n• "meus gastos" — onde vai o dinheiro\n\n "ajuda" — esta mensagem`
+        ` Comandos disponíveis:\n\n Transações:\n• "Mercado 150,50" — cria despesa\n• "Entrada 4k salário" — cria entrada\n• "alterar [descrição] para [valor]" — corrige o valor\n• "mudar [descrição] para categoria [nome]" — troca a categoria\n• "alterar [descrição] para [data]" — muda a data (ex.: "para hoje")\n• "renomear [descrição] para [novo nome]" — muda a descrição\n• "apagar [descrição]" — remove o(s) lançamento(s)\n\n Categorias:\n• "criar categoria [nome]" — nova categoria\n• "categorias" — listar todas\n• "excluir categoria [nome]" — remover\n\n Contas Recorrentes:\n• "conta recorrente [nome] [valor] dia [dia]" — criar\n• "contas recorrentes" — listar todas\n• "editar conta [nome] [novo valor]" — atualizar\n• "excluir conta [nome]" — remover\n• "gerar contas" — criar transações do mês\n\n Análise:\n• "resumo" — resumo do mês\n• "análise" — análise completa\n• "meus gastos" — onde vai o dinheiro\n\n "ajuda" — esta mensagem`
       );
     }
     default:

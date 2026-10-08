@@ -14,10 +14,14 @@ import {
   ANALYSIS_PATTERNS,
   LIST_CATEGORIES_PATTERNS,
   HELP_PATTERNS,
+  UPDATE_TRANSACTION_PATTERNS,
+  DELETE_TRANSACTION_PATTERNS,
 } from './chatCommandsPatterns';
 import {
   parseRecurringBillInput,
   parseRecurringBillUpdate,
+  parseTransactionUpdate,
+  cleanTransactionTarget,
   capitalizeFirst,
 } from './chatCommandsParser';
 import type { CommandType } from './chatCommandsExecutor';
@@ -62,6 +66,22 @@ export function detectCommand(text: string): CommandType {
   }
   for (const pattern of LIST_RECURRING_PATTERNS)
     if (pattern.test(trimmed)) return { type: 'list_recurring' };
+  // Edição/exclusão de transação: antes dos genéricos (resumo/análise/categorias),
+  // pois "mudar X para categoria Y" contém a palavra "categoria".
+  for (const pattern of UPDATE_TRANSACTION_PATTERNS) {
+    const match = trimmed.match(pattern);
+    if (match) {
+      const patch = parseTransactionUpdate(match[1].trim());
+      if (patch) return { type: 'update_transaction', patch };
+    }
+  }
+  for (const pattern of DELETE_TRANSACTION_PATTERNS) {
+    const match = trimmed.match(pattern);
+    if (match) {
+      const target = cleanTransactionTarget(match[1].trim());
+      if (target.length >= 2) return { type: 'delete_transaction', target };
+    }
+  }
   for (const pattern of SUMMARY_PATTERNS) if (pattern.test(trimmed)) return { type: 'summary' };
   for (const pattern of ANALYSIS_PATTERNS)
     if (pattern.test(trimmed)) return { type: 'analysis', text: trimmed };
