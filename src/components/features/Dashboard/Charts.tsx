@@ -113,6 +113,21 @@ const Charts: React.FC = () => {
   const [monthlyPeriod, setMonthlyPeriod] = useState<'12' | '6'>('12');
   const [categoryPeriod, setCategoryPeriod] = useState<CategoryPeriod>('month');
 
+  /** Últimos 12 meses (mais recente primeiro) para o seletor da pizza */
+  const monthOptions = useMemo(() => [...getLastNMonths(12)].reverse(), []);
+
+  const categoryPeriodKey =
+    typeof categoryPeriod === 'object'
+      ? `${categoryPeriod.year}-${categoryPeriod.month}`
+      : categoryPeriod;
+
+  const categoryPeriodLabel =
+    typeof categoryPeriod === 'object'
+      ? (monthOptions.find(
+          (m) => m.year === categoryPeriod.year && m.month === categoryPeriod.month
+        )?.name ?? '')
+      : '';
+
   // Breakpoint simples para rótulos
   const isMobile = typeof window !== 'undefined' && window.innerWidth <= 600;
 
@@ -359,15 +374,27 @@ const Charts: React.FC = () => {
             Despesas por Categoria
           </CardTitle>
           <Select
-            value={categoryPeriod}
-            onValueChange={(v) => setCategoryPeriod(v as CategoryPeriod)}
+            value={categoryPeriodKey}
+            onValueChange={(v) => {
+              if (v === 'month' || v === 'quarter') {
+                setCategoryPeriod(v);
+                return;
+              }
+              const [year, month] = v.split('-').map(Number);
+              if (!Number.isNaN(year) && !Number.isNaN(month)) setCategoryPeriod({ year, month });
+            }}
           >
-            <SelectTrigger className="w-[150px] h-9 rounded-xl text-xs">
+            <SelectTrigger className="w-[160px] h-9 rounded-xl text-xs">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="month">Este Mês</SelectItem>
               <SelectItem value="quarter">Último Trimestre</SelectItem>
+              {monthOptions.map((m) => (
+                <SelectItem key={`${m.year}-${m.month}`} value={`${m.year}-${m.month}`}>
+                  {m.name} {m.year}
+                </SelectItem>
+              ))}
             </SelectContent>
           </Select>
         </CardHeader>
@@ -405,7 +432,11 @@ const Charts: React.FC = () => {
                 <PieChartIcon className="h-6 w-6" />
               </span>
               <p className="text-sm font-semibold">
-                {categoryPeriod === 'quarter' ? 'Nenhuma despesa no trimestre' : 'Nenhuma despesa este mês'}
+                {categoryPeriod === 'quarter'
+                  ? 'Nenhuma despesa no trimestre'
+                  : categoryPeriodLabel
+                    ? `Nenhuma despesa em ${categoryPeriodLabel}`
+                    : 'Nenhuma despesa este mês'}
               </p>
               <p className="text-xs text-muted-foreground">
                 Registre despesas para ver a distribuição por categoria

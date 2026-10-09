@@ -70,6 +70,24 @@ describe('categoryTotals - groupExpensesByCategory', () => {
     expect(groupExpensesByCategory([], mockCategories)).toEqual([]);
   });
 
+  it('mês específico filtra só aquele mês', () => {
+    const now = new Date();
+    const prev = new Date(now.getFullYear(), now.getMonth() - 1, 12);
+    const fmt = (d: Date) =>
+      `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}T12:00:00`;
+    const txs = [
+      txMonth(5, { amount: 10 }),
+      { ...txMonth(6, { amount: 999 }), date: fmt(prev) },
+    ];
+    const result = groupExpensesByCategory(
+      txs,
+      mockCategories,
+      '#000',
+      periodMatcher({ year: now.getFullYear(), month: now.getMonth() }, now)
+    );
+    expect(result.reduce((s, r) => s + r.total, 0)).toBe(10);
+  });
+
   it('trimestre inclui os últimos 3 meses', () => {
     const now = new Date();
     const twoAgo = new Date(now.getFullYear(), now.getMonth() - 2, 12);

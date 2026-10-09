@@ -17,7 +17,7 @@ export interface CategoryTotal {
   percent: number;
 }
 
-export type CategoryPeriod = 'month' | 'quarter';
+export type CategoryPeriod = 'month' | 'quarter' | { year: number; month: number };
 
 /** Início (mês/ano) dos N meses terminando no mês atual, ex. trimestre = 3. */
 function startOfTrailingMonths(n: number, now = new Date()): { month: number; year: number } {
@@ -25,8 +25,13 @@ function startOfTrailingMonths(n: number, now = new Date()): { month: number; ye
   return { month: d.getMonth(), year: d.getFullYear() };
 }
 
-/** Matcher de período para despesas: mês atual ou últimos 3 meses (trimestre). */
+/** Matcher de período para despesas: mês atual, mês específico ou últimos 3 meses. */
 export function periodMatcher(period: CategoryPeriod, now = new Date()): (d: Date) => boolean {
+  if (typeof period === 'object') {
+    const m = period.month;
+    const y = period.year;
+    return (d: Date) => d.getMonth() === m && d.getFullYear() === y;
+  }
   if (period === 'quarter') {
     const start = startOfTrailingMonths(3, now);
     const startIdx = start.year * 12 + start.month;
