@@ -192,12 +192,29 @@ export function cleanTransactionTarget(text: string): string {
   return cleanTarget(text);
 }
 
-function cleanTarget(text: string): string {
+const FILLER_SET = new Set(
+  'de da do das dos no na nos nas em e a o as os para pra por com sem um uma'.split(' ')
+);
+
+function stripFillers(text: string): string {
   return text
-    .replace(/^\s*(o|a|os|as|um|uma|de|da|do|no|na|em)\s+/gi, '')
-    .replace(/\s+(para|pra|por)\s*$/gi, '')
-    .replace(/[,.\s]+/g, ' ')
-    .trim();
+    .replace(/[,.;:!?]+/g, ' ')
+    .split(/\s+/)
+    .map((w) => w.trim())
+    .filter((w) => w && !FILLER_SET.has(w.toLowerCase()))
+    .join(' ');
+}
+
+function cleanTarget(text: string): string {
+  return stripFillers(text);
+}
+
+/**
+ * Normaliza texto para comparação tolerante ("despesa de de" casa com "Despesa",
+ * "pão açúcar" casa com "Pão de Açúcar"). Usada nos dois lados do match.
+ */
+export function normalizeForMatch(text: string): string {
+  return stripFillers(text.toLowerCase());
 }
 
 /**

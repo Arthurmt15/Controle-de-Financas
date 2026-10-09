@@ -166,6 +166,76 @@ describe('chatCommands - executeCommand transações', () => {
     expect(msg).toContain('Nenhuma transação parecida');
   });
 
+  it('limpa "de de" e resolve alvo genérico só com filtros', () => {
+    const cmd = detectCommand('altere a despesa de 08/10/2026 de R$ 70 para festa rave');
+    expect(cmd.type).toBe('update_transaction');
+    if (cmd.type === 'update_transaction') {
+      expect(cmd.patch.target).toBe('');
+      expect(cmd.patch.filterDate).toBe('2026-10-08');
+      expect(cmd.patch.filterAmount).toBe(70);
+    }
+  });
+
+  it('sugere candidatos próximos quando a data está errada', async () => {
+    const txs = [
+      makeTx({ id: 'a', description: 'Colocar custo de 1/2', amount: 70, date: '2026-10-07T12:00:00.000Z' }),
+    ];
+    let calls = 0;
+    const msg = await executeCommand(
+      {
+        type: 'update_transaction',
+        patch: { target: '', filterAmount: 70, filterDate: '2026-10-08', txType: 'expense', newDescription: 'Festa Rave' },
+      },
+      mockCategories,
+      minimal.createCategory,
+      minimal.deleteCategory,
+      noopAsync,
+      noopAsync,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      txs,
+      async (t) => {
+        calls += 1;
+        return t;
+      },
+      async () => {}
+    );
+    expect(calls).toBe(0);
+    expect(msg).toContain('Mais próximos');
+    expect(msg).toContain('Colocar custo de 1/2');
+  });
+
+  it('casa descrição ignorando preposições ("custo" acha "Colocar custo de 1/2")', async () => {
+    const txs = [
+      makeTx({ id: 'a', description: 'Colocar custo de 1/2', amount: 70, date: '2026-10-07T12:00:00.000Z' }),
+    ];
+    const updated: Transaction[] = [];
+    const msg = await executeCommand(
+      { type: 'update_transaction', patch: { target: 'custo de', newDescription: 'Festa Rave' } },
+      mockCategories,
+      minimal.createCategory,
+      minimal.deleteCategory,
+      noopAsync,
+      noopAsync,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      txs,
+      async (t) => {
+        updated.push(t);
+        return t;
+      },
+      async () => {}
+    );
+    expect(updated).toHaveLength(1);
+    expect(msg).toContain('Transação atualizada');
+  });
+
   it('localiza por data+valor e renomeia (cenário festa rave)', async () => {
     const txs = [
       makeTx({ id: 'a', description: 'Lanche', amount: 70, date: '2026-10-08T12:00:00.000Z' }),

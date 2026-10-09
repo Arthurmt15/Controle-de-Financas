@@ -1,5 +1,5 @@
 import type { Category, RecurringBill, Transaction } from '../types';
-import { getCategoryStyle } from './chatCommandsParser';
+import { getCategoryStyle, normalizeForMatch } from './chatCommandsParser';
 import type { TransactionUpdatePatch } from './chatCommandsParser';
 
 export type CommandType =
@@ -27,15 +27,44 @@ function findTransactionsByDescription(
   target: string,
   filters?: { filterAmount?: number; filterDate?: string; txType?: 'income' | 'expense' }
 ): Transaction[] {
-  const needle = target.toLowerCase();
+  const needle = normalizeForMatch(target);
   return transactions.filter((t) => {
-    if (target && !t.description.toLowerCase().includes(needle)) return false;
+    if (needle && !normalizeForMatch(t.description).includes(needle)) return false;
     if (filters?.txType && t.type !== filters.txType) return false;
     if (filters?.filterAmount !== undefined && Math.abs(t.amount - filters.filterAmount) > 0.005)
       return false;
     if (filters?.filterDate && t.date.slice(0, 10) !== filters.filterDate) return false;
     return true;
   });
+}
+
+/**
+ * Candidatos "quase lá" quando os filtros exatos não acham nada
+ * (ex.: usuário errou a data — mesmo valor em outro dia).
+ */
+function findNearMisses(
+  transactions: Transaction[],
+  filters?: { filterAmount?: number; filterDate?: string; txType?: 'income' | 'expense' },
+  limit = 5
+): Transaction[] {
+  if (!filters || (filters.filterAmount === undefined && !filters.filterDate)) return [];
+  const scored = transactions
+    .map((t) => {
+      let score = 0;
+      if (filters.filterAmount !== undefined && Math.abs(t.amount - filters.filterAmount) <= 0.005)
+        score += 2;
+      if (filters.filterDate && t.date.slice(0, 10) === filters.filterDate) score += 2;
+      if (filters.txType && t.type === filters.txType) score += 1;
+      return { t, score };
+    })
+    .filter((s) => s.score > 0)
+    .sort((a, b) => b.score - a.score || new Date(b.t.date).getTime() - new Date(a.t.date).getTime());
+  return scored.slice(0, limit).map((s) => s.t);
+}
+
+function formatNearMisses(candidates: Transaction[], categories: Category[]): string {
+  if (candidates.length === 0) return '';
+  return `\n\nMais próximos dos filtros:\n${candidates.map((t) => `• ${describeTransaction(t, categories)}`).join('\n')}`;
 }
 
 function describeTransaction(t: Transaction, categories: Category[]): string {
@@ -195,6 +224,10 @@ export async function executeCommand(
       const matches = findTransactionsByDescription(transactions, patch.target, patch);
       if (matches.length === 0) {
         const label = patch.target || 'os filtros informados';
+        const near = findNearMisses(transactions, patch);
+        if (near.length > 0) {
+          return ` Não encontrei exatamente com esses filtros.${formatNearMisses(near, categories)}\n\nSe for um deles, repita o comando com a data/valor exatos.`;
+        }
         const recent = [...transactions]
           .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
           .slice(0, 8);
@@ -237,8 +270,13 @@ export async function executeCommand(
       if (!deleteTransaction || !transactions)
         return ' Função de exclusão de transação não disponível.';
       const matches = findTransactionsByDescription(transactions, command.target, command);
-      if (matches.length === 0)
+      if (matches.length === 0) {
+        const near = findNearMisses(transactions, command);
+        if (near.length > 0) {
+          return ` Não encontrei exatamente com esses filtros.${formatNearMisses(near, categories)}\n\nSe for um deles, repita o comando com a data/valor exatos.`;
+        }
         return ` Nenhuma transação parecida com "${command.target || 'os filtros informados'}".\n\nUse "resumo" para ver seus lançamentos.`;
+      }
       try {
         for (const t of matches) {
           await deleteTransaction(t.id);
