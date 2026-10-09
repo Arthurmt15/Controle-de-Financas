@@ -16,7 +16,9 @@ export type SoundName =
   | 'error'
   | 'send'
   | 'receive'
-  | 'click';
+  | 'click'
+  | 'drawer'
+  | 'hover';
 
 /** Rótulos amigáveis para a tela de Configurações */
 export const SOUND_LABELS: Record<SoundName, string> = {
@@ -30,6 +32,8 @@ export const SOUND_LABELS: Record<SoundName, string> = {
   send: 'Mensagem enviada',
   receive: 'Resposta recebida',
   click: 'Toque',
+  drawer: 'Abrir menu',
+  hover: 'Passar o mouse',
 };
 
 interface Tone {
@@ -90,6 +94,10 @@ const SOUNDS: Record<SoundName, Tone[]> = {
   ],
   // Tick mínimo — toques
   click: [{ freq: 1250, at: 0, dur: 0.03, vol: 0.05 }],
+  // Swoosh suave para cima — abrir menu/drawer/chat
+  drawer: [{ freq: 480, slideTo: 940, at: 0, dur: 0.1, type: 'triangle', vol: 0.09 }],
+  // Tick quase inaudível — hover (sempre via playHover, que limita a frequência)
+  hover: [{ freq: 1500, at: 0, dur: 0.025, vol: 0.028 }],
 };
 
 const STORAGE_KEY = 'financas_sounds_enabled';
@@ -148,8 +156,7 @@ export function setSoundEnabled(enabled: boolean): void {
  * Toca um efeito. Nunca lança exceção.
  * @param force ignora a preferência (usado na prévia da tela de Sons)
  */
-export function playSound(name: SoundName, opts?: { force?: boolean }): void {
-  try {
+export function playSound(name: SoundName, opts?: { force?: boolean }): void {  try {
     ensureUnlockListeners();
     if (!opts?.force && !isSoundEnabled()) return;
     const ac = getContext();
@@ -175,5 +182,18 @@ export function playSound(name: SoundName, opts?: { force?: boolean }): void {
     }
   } catch {
     // áudio nunca pode quebrar o app
+  }
+}
+
+let lastHoverAt = 0;
+/** Tick de hover com throttle (máx. ~1 a cada 90ms) para não virar ruído. */
+export function playHover(): void {
+  try {
+    const now = Date.now();
+    if (now - lastHoverAt < 90) return;
+    lastHoverAt = now;
+    playSound('hover');
+  } catch {
+    // ignora
   }
 }

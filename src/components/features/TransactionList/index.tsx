@@ -19,6 +19,7 @@ import {
 import { useTransactions } from '../../../hooks/useTransactions';
 import { formatCurrency, formatDate } from '../../../utils/formatters';
 import { exportTransactionsCSV, exportTransactionsPDF } from '../../../utils/exportData';
+import { playSound, playHover } from '../../../utils/sounds';
 import TransactionForm from '../TransactionForm';
 import MobileDownloadBar from './MobileDownloadBar';
 import { Card, CardContent, CardHeader, CardTitle } from '../../ui/card';
@@ -90,9 +91,11 @@ const TransactionList: React.FC = () => {
                 variant="outline"
                 size="sm"
                 className="rounded-xl gap-1.5 h-8 text-xs"
-                onClick={() =>
-                  exportTransactionsCSV({ transactions: filteredTransactions, categories })
-                }
+                onClick={() => {
+                  exportTransactionsCSV({ transactions: filteredTransactions, categories });
+                  playSound('success');
+                }}
+                onMouseEnter={playHover}
                 aria-label="Exportar como CSV"
               >
                 <FileSpreadsheet className="h-3.5 w-3.5" />
@@ -102,9 +105,11 @@ const TransactionList: React.FC = () => {
                 variant="outline"
                 size="sm"
                 className="rounded-xl gap-1.5 h-8 text-xs"
-                onClick={() =>
-                  exportTransactionsPDF({ transactions: filteredTransactions, categories })
-                }
+                onClick={() => {
+                  exportTransactionsPDF({ transactions: filteredTransactions, categories });
+                  playSound('success');
+                }}
+                onMouseEnter={playHover}
                 aria-label="Exportar como PDF"
               >
                 <FileText className="h-3.5 w-3.5" />

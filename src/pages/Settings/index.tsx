@@ -14,6 +14,7 @@ import SoundSettings from '../../components/features/SoundSettings';
 import { Card, CardContent } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
 import { Badge } from '../../components/ui/badge';
+import { playSound, playHover } from '../../utils/sounds';
 
 /** Tipo das abas */
 type SettingsTab = 'categories' | 'budget' | 'bulk' | 'sounds';
@@ -66,7 +67,11 @@ const SettingsPage: React.FC = () => {
                 <Button
                   key={tab.id}
                   variant={isActive ? 'default' : 'ghost'}
-                  onClick={() => setActiveTab(tab.id)}
+                  onClick={() => {
+                    playSound('click');
+                    setActiveTab(tab.id);
+                  }}
+                  onMouseEnter={playHover}
                   className={`flex-1 min-w-[124px] rounded-xl justify-center gap-2 whitespace-nowrap ${
                     isActive ? 'shadow-sm' : 'text-muted-foreground hover:text-foreground'
                   }`}

@@ -9,6 +9,7 @@ import { useLocation } from 'react-router-dom';
 import { useAuth } from '../../../contexts/AuthContext';
 import { useTheme } from '../../../contexts/ThemeContext';
 import { useInstallPrompt } from '../../../hooks/useInstallPrompt';
+import { playSound, playHover } from '../../../utils/sounds';
 import Icon from '../../common/Icon';
 import ColorPicker from '../../common/ColorPicker';
 import * as C from './styles';
@@ -86,7 +87,11 @@ const Header: React.FC = () => {
       <C.LeftSection>
         <C.MenuButton
           ref={buttonRef}
-          onClick={toggleMenu}
+          onClick={() => {
+            playSound(menuOpen ? 'click' : 'drawer');
+            toggleMenu();
+          }}
+          onMouseEnter={playHover}
           aria-label={menuOpen ? 'Fechar menu' : 'Abrir menu'}
           aria-expanded={menuOpen}
         >
@@ -121,6 +126,7 @@ const Header: React.FC = () => {
               key={path}
               to={path}
               $active={isActive(path)}
+              onMouseEnter={playHover}
               aria-current={isActive(path) ? 'page' : undefined}
             >
               {label}
@@ -240,6 +246,7 @@ const Header: React.FC = () => {
                   to={path}
                   $active={active}
                   onClick={closeMenu}
+                  onMouseEnter={playHover}
                   aria-current={active ? 'page' : undefined}
                 >
                   <ItemIcon size={18} strokeWidth={active ? 2.2 : 1.8} />

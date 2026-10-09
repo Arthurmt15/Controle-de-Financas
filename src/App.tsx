@@ -4,8 +4,8 @@
  * Implementa code splitting para melhor performance.
  */
 
-import React, { Suspense, useEffect } from 'react';
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import React, { Suspense, useEffect, useRef } from 'react';
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { ThemeProvider, useTheme } from './contexts/ThemeContext';
 import { TransactionsProvider } from './contexts/TransactionsContext';
@@ -21,6 +21,7 @@ import FloatingChat from './components/features/FloatingChat';
 import ErrorBoundary from './components/common/ErrorBoundary';
 import GlobalStyle from './Styles/global';
 import { lazyWithRetry, clearChunkReloadFlag } from './utils/lazyWithRetry';
+import { playSound } from './utils/sounds';
 
 const Main = styled.main`
   padding: 24px;
@@ -78,12 +79,29 @@ const PrivateRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => 
 };
 
 /**
+ * Toca um clique sutil a cada troca de página (navegação do app).
+ */
+const RouteSound: React.FC = () => {
+  const location = useLocation();
+  const first = useRef(true);
+  useEffect(() => {
+    if (first.current) {
+      first.current = false;
+      return;
+    }
+    playSound('click');
+  }, [location.pathname]);
+  return null;
+};
+
+/**
  * Layout principal com Header
  */
 const MainLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => (
   <>
     <SkipLink />
     <Header />
+    <RouteSound />
     <Main id="main-content" tabIndex={-1}>
       {children}
     </Main>

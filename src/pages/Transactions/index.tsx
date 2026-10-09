@@ -13,6 +13,7 @@ import TransactionList from '../../components/features/TransactionList';
 import { Card, CardContent } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
 import { Badge } from '../../components/ui/badge';
+import { playSound } from '../../utils/sounds';
 
 /**
  * Página de Transações - design system shadcn
@@ -98,7 +99,10 @@ const TransactionsPage: React.FC = () => {
             <Button
               size="sm"
               className="rounded-full shrink-0 gap-1.5 bg-violet-600 hover:bg-violet-700"
-              onClick={() => window.dispatchEvent(new CustomEvent('open-floating-chat'))}
+              onClick={() => {
+                playSound('drawer');
+                window.dispatchEvent(new CustomEvent('open-floating-chat'));
+              }}
             >
               Abrir guia <ArrowUpRight className="h-3.5 w-3.5" />
             </Button>

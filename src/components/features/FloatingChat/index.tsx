@@ -419,7 +419,10 @@ Responda como guia quando pergunta for sobre navegação.`;
       {/* FAB — cor acompanha accent do usuário */}
       <motion.button
         ref={fabRef}
-        onClick={() => setIsOpen(!isOpen)}
+        onClick={() => {
+          playSound(isOpen ? 'click' : 'drawer');
+          setIsOpen(!isOpen);
+        }}
         style={!isOpen ? { backgroundColor: theme.colors.primary, color: 'white' } : undefined}
         className={`fixed bottom-4 right-4 sm:bottom-6 sm:right-6 z-[60] w-14 h-14 rounded-full shadow-lg flex items-center justify-center transition-colors ${isOpen ? 'bg-slate-900 text-white hover:bg-slate-800' : 'text-white hover:opacity-90'}`}
         whileHover={{ scale: 1.05 }}

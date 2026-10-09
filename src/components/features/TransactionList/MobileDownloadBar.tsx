@@ -10,6 +10,7 @@ import React from 'react';
 import { BookDown, Rocket, Sheet } from 'lucide-react';
 import { Button } from '../../ui/button';
 import { exportTransactionsCSV, exportTransactionsPDF } from '../../../utils/exportData';
+import { playSound, playHover } from '../../../utils/sounds';
 import type { Transaction, Category } from '../../../types';
 
 interface MobileDownloadBarProps {
@@ -35,7 +36,11 @@ const MobileDownloadBar: React.FC<MobileDownloadBarProps> = ({ transactions, cat
             variant="default"
             className="h-12 rounded-xl gap-2 text-sm"
             disabled={isEmpty}
-            onClick={() => exportTransactionsCSV({ transactions, categories })}
+            onClick={() => {
+              exportTransactionsCSV({ transactions, categories });
+              playSound('success');
+            }}
+            onMouseEnter={playHover}
             aria-label="Baixar transações em CSV"
           >
             <Sheet className="h-5 w-5 text-emerald-300" />
@@ -45,7 +50,11 @@ const MobileDownloadBar: React.FC<MobileDownloadBarProps> = ({ transactions, cat
             variant="outline"
             className="h-12 rounded-xl gap-2 text-sm"
             disabled={isEmpty}
-            onClick={() => exportTransactionsPDF({ transactions, categories })}
+            onClick={() => {
+              exportTransactionsPDF({ transactions, categories });
+              playSound('success');
+            }}
+            onMouseEnter={playHover}
             aria-label="Baixar transações em PDF"
           >
             <BookDown className="h-5 w-5" />
