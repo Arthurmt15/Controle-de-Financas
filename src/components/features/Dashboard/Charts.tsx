@@ -24,6 +24,7 @@ import {
 import { useTransactions } from '../../../hooks/useTransactions';
 import { formatCurrency, getMonthAbbreviation } from '../../../utils/formatters';
 import { getLastNMonths, getCurrentYearMonths } from '../../../utils/helpers';
+import { groupExpensesByCategory } from '../../../utils/categoryTotals';
 import { Card, CardContent, CardHeader, CardTitle } from '../../ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../ui/select';
 import { BarChart3, PieChart as PieChartIcon, Inbox } from 'lucide-react';
@@ -160,34 +161,11 @@ const Charts: React.FC = () => {
     return { saldoMax, best, saldoMedio };
   }, [monthlyData]);
 
-  /** Dados de categorias do mês atual */
+  /** Dados de categorias do mês atual (órfãs unificadas em "Outros") */
   const categoryData = useMemo(() => {
-    const now = new Date();
-    const expenses = transactions.filter((t) => {
-      const d = new Date(t.date);
-      return (
-        t.type === 'expense' &&
-        d.getMonth() === now.getMonth() &&
-        d.getFullYear() === now.getFullYear()
-      );
-    });
-    const totals = expenses.reduce(
-      (acc, t) => {
-        acc[t.categoryId] = (acc[t.categoryId] || 0) + t.amount;
-        return acc;
-      },
-      {} as Record<string, number>
+    return groupExpensesByCategory(transactions, categories, theme.colors.textSecondary).map(
+      (c) => ({ name: c.name, value: c.total, color: c.color })
     );
-    return Object.entries(totals)
-      .map(([catId, value]) => {
-        const cat = categories.find((c) => c.id === catId);
-        return {
-          name: cat?.name || 'Outros',
-          value,
-          color: cat?.color || theme.colors.textSecondary,
-        };
-      })
-      .sort((a, b) => b.value - a.value);
   }, [transactions, categories, theme]);
 
   const hasBarData = monthlyData.some((d) => d.entradas > 0 || d.saidas > 0);

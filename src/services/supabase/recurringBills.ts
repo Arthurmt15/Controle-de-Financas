@@ -1,5 +1,6 @@
 import { supabase } from '../../lib/supabase';
 import type { RecurringBill, Transaction } from '../../types';
+import { toLocalDateTime } from '../../utils/dateHelpers';
 
 interface RecurringBillRow {
   id: string;
@@ -48,7 +49,7 @@ function mapTransaction(row: TransactionRow): Transaction {
     description: row.description,
     amount: Number(row.amount),
     type: row.type,
-    date: typeof row.date === 'string' ? row.date.split('T')[0] : row.date,
+    date: typeof row.date === 'string' ? toLocalDateTime(row.date) : row.date,
     categoryId: row.category_id,
     notes: row.notes || undefined,
     createdAt: row.created_at,

@@ -74,3 +74,28 @@ export const getCurrentYearMonths = (): Array<{ month: number; year: number; nam
   const y = new Date().getFullYear();
   return months.map((name, month) => ({ month, year: y, name }));
 };
+
+/**
+ * Normaliza data vinda do banco para ISO local com hora (meio-dia).
+ * A coluna transactions.date é DATE: o Supabase devolve "2026-10-07" e
+ * `new Date("2026-10-07")` interpreta como UTC — no Brasil isso cai no dia
+ * anterior (e no mês anterior, se dia 1º), quebrando filtros mensais e gráficos.
+ * Com "T12:00:00" (horário local), getMonth/getDate sempre acertam.
+ */
+export function toLocalDateTime(value: string): string {
+  if (/^\d{4}-\d{2}-\d{2}$/.test(value.trim())) return `${value.trim()}T12:00:00`;
+  return value;
+}
+
+/**
+ * Interpreta "YYYY-MM-DD" como data local (meio-dia), evitando o deslocamento
+ * de fuso que `new Date("2026-10-07")` causa. Repassa outros formatos direto.
+ */
+export function parseLocalDate(value: string | Date): Date {
+  if (value instanceof Date) return value;
+  if (/^\d{4}-\d{2}-\d{2}/.test(value.trim())) {
+    const [y, m, d] = value.trim().slice(0, 10).split('-').map(Number);
+    return new Date(y, m - 1, d, 12, 0, 0);
+  }
+  return new Date(value);
+}

@@ -8,6 +8,7 @@ import React, { useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { PieChart, Wallet } from 'lucide-react';
 import { formatCurrency } from '../../../../utils/formatters';
+import { groupExpensesByCategory } from '../../../../utils/categoryTotals';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '../../../ui/card';
 import type { Transaction, Category } from '../../../../types';
 
@@ -16,47 +17,12 @@ interface CategoryBreakdownProps {
   categories: Category[];
 }
 
-interface CategoryData {
-  id: string;
-  name: string;
-  color: string;
-  total: number;
-  percent: number;
-}
-
 // Breakdown de gastos por categoria no mês atual
 const CategoryBreakdown: React.FC<CategoryBreakdownProps> = ({ transactions, categories }) => {
-  const data = useMemo(() => {
-    const now = new Date();
-    const currentMonth = now.getMonth();
-    const currentYear = now.getFullYear();
-
-    const expenses = transactions.filter((t) => {
-      if (t.type !== 'expense') return false;
-      const d = new Date(t.date);
-      return d.getMonth() === currentMonth && d.getFullYear() === currentYear;
-    });
-
-    const totals: Record<string, number> = {};
-    expenses.forEach((t) => {
-      totals[t.categoryId] = (totals[t.categoryId] || 0) + t.amount;
-    });
-
-    const totalExpenses = Object.values(totals).reduce((s, v) => s + v, 0);
-
-    return Object.entries(totals)
-      .map(([catId, total]): CategoryData => {
-        const cat = categories.find((c) => c.id === catId);
-        return {
-          id: catId,
-          name: cat?.name || 'Outros',
-          color: cat?.color || '#6b7280',
-          total,
-          percent: totalExpenses > 0 ? (total / totalExpenses) * 100 : 0,
-        };
-      })
-      .sort((a, b) => b.total - a.total);
-  }, [transactions, categories]);
+  const data = useMemo(
+    () => groupExpensesByCategory(transactions, categories),
+    [transactions, categories]
+  );
 
   if (data.length === 0) {
     return (

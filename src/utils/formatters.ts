@@ -4,6 +4,8 @@
  * Este arquivo contém utilitários para formatar valores, datas e textos.
  */
 
+import { parseLocalDate } from './dateHelpers';
+
 /**
  * Formata um valor numérico para o formato de moeda brasileira (BRL)
  * @param {number} value - Valor a ser formatado
@@ -39,7 +41,11 @@ export const formatCurrency = (value: number): string => {
  * formatDate('2026-09-03T14:30:00', true)
  */
 export const formatDate = (dateString: string, includeTime = false): string => {
-  const date = new Date(dateString);
+  // "YYYY-MM-DD" (coluna DATE) deve ser lido como data local, senão o UTC
+  // desloca para o dia anterior no Brasil
+  const date = /^\d{4}-\d{2}-\d{2}$/.test(dateString.trim())
+    ? parseLocalDate(dateString)
+    : new Date(dateString);
 
   const options: Intl.DateTimeFormatOptions = {
     day: '2-digit',

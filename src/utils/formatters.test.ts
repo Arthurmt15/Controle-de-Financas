@@ -43,6 +43,11 @@ describe('Formatters', () => {
       expect(result).toContain('03/09/2026');
       expect(result).toContain('14:30');
     });
+
+    it('não desloca DATE do banco para o dia anterior (fuso)', () => {
+      expect(formatDate('2026-10-07')).toBe('07/10/2026');
+      expect(formatDate('2026-10-01')).toBe('01/10/2026');
+    });
   });
 
   describe('toInputDate', () => {
