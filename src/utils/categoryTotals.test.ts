@@ -2,7 +2,7 @@
  * @file utils/categoryTotals.test.ts
  * @description Agrupamento de despesas por categoria (pizza + breakdown).
  */
-import { groupExpensesByCategory } from './categoryTotals';
+import { groupExpensesByCategory, periodMatcher } from './categoryTotals';
 import type { Transaction, Category } from '../types';
 
 const mockCategories: Category[] = [
@@ -68,5 +68,21 @@ describe('categoryTotals - groupExpensesByCategory', () => {
 
   it('lista vazia sem despesas', () => {
     expect(groupExpensesByCategory([], mockCategories)).toEqual([]);
+  });
+
+  it('trimestre inclui os últimos 3 meses', () => {
+    const now = new Date();
+    const twoAgo = new Date(now.getFullYear(), now.getMonth() - 2, 12);
+    const fourAgo = new Date(now.getFullYear(), now.getMonth() - 4, 12);
+    const fmt = (d: Date) =>
+      `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}T12:00:00`;
+    const txs = [
+      txMonth(5, { amount: 10 }),
+      { ...txMonth(6, { amount: 20 }), date: fmt(twoAgo) },
+      { ...txMonth(7, { amount: 999 }), date: fmt(fourAgo) },
+    ];
+    const result = groupExpensesByCategory(txs, mockCategories, '#000', periodMatcher('quarter', now));
+    const total = result.reduce((s, r) => s + r.total, 0);
+    expect(total).toBe(30);
   });
 });

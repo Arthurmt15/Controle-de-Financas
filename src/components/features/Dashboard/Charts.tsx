@@ -24,7 +24,7 @@ import {
 import { useTransactions } from '../../../hooks/useTransactions';
 import { formatCurrency, getMonthAbbreviation } from '../../../utils/formatters';
 import { getLastNMonths, getCurrentYearMonths } from '../../../utils/helpers';
-import { groupExpensesByCategory } from '../../../utils/categoryTotals';
+import { groupExpensesByCategory, periodMatcher, type CategoryPeriod } from '../../../utils/categoryTotals';
 import { Card, CardContent, CardHeader, CardTitle } from '../../ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../ui/select';
 import { BarChart3, PieChart as PieChartIcon, Inbox } from 'lucide-react';
@@ -111,6 +111,7 @@ const Charts: React.FC = () => {
   const { transactions, categories } = useTransactions();
   const { theme } = useTheme();
   const [monthlyPeriod, setMonthlyPeriod] = useState<'12' | '6'>('12');
+  const [categoryPeriod, setCategoryPeriod] = useState<CategoryPeriod>('month');
 
   // Breakpoint simples para rótulos
   const isMobile = typeof window !== 'undefined' && window.innerWidth <= 600;
@@ -161,12 +162,15 @@ const Charts: React.FC = () => {
     return { saldoMax, best, saldoMedio };
   }, [monthlyData]);
 
-  /** Dados de categorias do mês atual (órfãs unificadas em "Outros") */
+  /** Dados de categorias no período selecionado (órfãs unificadas em "Outros") */
   const categoryData = useMemo(() => {
-    return groupExpensesByCategory(transactions, categories, theme.colors.textSecondary).map(
-      (c) => ({ name: c.name, value: c.total, color: c.color })
-    );
-  }, [transactions, categories, theme]);
+    return groupExpensesByCategory(
+      transactions,
+      categories,
+      theme.colors.textSecondary,
+      periodMatcher(categoryPeriod)
+    ).map((c) => ({ name: c.name, value: c.total, color: c.color }));
+  }, [transactions, categories, theme, categoryPeriod]);
 
   const hasBarData = monthlyData.some((d) => d.entradas > 0 || d.saidas > 0);
 
@@ -354,7 +358,10 @@ const Charts: React.FC = () => {
             </span>
             Despesas por Categoria
           </CardTitle>
-          <Select defaultValue="month">
+          <Select
+            value={categoryPeriod}
+            onValueChange={(v) => setCategoryPeriod(v as CategoryPeriod)}
+          >
             <SelectTrigger className="w-[150px] h-9 rounded-xl text-xs">
               <SelectValue />
             </SelectTrigger>
@@ -397,7 +404,9 @@ const Charts: React.FC = () => {
               <span className="w-14 h-14 flex items-center justify-center rounded-2xl border bg-primary/10 text-primary">
                 <PieChartIcon className="h-6 w-6" />
               </span>
-              <p className="text-sm font-semibold">Nenhuma despesa este mês</p>
+              <p className="text-sm font-semibold">
+                {categoryPeriod === 'quarter' ? 'Nenhuma despesa no trimestre' : 'Nenhuma despesa este mês'}
+              </p>
               <p className="text-xs text-muted-foreground">
                 Registre despesas para ver a distribuição por categoria
               </p>

@@ -6,6 +6,7 @@
  */
 
 import type { Transaction, Category } from '../types';
+import { parseLocalDate } from './dateHelpers';
 
 export interface CategoryTotal {
   /** ID da categoria; 'unknown' para o balde unificado de órfãs */
@@ -16,23 +17,44 @@ export interface CategoryTotal {
   percent: number;
 }
 
+export type CategoryPeriod = 'month' | 'quarter';
+
+/** Início (mês/ano) dos N meses terminando no mês atual, ex. trimestre = 3. */
+function startOfTrailingMonths(n: number, now = new Date()): { month: number; year: number } {
+  const d = new Date(now.getFullYear(), now.getMonth() - (n - 1), 1);
+  return { month: d.getMonth(), year: d.getFullYear() };
+}
+
+/** Matcher de período para despesas: mês atual ou últimos 3 meses (trimestre). */
+export function periodMatcher(period: CategoryPeriod, now = new Date()): (d: Date) => boolean {
+  if (period === 'quarter') {
+    const start = startOfTrailingMonths(3, now);
+    const startIdx = start.year * 12 + start.month;
+    const endIdx = now.getFullYear() * 12 + now.getMonth();
+    return (d: Date) => {
+      const idx = d.getFullYear() * 12 + d.getMonth();
+      return idx >= startIdx && idx <= endIdx;
+    };
+  }
+  const m = now.getMonth();
+  const y = now.getFullYear();
+  return (d: Date) => d.getMonth() === m && d.getFullYear() === y;
+}
+
 /**
- * Totais de despesa do mês de referência por categoria, ordenados desc.
- * @param month mês 0-11 e ano de referência (padrão: mês atual)
+ * Totais de despesa no período por categoria, ordenados desc.
+ * @param match filtro de data (padrão: mês atual)
  */
 export function groupExpensesByCategory(
   transactions: Transaction[],
   categories: Category[],
   fallbackColor = '#6b7280',
-  ref?: { month: number; year: number }
+  match: (d: Date) => boolean = periodMatcher('month')
 ): CategoryTotal[] {
-  const month = ref?.month ?? new Date().getMonth();
-  const year = ref?.year ?? new Date().getFullYear();
 
   const expenses = transactions.filter((t) => {
     if (t.type !== 'expense') return false;
-    const d = new Date(t.date);
-    return d.getMonth() === month && d.getFullYear() === year;
+    return match(parseLocalDate(t.date));
   });
 
   const totals = new Map<string, number>();
