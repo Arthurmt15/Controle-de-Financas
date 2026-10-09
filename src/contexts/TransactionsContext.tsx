@@ -18,6 +18,7 @@ import { useAuth } from './AuthContext';
 import { transactionService, categoryService, recurringBillService } from '../services/data';
 import { transactionReducer } from '../reducers/transactionReducer';
 import { filterTransactions } from '../utils/transactionFilters';
+import { playSound } from '../utils/sounds';
 import { calculateMetrics } from '../utils/transactionMetrics';
 import type {
   Transaction,
@@ -158,6 +159,7 @@ export function TransactionsProvider({ children }: { children: React.ReactNode }
       try {
         const newTransaction = await transactionService.create(transaction, userId);
         dispatch({ type: 'ADD_TRANSACTION', payload: newTransaction });
+        playSound(transaction.type === 'income' ? 'income' : 'expense');
         return newTransaction;
       } catch (error) {
         if (
@@ -184,6 +186,7 @@ export function TransactionsProvider({ children }: { children: React.ReactNode }
       try {
         const updated = await transactionService.update(transaction);
         dispatch({ type: 'UPDATE_TRANSACTION', payload: updated });
+        playSound('update');
         return updated;
       } catch (error) {
         if (
@@ -210,6 +213,7 @@ export function TransactionsProvider({ children }: { children: React.ReactNode }
       try {
         await transactionService.delete(transactionId);
         dispatch({ type: 'DELETE_TRANSACTION', payload: transactionId });
+        playSound('delete');
       } catch (error) {
         if (
           error instanceof Error &&
@@ -235,6 +239,7 @@ export function TransactionsProvider({ children }: { children: React.ReactNode }
       try {
         const newCategory = await categoryService.create(category, userId);
         dispatch({ type: 'ADD_CATEGORY', payload: newCategory });
+        playSound('create');
         return newCategory;
       } catch (error) {
         if (
@@ -261,6 +266,7 @@ export function TransactionsProvider({ children }: { children: React.ReactNode }
       try {
         await categoryService.delete(categoryId);
         dispatch({ type: 'DELETE_CATEGORY', payload: categoryId });
+        playSound('delete');
       } catch (error) {
         if (
           error instanceof Error &&
@@ -286,6 +292,7 @@ export function TransactionsProvider({ children }: { children: React.ReactNode }
       try {
         const newBill = await recurringBillService.create(bill, userId);
         dispatch({ type: 'ADD_RECURRING_BILL', payload: newBill });
+        playSound('create');
         return newBill;
       } catch (error) {
         if (
@@ -312,6 +319,7 @@ export function TransactionsProvider({ children }: { children: React.ReactNode }
       try {
         const updated = await recurringBillService.update(bill);
         dispatch({ type: 'UPDATE_RECURRING_BILL', payload: updated });
+        playSound('update');
         return updated;
       } catch (error) {
         if (
@@ -338,6 +346,7 @@ export function TransactionsProvider({ children }: { children: React.ReactNode }
       try {
         await recurringBillService.delete(billId);
         dispatch({ type: 'DELETE_RECURRING_BILL', payload: billId });
+        playSound('delete');
       } catch (error) {
         if (
           error instanceof Error &&
@@ -364,6 +373,7 @@ export function TransactionsProvider({ children }: { children: React.ReactNode }
       for (const tx of newTransactions) {
         dispatch({ type: 'ADD_TRANSACTION', payload: tx });
       }
+      if (newTransactions.length > 0) playSound('success');
       return newTransactions;
     } catch (error) {
       if (

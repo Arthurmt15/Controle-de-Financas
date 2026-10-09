@@ -6,22 +6,24 @@
 
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Tags, Wallet, Layers, Settings2 } from 'lucide-react';
+import { Tags, Wallet, Layers, Settings2, Volume2 } from 'lucide-react';
 import CategoryManager from '../../components/features/CategoryManager';
 import BudgetManager from '../../components/features/BudgetManager';
 import BulkTransactionForm from '../../components/features/BulkTransactionForm';
+import SoundSettings from '../../components/features/SoundSettings';
 import { Card, CardContent } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
 import { Badge } from '../../components/ui/badge';
 
 /** Tipo das abas */
-type SettingsTab = 'categories' | 'budget' | 'bulk';
+type SettingsTab = 'categories' | 'budget' | 'bulk' | 'sounds';
 
 /** Configuração das abas com ícones lucide */
 const TABS: { id: SettingsTab; label: string; icon: React.ElementType; hint: string }[] = [
   { id: 'categories', label: 'Categorias', icon: Tags, hint: 'Crie e organize categorias' },
   { id: 'budget', label: 'Orçamento', icon: Wallet, hint: 'Defina limites mensais' },
   { id: 'bulk', label: 'Adicionar Múltiplos', icon: Layers, hint: 'Lance vários itens de uma vez' },
+  { id: 'sounds', label: 'Sons', icon: Volume2, hint: 'Ative sons e ouça cada efeito' },
 ];
 
 /** Página de Configurações — shadcn */
@@ -107,6 +109,7 @@ const SettingsPage: React.FC = () => {
                 {activeTab === 'categories' && <CategoryManager />}
                 {activeTab === 'budget' && <BudgetManager />}
                 {activeTab === 'bulk' && <BulkTransactionForm />}
+                {activeTab === 'sounds' && <SoundSettings />}
               </motion.div>
             </AnimatePresence>
           </CardContent>

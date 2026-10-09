@@ -8,6 +8,7 @@ import React, { createContext, useContext, useReducer, useCallback, useEffect } 
 import { useAuth } from './AuthContext';
 import { futureExpenseService } from '../services/data';
 import type { FutureExpense } from '../types';
+import { playSound } from '../utils/sounds';
 
 /** Estado do contexto de despesas futuras */
 interface FutureExpensesState {
@@ -112,6 +113,7 @@ export function FutureExpensesProvider({ children }: { children: React.ReactNode
     async (expense: Omit<FutureExpense, 'id'>) => {
       const newExpense = await futureExpenseService.create(expense, userId);
       dispatch({ type: 'ADD_FUTURE_EXPENSE', payload: newExpense });
+      playSound('create');
       return newExpense;
     },
     [userId]
@@ -121,6 +123,7 @@ export function FutureExpensesProvider({ children }: { children: React.ReactNode
   const updateFutureExpense = useCallback(async (expense: FutureExpense) => {
     const updated = await futureExpenseService.update(expense);
     dispatch({ type: 'UPDATE_FUTURE_EXPENSE', payload: updated });
+    playSound('update');
     return updated;
   }, []);
 
@@ -128,12 +131,14 @@ export function FutureExpensesProvider({ children }: { children: React.ReactNode
   const deleteFutureExpense = useCallback(async (id: string) => {
     await futureExpenseService.delete(id);
     dispatch({ type: 'DELETE_FUTURE_EXPENSE', payload: id });
+    playSound('delete');
   }, []);
 
   /** Marca uma despesa como paga */
   const markAsPaid = useCallback(async (id: string) => {
     const updated = await futureExpenseService.markAsPaid(id);
     dispatch({ type: 'UPDATE_FUTURE_EXPENSE', payload: updated });
+    playSound('success');
   }, []);
 
   return (

@@ -15,6 +15,7 @@ import { useDebts } from '../../../contexts/DebtsContext';
 import { useTheme } from '../../../contexts/ThemeContext';
 import { parseTransactionFromMessage } from '../../../utils/parseTransaction';
 import { detectCommand, executeCommand } from '../../../utils/chatCommands';
+import { playSound } from '../../../utils/sounds';
 import { generateSummary, generateAnalysis } from '../../../utils/analysisEngine';
 import { buildFinancialContext, streamAdvisor } from '../../../services/financialAdvisorService';
 import { useLocation } from 'react-router-dom';
@@ -240,6 +241,10 @@ const FloatingChat: React.FC = () => {
         updateTransaction,
         deleteTransaction
       );
+      // Comandos que alteram dados já tocam som no contexto; aqui só erro ou leitura
+      if (/\berro\b/i.test(response)) playSound('error');
+      else if (['list_categories', 'summary', 'analysis', 'help', 'list_recurring'].includes(command.type))
+        playSound('receive');
       addMessage(response, false);
       setIsProcessing(false);
       return;
@@ -379,7 +384,9 @@ Responda como guia quando pergunta for sobre navegação.`;
         accumulated += chunk;
         updateAiMessage(accumulated);
       }
+      if (accumulated) playSound('receive');
     } catch {
+      playSound('error');
       setMessages((prev) =>
         prev.map((m) =>
           m.id === aiMsg.id ? { ...m, text: 'Erro ao conectar com a IA. Tente novamente.' } : m
@@ -393,6 +400,7 @@ Responda como guia quando pergunta for sobre navegação.`;
     const text = inputValue.trim();
     if (!text || isProcessing) return;
     setInputValue('');
+    playSound('send');
     processMessage(text);
   };
 

@@ -8,6 +8,7 @@ import React, { createContext, useContext, useReducer, useCallback, useEffect } 
 import { useAuth } from './AuthContext';
 import { installmentService } from '../services/data';
 import type { Installment } from '../types';
+import { playSound } from '../utils/sounds';
 
 /** Estado do contexto de parcelados */
 interface InstallmentsState {
@@ -112,6 +113,7 @@ export function InstallmentsProvider({ children }: { children: React.ReactNode }
     async (installment: Omit<Installment, 'id'>) => {
       const newInstallment = await installmentService.create(installment, userId);
       dispatch({ type: 'ADD_INSTALLMENT', payload: newInstallment });
+      playSound('create');
       return newInstallment;
     },
     [userId]
@@ -121,6 +123,7 @@ export function InstallmentsProvider({ children }: { children: React.ReactNode }
   const updateInstallment = useCallback(async (installment: Installment) => {
     const updated = await installmentService.update(installment);
     dispatch({ type: 'UPDATE_INSTALLMENT', payload: updated });
+    playSound('update');
     return updated;
   }, []);
 
@@ -128,12 +131,14 @@ export function InstallmentsProvider({ children }: { children: React.ReactNode }
   const deleteInstallment = useCallback(async (id: string) => {
     await installmentService.delete(id);
     dispatch({ type: 'DELETE_INSTALLMENT', payload: id });
+    playSound('delete');
   }, []);
 
   /** Avança para a próxima parcela */
   const advanceInstallment = useCallback(async (id: string) => {
     const updated = await installmentService.advance(id);
     dispatch({ type: 'UPDATE_INSTALLMENT', payload: updated });
+    playSound('success');
   }, []);
 
   return (

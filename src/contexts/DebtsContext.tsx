@@ -2,6 +2,7 @@ import React, { createContext, useContext, useReducer, useCallback, useEffect } 
 import { useAuth } from './AuthContext';
 import { debtService } from '../services/data';
 import type { Debt } from '../types';
+import { playSound } from '../utils/sounds';
 
 interface DebtsState {
   debts: Debt[];
@@ -100,6 +101,7 @@ export function DebtsProvider({ children }: { children: React.ReactNode }) {
     async (debt: Omit<Debt, 'id'>) => {
       const newDebt = await debtService.create(debt, userId);
       dispatch({ type: 'ADD_DEBT', payload: newDebt });
+      playSound('create');
       return newDebt;
     },
     [userId]
@@ -108,17 +110,20 @@ export function DebtsProvider({ children }: { children: React.ReactNode }) {
   const updateDebt = useCallback(async (debt: Debt) => {
     const updated = await debtService.update(debt);
     dispatch({ type: 'UPDATE_DEBT', payload: updated });
+    playSound('update');
     return updated;
   }, []);
 
   const deleteDebt = useCallback(async (id: string) => {
     await debtService.delete(id);
     dispatch({ type: 'DELETE_DEBT', payload: id });
+    playSound('delete');
   }, []);
 
   const advanceDebt = useCallback(async (id: string) => {
     const updated = await debtService.advance(id);
     dispatch({ type: 'UPDATE_DEBT', payload: updated });
+    playSound('success');
   }, []);
 
   return (

@@ -7,6 +7,7 @@ import React, { createContext, useContext, useCallback, useEffect, useState } fr
 import { useAuth } from './AuthContext';
 import { emergencyReserveService } from '../services/data';
 import type { EmergencyReserve } from '../types';
+import { playSound } from '../utils/sounds';
 
 interface EmergencyReserveContextValue {
   reserve: EmergencyReserve | null;
@@ -71,6 +72,7 @@ export function EmergencyReserveProvider({ children }: { children: React.ReactNo
   const create = useCallback(async (goalAmount: number, currentAmount = 0) => {
     const created = await emergencyReserveService.create({ goalAmount, currentAmount });
     setReserve(created);
+    playSound('create');
     return created;
   }, []);
 
@@ -79,6 +81,7 @@ export function EmergencyReserveProvider({ children }: { children: React.ReactNo
       if (!reserve) throw new Error('Sem reserva');
       const updated = await emergencyReserveService.update({ ...reserve, goalAmount });
       setReserve(updated);
+      playSound('update');
       return updated;
     },
     [reserve]
@@ -87,18 +90,21 @@ export function EmergencyReserveProvider({ children }: { children: React.ReactNo
   const updateCurrentAmount = useCallback(async (amount: number) => {
     const updated = await emergencyReserveService.setCurrentAmount(amount);
     setReserve(updated);
+    playSound('update');
     return updated;
   }, []);
 
   const deposit = useCallback(async (amount: number) => {
     const updated = await emergencyReserveService.deposit(amount);
     setReserve(updated);
+    playSound('income');
     return updated;
   }, []);
 
   const withdraw = useCallback(async (amount: number) => {
     const updated = await emergencyReserveService.withdraw(amount);
     setReserve(updated);
+    playSound('expense');
     return updated;
   }, []);
 
@@ -106,6 +112,7 @@ export function EmergencyReserveProvider({ children }: { children: React.ReactNo
     if (!reserve) return;
     await emergencyReserveService.delete(reserve.id);
     setReserve(null);
+    playSound('delete');
   }, [reserve]);
 
   return (
