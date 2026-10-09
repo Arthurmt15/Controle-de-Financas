@@ -95,7 +95,7 @@ const SOUNDS: Record<SoundName, Tone[]> = {
   // Tick mínimo — toques
   click: [{ freq: 1250, at: 0, dur: 0.03, vol: 0.05 }],
   // Swoosh suave para cima — abrir menu/drawer/chat
-  drawer: [{ freq: 480, slideTo: 940, at: 0, dur: 0.1, type: 'triangle', vol: 0.09 }],
+  drawer: [{ freq: 480, slideTo: 990, at: 0, dur: 0.14, type: 'triangle', vol: 0.12 }],
   // Tick quase inaudível — hover (sempre via playHover, que limita a frequência)
   hover: [{ freq: 1500, at: 0, dur: 0.025, vol: 0.028 }],
 };

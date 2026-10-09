@@ -194,7 +194,14 @@ const Header: React.FC = () => {
         )}
       </C.RightSection>
 
-      <C.MobileOverlay $isOpen={menuOpen} onClick={closeMenu} aria-hidden={!menuOpen} />
+      <C.MobileOverlay
+        $isOpen={menuOpen}
+        onClick={() => {
+          playSound('click');
+          closeMenu();
+        }}
+        aria-hidden={!menuOpen}
+      />
       <C.MobileMenu
         ref={menuRef as any}
         $isOpen={menuOpen}
