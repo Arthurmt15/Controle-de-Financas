@@ -175,6 +175,7 @@ const InstallmentList: React.FC<InstallmentListProps> = ({ installments: propIns
           return (
             <motion.div
               key={installment.id}
+              data-hover-sound
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: idx * 0.04, duration: 0.35 }}

@@ -85,6 +85,7 @@ const SummaryCards: React.FC = () => {
       {cards.map(({ key, Icon, label, value, subtext, tone }, idx) => (
         <motion.div
           key={key}
+          data-hover-sound
           initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: idx * 0.06, duration: 0.35 }}

@@ -74,6 +74,7 @@ const BudgetCards: React.FC<BudgetCardsProps> = ({
         return (
           <motion.div
             key={budget.id}
+            data-hover-sound
             initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: idx * 0.04, duration: 0.3 }}

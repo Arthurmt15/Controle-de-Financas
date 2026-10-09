@@ -208,6 +208,11 @@ export function playHover(): void {
 const CLICKABLE_SELECTOR =
   'button, a, [role="button"], [role="tab"], [role="menuitem"], select, input[type="checkbox"], input[type="radio"], label';
 
+const HOVER_SELECTOR =
+  'button, a, [role="button"], [role="tab"], [role="menuitem"], tr, select, input, textarea, summary, [data-hover-sound]';
+
+let lastHoverEl: Element | null = null;
+
 /**
  * Liga o fallback global (idempotente): qualquer clique/toque em elemento
  * interativo toca 'click' e qualquer hover sobre eles toca o tick — exceto
@@ -239,8 +244,14 @@ export function initGlobalSounds(): void {
         try {
           const el = e.target as Element | null;
           if (!el || typeof (el as Element).closest !== 'function') return;
-          if (!(el as Element).closest('button, a, [role="button"], [role="tab"], [role="menuitem"]'))
+          const match = (el as Element).closest(HOVER_SELECTOR);
+          // Um tick por item: mover dentro do mesmo elemento não repete
+          if (!match) {
+            lastHoverEl = null;
             return;
+          }
+          if (match === lastHoverEl) return;
+          lastHoverEl = match;
           playHover();
         } catch {
           // ignora

@@ -132,6 +132,7 @@ const TransactionsList: React.FC = () => {
           {recentTransactions.map((tx, idx) => (
             <motion.div
               key={tx.id}
+              data-hover-sound
               initial={{ opacity: 0, y: 6 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: idx * 0.04 }}

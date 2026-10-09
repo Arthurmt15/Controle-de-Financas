@@ -292,6 +292,7 @@ const TransactionList: React.FC = () => {
             filteredTransactions.map((transaction, idx) => (
               <motion.div
                 key={transaction.id}
+                data-hover-sound
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -10 }}

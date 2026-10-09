@@ -263,6 +263,7 @@ const CategoryManager: React.FC = () => {
         {categories.map((category, idx) => (
           <motion.div
             key={category.id}
+            data-hover-sound
             initial={{ opacity: 0, y: 6 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: idx * 0.03, duration: 0.25 }}

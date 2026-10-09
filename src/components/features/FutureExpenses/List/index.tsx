@@ -159,6 +159,7 @@ const FutureExpenseList: React.FC = () => {
             return (
               <motion.div
                 key={expense.id}
+                data-hover-sound
                 initial={{ opacity: 0, y: 8 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: idx * 0.03 }}

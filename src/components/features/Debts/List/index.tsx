@@ -130,6 +130,7 @@ const DebtList: React.FC<DebtListProps> = ({ debts: propDebts }) => {
           return (
             <motion.div
               key={debt.id}
+              data-hover-sound
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: idx * 0.04, duration: 0.35 }}
