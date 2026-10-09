@@ -2,7 +2,7 @@
  * @file utils/sounds.test.ts
  * @description Testes do motor de sons (jsdom não tem AudioContext — deve falhar silencioso).
  */
-import { playSound, isSoundEnabled, setSoundEnabled, SOUND_LABELS, type SoundName } from './sounds';
+import { playSound, isSoundEnabled, setSoundEnabled, SOUND_LABELS, initGlobalSounds, type SoundName } from './sounds';
 
 describe('sounds', () => {
   afterEach(() => {
@@ -23,5 +23,17 @@ describe('sounds', () => {
     expect(() => playSound('success')).not.toThrow();
     setSoundEnabled(true);
     expect(isSoundEnabled()).toBe(true);
+  });
+
+  it('fallback global é idempotente e não quebra em clique/hover', () => {
+    expect(() => initGlobalSounds()).not.toThrow();
+    expect(() => initGlobalSounds()).not.toThrow();
+    const btn = document.createElement('button');
+    document.body.appendChild(btn);
+    expect(() =>
+      btn.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true }))
+    ).not.toThrow();
+    expect(() => btn.dispatchEvent(new MouseEvent('mouseover', { bubbles: true }))).not.toThrow();
+    document.body.removeChild(btn);
   });
 });

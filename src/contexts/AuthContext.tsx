@@ -7,6 +7,7 @@
 import React, { createContext, useContext, useCallback, useEffect, useReducer } from 'react';
 import { useLocalStorage } from '../hooks/useLocalStorage';
 import { authService, isSupabase } from '../services/data';
+import { playSound } from '../utils/sounds';
 import type { User, AuthState, AuthAction } from '../types';
 
 interface GooglePayload {
@@ -203,6 +204,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
           dispatch({ type: 'LOGIN_SUCCESS', payload: user });
           setStoredUser(user);
+          playSound('success');
         }
       } catch (error) {
         console.error('Erro ao processar login Google:', error);
@@ -215,6 +217,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const logout = useCallback(async () => {
     dispatch({ type: 'LOGOUT' });
     removeStoredUser();
+    playSound('click');
     authService.setAuthToken(null);
     await authService.signOut();
     if (window.google?.accounts?.id) {

@@ -156,8 +156,10 @@ export function setSoundEnabled(enabled: boolean): void {
  * Toca um efeito. Nunca lança exceção.
  * @param force ignora a preferência (usado na prévia da tela de Sons)
  */
-export function playSound(name: SoundName, opts?: { force?: boolean }): void {  try {
+export function playSound(name: SoundName, opts?: { force?: boolean }): void {
+  try {
     ensureUnlockListeners();
+    if (name !== 'click' && name !== 'hover') lastSpecificAt = Date.now();
     if (!opts?.force && !isSoundEnabled()) return;
     const ac = getContext();
     const tones = SOUNDS[name];
@@ -186,6 +188,11 @@ export function playSound(name: SoundName, opts?: { force?: boolean }): void {  
 }
 
 let lastHoverAt = 0;
+let lastSpecificAt = 0;
+let globalInit = false;
+/** Janela (ms) em que o clique global é suprimido após um som específico. */
+const FALLBACK_SUPPRESS_MS = 500;
+
 /** Tick de hover com throttle (máx. ~1 a cada 90ms) para não virar ruído. */
 export function playHover(): void {
   try {
@@ -193,6 +200,54 @@ export function playHover(): void {
     if (now - lastHoverAt < 90) return;
     lastHoverAt = now;
     playSound('hover');
+  } catch {
+    // ignora
+  }
+}
+
+const CLICKABLE_SELECTOR =
+  'button, a, [role="button"], [role="tab"], [role="menuitem"], select, input[type="checkbox"], input[type="radio"], label';
+
+/**
+ * Liga o fallback global (idempotente): qualquer clique/toque em elemento
+ * interativo toca 'click' e qualquer hover sobre eles toca o tick — exceto
+ * quando um som específico tocou há menos de 500ms (evita duplicar com os
+ * sons de ação como income/success). Cobre o app inteiro sem fiação manual.
+ */
+export function initGlobalSounds(): void {
+  try {
+    if (globalInit || typeof document === 'undefined' || typeof window === 'undefined') return;
+    globalInit = true;
+    document.addEventListener(
+      'click',
+      (e) => {
+        try {
+          const el = e.target as Element | null;
+          if (!el || typeof (el as Element).closest !== 'function') return;
+          if (!(el as Element).closest(CLICKABLE_SELECTOR)) return;
+          if (Date.now() - lastSpecificAt < FALLBACK_SUPPRESS_MS) return;
+          playSound('click');
+        } catch {
+          // ignora
+        }
+      },
+      { capture: true, passive: true }
+    );
+    document.addEventListener(
+      'mouseover',
+      (e) => {
+        try {
+          const el = e.target as Element | null;
+          if (!el || typeof (el as Element).closest !== 'function') return;
+          if (!(el as Element).closest('button, a, [role="button"], [role="tab"], [role="menuitem"]'))
+            return;
+          playHover();
+        } catch {
+          // ignora
+        }
+      },
+      { passive: true }
+    );
   } catch {
     // ignora
   }

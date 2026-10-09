@@ -21,7 +21,7 @@ import FloatingChat from './components/features/FloatingChat';
 import ErrorBoundary from './components/common/ErrorBoundary';
 import GlobalStyle from './Styles/global';
 import { lazyWithRetry, clearChunkReloadFlag } from './utils/lazyWithRetry';
-import { playSound } from './utils/sounds';
+import { playSound, initGlobalSounds } from './utils/sounds';
 
 const Main = styled.main`
   padding: 24px;
@@ -179,6 +179,7 @@ const App: React.FC = () => {
   // Boot ok com o bundle atual — libera futuros auto-reloads de chunk obsoleto
   useEffect(() => {
     clearChunkReloadFlag();
+    initGlobalSounds();
   }, []);
 
   return (
