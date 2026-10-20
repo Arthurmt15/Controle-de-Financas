@@ -12,6 +12,7 @@ import { Bot, Sparkles, Send, X, User } from 'lucide-react';
 import { useTransactions } from '../../../hooks/useTransactions';
 import { useInstallments } from '../../../contexts/InstallmentsContext';
 import { useDebts } from '../../../contexts/DebtsContext';
+import { useAuth } from '../../../contexts/AuthContext';
 import { useTheme } from '../../../contexts/ThemeContext';
 import { parseTransactionFromMessage } from '../../../utils/parseTransaction';
 import { detectCommand, executeCommand } from '../../../utils/chatCommands';
@@ -59,6 +60,7 @@ const SUGGESTIONS_GUIDE = [
 
 const FloatingChat: React.FC = () => {
   const location = useLocation();
+  const { user } = useAuth();
   const { theme } = useTheme();
   const {
     transactions,
@@ -88,8 +90,7 @@ const FloatingChat: React.FC = () => {
   const fabRef = useRef<HTMLButtonElement>(null);
   const chatRef = useRef<HTMLDivElement>(null);
 
-  const STORAGE_KEY = 'financas_floating_chat';
-  const LEGACY_KEY = 'financas_chat_messages';
+  const STORAGE_KEY = `financas_floating_chat_${user?.id ?? 'anon'}`;
 
   // Não mostra em /login
   const isLogin = location.pathname === '/login';
@@ -148,16 +149,14 @@ const FloatingChat: React.FC = () => {
     };
   }, [isOpen]);
 
-  // Carrega histórico (migra legado) ou welcome
+  // Carrega histórico do usuário atual ou welcome
   useEffect(() => {
     try {
-      const saved = localStorage.getItem(STORAGE_KEY) || localStorage.getItem(LEGACY_KEY);
+      const saved = localStorage.getItem(STORAGE_KEY);
       if (saved) {
         const parsed = JSON.parse(saved);
         if (Array.isArray(parsed) && parsed.length > 0) {
           setMessages(parsed.map((m: ChatMessage) => ({ ...m, timestamp: new Date(m.timestamp) })));
-          // migra para nova chave
-          if (!localStorage.getItem(STORAGE_KEY)) localStorage.setItem(STORAGE_KEY, saved);
           return;
         }
       }
@@ -180,11 +179,11 @@ const FloatingChat: React.FC = () => {
         timestamp: new Date(),
       },
     ]);
-  }, []);
+  }, [STORAGE_KEY]);
 
   useEffect(() => {
     if (messages.length > 0) localStorage.setItem(STORAGE_KEY, JSON.stringify(messages));
-  }, [messages]);
+  }, [messages, STORAGE_KEY]);
 
   const dynamicFollowUps = useMemo(() => {
     if (isProcessing) return [];

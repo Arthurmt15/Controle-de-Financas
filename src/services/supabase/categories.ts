@@ -1,4 +1,5 @@
 import { supabase } from '../../lib/supabase';
+import { requireUserId } from '../../lib/auth';
 import type { Category } from '../../types';
 
 interface CategoryRow {
@@ -23,7 +24,12 @@ function mapCategory(row: CategoryRow): Category {
 
 export const categoryService = {
   async getAll(): Promise<Category[]> {
-    const { data, error } = await supabase.from('categories').select('*').order('name');
+    const userId = await requireUserId();
+    const { data, error } = await supabase
+      .from('categories')
+      .select('*')
+      .eq('user_id', userId)
+      .order('name');
 
     if (error) throw error;
     return (data as CategoryRow[]).map(mapCategory);
@@ -55,7 +61,12 @@ export const categoryService = {
   },
 
   async delete(id: string): Promise<void> {
-    const { error } = await supabase.from('categories').delete().eq('id', id);
+    const userId = await requireUserId();
+    const { error } = await supabase
+      .from('categories')
+      .delete()
+      .eq('id', id)
+      .eq('user_id', userId);
 
     if (error) throw error;
   },

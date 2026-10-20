@@ -11,6 +11,7 @@ import { Send, Bot, User, Sparkles, Trash2, Lightbulb } from 'lucide-react';
 import { useTransactions } from '../../../hooks/useTransactions';
 import { useInstallments } from '../../../contexts/InstallmentsContext';
 import { useDebts } from '../../../contexts/DebtsContext';
+import { useAuth } from '../../../contexts/AuthContext';
 import { useTheme } from '../../../contexts/ThemeContext';
 import { getExampleMessages, parseTransactionFromMessage } from '../../../utils/parseTransaction';
 import { detectCommand, executeCommand } from '../../../utils/chatCommands';
@@ -54,6 +55,7 @@ function renderMarkdown(text: string): string {
  * Chat rápido com IA - design shadcn
  */
 const TransactionChat: React.FC = () => {
+  const { user } = useAuth();
   const { theme } = useTheme();
   // Dados do contexto
   const {
@@ -83,7 +85,7 @@ const TransactionChat: React.FC = () => {
 
   // Exemplos de mensagens
   const examples = getExampleMessages();
-  const STORAGE_KEY = 'financas_chat_messages';
+  const STORAGE_KEY = `financas_chat_messages_${user?.id ?? 'anon'}`;
 
   // Sugestões dinâmicas — aparecem após resposta da IA para manter conversa fluida
   const dynamicFollowUps = useMemo(() => {
@@ -158,14 +160,14 @@ const TransactionChat: React.FC = () => {
         timestamp: new Date(),
       },
     ]);
-  }, []);
+  }, [STORAGE_KEY]);
 
   /** Salva mensagens no localStorage quando mudam */
   useEffect(() => {
     if (messages.length > 0) {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(messages));
     }
-  }, [messages]);
+  }, [messages, STORAGE_KEY]);
 
   /** Gera ID único para mensagem */
   const generateMessageId = () => `msg_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;

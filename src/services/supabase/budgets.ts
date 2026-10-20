@@ -1,4 +1,5 @@
 import { supabase } from '../../lib/supabase';
+import { requireUserId } from '../../lib/auth';
 import type { Budget } from '../../types/dashboard';
 
 interface BudgetRow {
@@ -21,9 +22,11 @@ function mapBudget(row: BudgetRow): Budget {
 
 export const budgetService = {
   async getAll(): Promise<Budget[]> {
+    const userId = await requireUserId();
     const { data, error } = await supabase
       .from('budgets')
       .select('*')
+      .eq('user_id', userId)
       .order('month', { ascending: false });
 
     if (error) throw error;
@@ -55,7 +58,12 @@ export const budgetService = {
   },
 
   async delete(id: string): Promise<void> {
-    const { error } = await supabase.from('budgets').delete().eq('id', id);
+    const userId = await requireUserId();
+    const { error } = await supabase
+      .from('budgets')
+      .delete()
+      .eq('id', id)
+      .eq('user_id', userId);
 
     if (error) throw error;
   },

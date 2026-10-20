@@ -1,4 +1,5 @@
 import { supabase } from '../../lib/supabase';
+import { requireUserId } from '../../lib/auth';
 import type { Installment } from '../../types';
 import type { IInstallmentRepository } from '../../domain/repositories/IRepository';
 import { InstallmentEntity } from '../../domain/entities/InstallmentEntity';
@@ -43,16 +44,24 @@ function mapRow(row: InstallmentRow): Installment {
  */
 export class SupabaseInstallmentRepository implements IInstallmentRepository {
   async getAll(): Promise<Installment[]> {
+    const userId = await requireUserId();
     const { data, error } = await supabase
       .from('installments')
       .select('*')
+      .eq('user_id', userId)
       .order('start_date', { ascending: false });
     if (error) throw error;
     return (data as InstallmentRow[]).map(mapRow);
   }
 
   async getById(id: string): Promise<Installment | null> {
-    const { data } = await supabase.from('installments').select('*').eq('id', id).single();
+    const userId = await requireUserId();
+    const { data } = await supabase
+      .from('installments')
+      .select('*')
+      .eq('id', id)
+      .eq('user_id', userId)
+      .single();
     if (!data) return null;
     return mapRow(data as InstallmentRow);
   }
@@ -90,6 +99,7 @@ export class SupabaseInstallmentRepository implements IInstallmentRepository {
 
   async update(entity: Installment): Promise<Installment> {
     new InstallmentEntity(entity);
+    const userId = await requireUserId();
     const { data, error } = await supabase
       .from('installments')
       .update({
@@ -105,6 +115,7 @@ export class SupabaseInstallmentRepository implements IInstallmentRepository {
         updated_at: new Date().toISOString(),
       })
       .eq('id', entity.id)
+      .eq('user_id', userId)
       .select()
       .single();
     if (error) throw error;
@@ -112,7 +123,12 @@ export class SupabaseInstallmentRepository implements IInstallmentRepository {
   }
 
   async delete(id: string): Promise<void> {
-    const { error } = await supabase.from('installments').delete().eq('id', id);
+    const userId = await requireUserId();
+    const { error } = await supabase
+      .from('installments')
+      .delete()
+      .eq('id', id)
+      .eq('user_id', userId);
     if (error) throw error;
   }
 

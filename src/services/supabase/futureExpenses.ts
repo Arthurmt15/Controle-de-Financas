@@ -5,6 +5,7 @@
  */
 
 import { supabase } from '../../lib/supabase';
+import { requireUserId } from '../../lib/auth';
 import type { FutureExpense } from '../../types';
 
 /** Interface da linha bruta do banco de dados */
@@ -39,9 +40,11 @@ function mapFutureExpense(row: FutureExpenseRow): FutureExpense {
 export const futureExpenseService = {
   /** Lista todas as despesas futuras do usuário */
   async getAll(): Promise<FutureExpense[]> {
+    const userId = await requireUserId();
     const { data, error } = await supabase
       .from('future_expenses')
       .select('*')
+      .eq('user_id', userId)
       .order('expected_date', { ascending: true });
 
     if (error) throw error;
@@ -50,9 +53,11 @@ export const futureExpenseService = {
 
   /** Lista despesas futuras pendentes */
   async getPending(): Promise<FutureExpense[]> {
+    const userId = await requireUserId();
     const { data, error } = await supabase
       .from('future_expenses')
       .select('*')
+      .eq('user_id', userId)
       .eq('status', 'pending')
       .order('expected_date', { ascending: true });
 
@@ -89,6 +94,7 @@ export const futureExpenseService = {
 
   /** Atualiza uma despesa futura existente */
   async update(expense: FutureExpense): Promise<FutureExpense> {
+    const userId = await requireUserId();
     const { data, error } = await supabase
       .from('future_expenses')
       .update({
@@ -101,6 +107,7 @@ export const futureExpenseService = {
         updated_at: new Date().toISOString(),
       })
       .eq('id', expense.id)
+      .eq('user_id', userId)
       .select()
       .single();
 
@@ -110,13 +117,19 @@ export const futureExpenseService = {
 
   /** Remove uma despesa futura */
   async delete(id: string): Promise<void> {
-    const { error } = await supabase.from('future_expenses').delete().eq('id', id);
+    const userId = await requireUserId();
+    const { error } = await supabase
+      .from('future_expenses')
+      .delete()
+      .eq('id', id)
+      .eq('user_id', userId);
 
     if (error) throw error;
   },
 
   /** Marca uma despesa como paga */
   async markAsPaid(id: string): Promise<FutureExpense> {
+    const userId = await requireUserId();
     const { data, error } = await supabase
       .from('future_expenses')
       .update({
@@ -124,6 +137,7 @@ export const futureExpenseService = {
         updated_at: new Date().toISOString(),
       })
       .eq('id', id)
+      .eq('user_id', userId)
       .select()
       .single();
 

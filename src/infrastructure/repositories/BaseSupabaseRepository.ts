@@ -1,4 +1,5 @@
 import { supabase } from '../../lib/supabase';
+import { requireUserId } from '../../lib/auth';
 
 /**
  * Classe base abstrata para repositórios Supabase.
@@ -20,9 +21,11 @@ export abstract class BaseSupabaseRepository<Row, Domain> {
 
   /** Lista todos do usuário atual */
   async getAll(): Promise<Domain[]> {
+    const userId = await requireUserId();
     const { data, error } = await supabase
       .from(this.tableName)
       .select('*')
+      .eq('user_id', userId)
       .order('created_at', { ascending: false });
     if (error) throw error;
     return (data as Row[]).map((r) => this.mapRow(r));

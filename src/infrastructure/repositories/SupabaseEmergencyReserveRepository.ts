@@ -1,4 +1,5 @@
 import { supabase } from '../../lib/supabase';
+import { requireUserId } from '../../lib/auth';
 import type { EmergencyReserve } from '../../types';
 import type { IEmergencyReserveRepository } from '../../domain/repositories/IRepository';
 import { EmergencyReserveEntity } from '../../domain/entities/EmergencyReserveEntity';
@@ -56,10 +57,12 @@ export class SupabaseEmergencyReserveRepository implements IEmergencyReserveRepo
   }
 
   async getById(id: string): Promise<EmergencyReserve | null> {
+    const userId = await requireUserId();
     const { data, error } = await supabase
       .from('emergency_reserves')
       .select('*')
       .eq('id', id)
+      .eq('user_id', userId)
       .single();
     if (error) {
       if (isTableNotFound(error)) {
@@ -73,10 +76,11 @@ export class SupabaseEmergencyReserveRepository implements IEmergencyReserveRepo
   }
 
   async getByUser(): Promise<EmergencyReserve | null> {
+    const userId = await requireUserId();
     const { data, error } = await supabase
       .from('emergency_reserves')
       .select('*')
-      .limit(1)
+      .eq('user_id', userId)
       .maybeSingle();
     if (error) {
       if (isTableNotFound(error)) {
@@ -120,6 +124,7 @@ export class SupabaseEmergencyReserveRepository implements IEmergencyReserveRepo
 
   async update(entity: EmergencyReserve): Promise<EmergencyReserve> {
     new EmergencyReserveEntity(entity);
+    const userId = await requireUserId();
     const { data, error } = await supabase
       .from('emergency_reserves')
       .update({
@@ -129,6 +134,7 @@ export class SupabaseEmergencyReserveRepository implements IEmergencyReserveRepo
         updated_at: new Date().toISOString(),
       })
       .eq('id', entity.id)
+      .eq('user_id', userId)
       .select()
       .single();
     if (error) {
@@ -144,7 +150,12 @@ export class SupabaseEmergencyReserveRepository implements IEmergencyReserveRepo
   }
 
   async delete(id: string): Promise<void> {
-    const { error } = await supabase.from('emergency_reserves').delete().eq('id', id);
+    const userId = await requireUserId();
+    const { error } = await supabase
+      .from('emergency_reserves')
+      .delete()
+      .eq('id', id)
+      .eq('user_id', userId);
     if (error) {
       if (isTableNotFound(error)) {
         logMissingTableOnce(error);

@@ -1,4 +1,5 @@
 import { supabase } from '../../lib/supabase';
+import { requireUserId } from '../../lib/auth';
 import type { Transaction } from '../../types';
 import { toLocalDateTime } from '../../utils/dateHelpers';
 
@@ -30,10 +31,12 @@ function mapTransaction(row: TransactionRow): Transaction {
 export const transactionService = {
   async getAll(page = 1, limit = 50): Promise<Transaction[]> {
     const offset = (page - 1) * limit;
+    const userId = await requireUserId();
 
     const { data, error } = await supabase
       .from('transactions')
       .select('*')
+      .eq('user_id', userId)
       .order('created_at', { ascending: false })
       .range(offset, offset + limit - 1);
 
@@ -69,6 +72,7 @@ export const transactionService = {
   },
 
   async update(transaction: Transaction): Promise<Transaction> {
+    const userId = await requireUserId();
     const { data, error } = await supabase
       .from('transactions')
       .update({
@@ -81,6 +85,7 @@ export const transactionService = {
         updated_at: new Date().toISOString(),
       })
       .eq('id', transaction.id)
+      .eq('user_id', userId)
       .select()
       .single();
 
@@ -89,7 +94,12 @@ export const transactionService = {
   },
 
   async delete(id: string): Promise<void> {
-    const { error } = await supabase.from('transactions').delete().eq('id', id);
+    const userId = await requireUserId();
+    const { error } = await supabase
+      .from('transactions')
+      .delete()
+      .eq('id', id)
+      .eq('user_id', userId);
 
     if (error) throw error;
   },

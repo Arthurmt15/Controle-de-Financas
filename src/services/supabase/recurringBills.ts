@@ -1,4 +1,5 @@
 import { supabase } from '../../lib/supabase';
+import { requireUserId } from '../../lib/auth';
 import type { RecurringBill, Transaction } from '../../types';
 import { toLocalDateTime } from '../../utils/dateHelpers';
 
@@ -58,7 +59,12 @@ function mapTransaction(row: TransactionRow): Transaction {
 
 export const recurringBillService = {
   async getAll(): Promise<RecurringBill[]> {
-    const { data, error } = await supabase.from('recurring_bills').select('*').order('name');
+    const userId = await requireUserId();
+    const { data, error } = await supabase
+      .from('recurring_bills')
+      .select('*')
+      .eq('user_id', userId)
+      .order('name');
 
     if (error) throw error;
     return (data as RecurringBillRow[]).map(mapRecurringBill);
@@ -93,6 +99,7 @@ export const recurringBillService = {
   },
 
   async update(bill: RecurringBill): Promise<RecurringBill> {
+    const userId = await requireUserId();
     const { data, error } = await supabase
       .from('recurring_bills')
       .update({
@@ -106,6 +113,7 @@ export const recurringBillService = {
         updated_at: new Date().toISOString(),
       })
       .eq('id', bill.id)
+      .eq('user_id', userId)
       .select()
       .single();
 
@@ -114,7 +122,12 @@ export const recurringBillService = {
   },
 
   async delete(id: string): Promise<void> {
-    const { error } = await supabase.from('recurring_bills').delete().eq('id', id);
+    const userId = await requireUserId();
+    const { error } = await supabase
+      .from('recurring_bills')
+      .delete()
+      .eq('id', id)
+      .eq('user_id', userId);
 
     if (error) throw error;
   },

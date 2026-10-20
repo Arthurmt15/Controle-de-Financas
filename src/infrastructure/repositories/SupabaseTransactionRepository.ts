@@ -1,4 +1,5 @@
 import { supabase } from '../../lib/supabase';
+import { requireUserId } from '../../lib/auth';
 import type { Transaction } from '../../types';
 import type { ITransactionRepository } from '../../domain/repositories/IRepository';
 import { TransactionEntity } from '../../domain/entities/TransactionEntity';
@@ -35,9 +36,11 @@ function mapRow(row: TransactionRow): Transaction {
 export class SupabaseTransactionRepository implements ITransactionRepository {
   async getAll(page = 1, limit = 50): Promise<Transaction[]> {
     const offset = (page - 1) * limit;
+    const userId = await requireUserId();
     const { data, error } = await supabase
       .from('transactions')
       .select('*')
+      .eq('user_id', userId)
       .order('created_at', { ascending: false })
       .range(offset, offset + limit - 1);
     if (error) throw error;
@@ -45,7 +48,13 @@ export class SupabaseTransactionRepository implements ITransactionRepository {
   }
 
   async getById(id: string): Promise<Transaction | null> {
-    const { data, error } = await supabase.from('transactions').select('*').eq('id', id).single();
+    const userId = await requireUserId();
+    const { data, error } = await supabase
+      .from('transactions')
+      .select('*')
+      .eq('id', id)
+      .eq('user_id', userId)
+      .single();
     if (error) return null;
     return mapRow(data as TransactionRow);
   }
@@ -78,6 +87,7 @@ export class SupabaseTransactionRepository implements ITransactionRepository {
 
   async update(entity: Transaction): Promise<Transaction> {
     new TransactionEntity(entity);
+    const userId = await requireUserId();
     const { data, error } = await supabase
       .from('transactions')
       .update({
@@ -90,6 +100,7 @@ export class SupabaseTransactionRepository implements ITransactionRepository {
         updated_at: new Date().toISOString(),
       })
       .eq('id', entity.id)
+      .eq('user_id', userId)
       .select()
       .single();
     if (error) throw error;
@@ -97,7 +108,12 @@ export class SupabaseTransactionRepository implements ITransactionRepository {
   }
 
   async delete(id: string): Promise<void> {
-    const { error } = await supabase.from('transactions').delete().eq('id', id);
+    const userId = await requireUserId();
+    const { error } = await supabase
+      .from('transactions')
+      .delete()
+      .eq('id', id)
+      .eq('user_id', userId);
     if (error) throw error;
   }
 }

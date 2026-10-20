@@ -5,6 +5,7 @@
  */
 
 import { supabase } from '../../lib/supabase';
+import { requireUserId } from '../../lib/auth';
 import type { Installment } from '../../types';
 
 /** Interface da linha bruta do banco de dados */
@@ -45,9 +46,11 @@ function mapInstallment(row: InstallmentRow): Installment {
 export const installmentService = {
   /** Lista todos os parcelados do usuário */
   async getAll(): Promise<Installment[]> {
+    const userId = await requireUserId();
     const { data, error } = await supabase
       .from('installments')
       .select('*')
+      .eq('user_id', userId)
       .order('start_date', { ascending: false });
 
     if (error) throw error;
@@ -86,6 +89,7 @@ export const installmentService = {
 
   /** Atualiza um parcelado existente */
   async update(installment: Installment): Promise<Installment> {
+    const userId = await requireUserId();
     const { data, error } = await supabase
       .from('installments')
       .update({
@@ -101,6 +105,7 @@ export const installmentService = {
         updated_at: new Date().toISOString(),
       })
       .eq('id', installment.id)
+      .eq('user_id', userId)
       .select()
       .single();
 
@@ -110,14 +115,25 @@ export const installmentService = {
 
   /** Remove um parcelado */
   async delete(id: string): Promise<void> {
-    const { error } = await supabase.from('installments').delete().eq('id', id);
+    const userId = await requireUserId();
+    const { error } = await supabase
+      .from('installments')
+      .delete()
+      .eq('id', id)
+      .eq('user_id', userId);
 
     if (error) throw error;
   },
 
   /** Avança para a próxima parcela */
   async advanceInstallment(id: string): Promise<Installment> {
-    const { data: current } = await supabase.from('installments').select('*').eq('id', id).single();
+    const userId = await requireUserId();
+    const { data: current } = await supabase
+      .from('installments')
+      .select('*')
+      .eq('id', id)
+      .eq('user_id', userId)
+      .single();
 
     if (!current) throw new Error('Parcelado não encontrado');
 
@@ -131,6 +147,7 @@ export const installmentService = {
         updated_at: new Date().toISOString(),
       })
       .eq('id', id)
+      .eq('user_id', userId)
       .select()
       .single();
 

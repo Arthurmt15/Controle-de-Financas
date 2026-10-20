@@ -1,4 +1,5 @@
 import { supabase } from '../../lib/supabase';
+import { requireUserId } from '../../lib/auth';
 import type { Debt } from '../../types';
 import type { IDebtRepository } from '../../domain/repositories/IRepository';
 import { DebtEntity } from '../../domain/entities/DebtEntity';
@@ -53,9 +54,11 @@ function isTableNotFoundDebt(error: any): boolean {
 
 export class SupabaseDebtRepository implements IDebtRepository {
   async getAll(): Promise<Debt[]> {
+    const userId = await requireUserId();
     const { data, error } = await supabase
       .from('debts')
       .select('*')
+      .eq('user_id', userId)
       .order('start_date', { ascending: false });
     if (error) {
       if (isTableNotFoundDebt(error)) {
@@ -69,7 +72,13 @@ export class SupabaseDebtRepository implements IDebtRepository {
     return (data as DebtRow[]).map(mapRow);
   }
   async getById(id: string): Promise<Debt | null> {
-    const { data, error } = await supabase.from('debts').select('*').eq('id', id).single();
+    const userId = await requireUserId();
+    const { data, error } = await supabase
+      .from('debts')
+      .select('*')
+      .eq('id', id)
+      .eq('user_id', userId)
+      .single();
     if (error) {
       if (isTableNotFoundDebt(error)) return null;
       return null;
@@ -114,6 +123,7 @@ export class SupabaseDebtRepository implements IDebtRepository {
   }
   async update(entity: Debt): Promise<Debt> {
     new DebtEntity(entity);
+    const userId = await requireUserId();
     const { data, error } = await supabase
       .from('debts')
       .update({
@@ -129,6 +139,7 @@ export class SupabaseDebtRepository implements IDebtRepository {
         updated_at: new Date().toISOString(),
       })
       .eq('id', entity.id)
+      .eq('user_id', userId)
       .select()
       .single();
     if (error) {
@@ -139,7 +150,8 @@ export class SupabaseDebtRepository implements IDebtRepository {
     return mapRow(data as DebtRow);
   }
   async delete(id: string): Promise<void> {
-    const { error } = await supabase.from('debts').delete().eq('id', id);
+    const userId = await requireUserId();
+    const { error } = await supabase.from('debts').delete().eq('id', id).eq('user_id', userId);
     if (error) {
       if (isTableNotFoundDebt(error)) {
         console.warn('Tabela debts não existe.');
