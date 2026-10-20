@@ -6,6 +6,7 @@
 
 import type { Transaction, DashboardMetrics } from '../types';
 import { filterByCurrentMonth, filterByCurrentYear } from './transactionFilters';
+import { parseLocalDate } from './dateHelpers';
 
 /**
  * Calcula métricas financeiras baseadas nas transações
@@ -38,6 +39,17 @@ export function calculateMetrics(transactions: Transaction[]): DashboardMetrics 
   const averageMonthlyIncome = yearlyIncome / monthsElapsed;
   const averageMonthlyExpense = yearlyExpense / monthsElapsed;
 
+  // Transações do mês anterior (para comparativo real, sem média artificial)
+  const now = new Date();
+  const previousMonth = now.getMonth() === 0 ? 11 : now.getMonth() - 1;
+  const previousMonthYear = now.getMonth() === 0 ? now.getFullYear() - 1 : now.getFullYear();
+  const previousMonthTransactions = transactions.filter((t) => {
+    const date = parseLocalDate(t.date);
+    return date.getMonth() === previousMonth && date.getFullYear() === previousMonthYear;
+  });
+  const previousMonthIncome = sumByType(previousMonthTransactions, 'income');
+  const previousMonthExpense = sumByType(previousMonthTransactions, 'expense');
+
   return {
     monthlyIncome,
     monthlyExpense,
@@ -47,6 +59,8 @@ export function calculateMetrics(transactions: Transaction[]): DashboardMetrics 
     yearlyBalance,
     averageMonthlyIncome,
     averageMonthlyExpense,
+    previousMonthIncome,
+    previousMonthExpense,
   };
 }
 

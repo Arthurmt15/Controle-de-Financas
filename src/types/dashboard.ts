@@ -24,6 +24,10 @@ export interface DashboardMetrics {
   averageMonthlyIncome: number;
   /** Média de saídas mensais */
   averageMonthlyExpense: number;
+  /** Total de entradas no mês anterior */
+  previousMonthIncome: number;
+  /** Total de saídas no mês anterior */
+  previousMonthExpense: number;
 }
 
 /**

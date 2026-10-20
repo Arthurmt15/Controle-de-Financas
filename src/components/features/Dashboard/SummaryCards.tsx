@@ -34,11 +34,19 @@ const iconToneClass: Record<string, string> = {
 const SummaryCards: React.FC = () => {
   const { metrics } = useTransactions();
 
-  /** Variação percentual formatada com sinal */
+  /** Variação percentual em relação ao mês anterior */
   const getVariation = (current: number, previous: number): string => {
-    if (previous === 0) return current > 0 ? '+100%' : '0%';
+    if (previous === 0) {
+      return current === 0 ? 'Sem movimentação' : 'Sem base no mês anterior';
+    }
+
     const variation = ((current - previous) / previous) * 100;
-    return `${variation >= 0 ? '+' : ''}${variation.toFixed(1)}%`;
+    const formatted = variation.toLocaleString('pt-BR', {
+      minimumFractionDigits: 1,
+      maximumFractionDigits: 1,
+    });
+
+    return `${variation >= 0 ? '+' : ''}${formatted}% vs mês anterior`;
   };
 
   /** Dados dos 4 cards — label, valor e tom */
@@ -49,7 +57,7 @@ const SummaryCards: React.FC = () => {
         Icon: TrendingUp,
         label: 'Entradas do Mês',
         value: formatCurrency(metrics.monthlyIncome),
-        subtext: getVariation(metrics.monthlyIncome, metrics.averageMonthlyIncome),
+        subtext: getVariation(metrics.monthlyIncome, metrics.previousMonthIncome),
         tone: 'emerald' as const,
       },
       {
@@ -57,7 +65,7 @@ const SummaryCards: React.FC = () => {
         Icon: TrendingDown,
         label: 'Saídas do Mês',
         value: formatCurrency(metrics.monthlyExpense),
-        subtext: getVariation(metrics.monthlyExpense, metrics.averageMonthlyExpense),
+        subtext: getVariation(metrics.monthlyExpense, metrics.previousMonthExpense),
         tone: 'rose' as const,
       },
       {
