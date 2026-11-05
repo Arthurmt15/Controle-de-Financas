@@ -101,36 +101,60 @@ ALTER TABLE installments ENABLE ROW LEVEL SECURITY;
 ALTER TABLE future_expenses ENABLE ROW LEVEL SECURITY;
 
 -- CATEGORIES
+DROP POLICY IF EXISTS "Users can view own categories" ON categories;
+DROP POLICY IF EXISTS "Users can insert own categories" ON categories;
+DROP POLICY IF EXISTS "Users can update own categories" ON categories;
+DROP POLICY IF EXISTS "Users can delete own categories" ON categories;
 CREATE POLICY "Users can view own categories" ON categories FOR SELECT USING (auth.uid() = user_id);
 CREATE POLICY "Users can insert own categories" ON categories FOR INSERT WITH CHECK (auth.uid() = user_id);
 CREATE POLICY "Users can update own categories" ON categories FOR UPDATE USING (auth.uid() = user_id);
 CREATE POLICY "Users can delete own categories" ON categories FOR DELETE USING (auth.uid() = user_id);
 
 -- TRANSACTIONS
+DROP POLICY IF EXISTS "Users can view own transactions" ON transactions;
+DROP POLICY IF EXISTS "Users can insert own transactions" ON transactions;
+DROP POLICY IF EXISTS "Users can update own transactions" ON transactions;
+DROP POLICY IF EXISTS "Users can delete own transactions" ON transactions;
 CREATE POLICY "Users can view own transactions" ON transactions FOR SELECT USING (auth.uid() = user_id);
 CREATE POLICY "Users can insert own transactions" ON transactions FOR INSERT WITH CHECK (auth.uid() = user_id);
 CREATE POLICY "Users can update own transactions" ON transactions FOR UPDATE USING (auth.uid() = user_id);
 CREATE POLICY "Users can delete own transactions" ON transactions FOR DELETE USING (auth.uid() = user_id);
 
 -- BUDGETS
+DROP POLICY IF EXISTS "Users can view own budgets" ON budgets;
+DROP POLICY IF EXISTS "Users can insert own budgets" ON budgets;
+DROP POLICY IF EXISTS "Users can update own budgets" ON budgets;
+DROP POLICY IF EXISTS "Users can delete own budgets" ON budgets;
 CREATE POLICY "Users can view own budgets" ON budgets FOR SELECT USING (auth.uid() = user_id);
 CREATE POLICY "Users can insert own budgets" ON budgets FOR INSERT WITH CHECK (auth.uid() = user_id);
 CREATE POLICY "Users can update own budgets" ON budgets FOR UPDATE USING (auth.uid() = user_id);
 CREATE POLICY "Users can delete own budgets" ON budgets FOR DELETE USING (auth.uid() = user_id);
 
 -- RECURRING_BILLS
+DROP POLICY IF EXISTS "Users can view own recurring_bills" ON recurring_bills;
+DROP POLICY IF EXISTS "Users can insert own recurring_bills" ON recurring_bills;
+DROP POLICY IF EXISTS "Users can update own recurring_bills" ON recurring_bills;
+DROP POLICY IF EXISTS "Users can delete own recurring_bills" ON recurring_bills;
 CREATE POLICY "Users can view own recurring_bills" ON recurring_bills FOR SELECT USING (auth.uid() = user_id);
 CREATE POLICY "Users can insert own recurring_bills" ON recurring_bills FOR INSERT WITH CHECK (auth.uid() = user_id);
 CREATE POLICY "Users can update own recurring_bills" ON recurring_bills FOR UPDATE USING (auth.uid() = user_id);
 CREATE POLICY "Users can delete own recurring_bills" ON recurring_bills FOR DELETE USING (auth.uid() = user_id);
 
 -- INSTALLMENTS
+DROP POLICY IF EXISTS "Users can view own installments" ON installments;
+DROP POLICY IF EXISTS "Users can insert own installments" ON installments;
+DROP POLICY IF EXISTS "Users can update own installments" ON installments;
+DROP POLICY IF EXISTS "Users can delete own installments" ON installments;
 CREATE POLICY "Users can view own installments" ON installments FOR SELECT USING (auth.uid() = user_id);
 CREATE POLICY "Users can insert own installments" ON installments FOR INSERT WITH CHECK (auth.uid() = user_id);
 CREATE POLICY "Users can update own installments" ON installments FOR UPDATE USING (auth.uid() = user_id);
 CREATE POLICY "Users can delete own installments" ON installments FOR DELETE USING (auth.uid() = user_id);
 
 -- FUTURE_EXPENSES
+DROP POLICY IF EXISTS "Users can view own future_expenses" ON future_expenses;
+DROP POLICY IF EXISTS "Users can insert own future_expenses" ON future_expenses;
+DROP POLICY IF EXISTS "Users can update own future_expenses" ON future_expenses;
+DROP POLICY IF EXISTS "Users can delete own future_expenses" ON future_expenses;
 CREATE POLICY "Users can view own future_expenses" ON future_expenses FOR SELECT USING (auth.uid() = user_id);
 CREATE POLICY "Users can insert own future_expenses" ON future_expenses FOR INSERT WITH CHECK (auth.uid() = user_id);
 CREATE POLICY "Users can update own future_expenses" ON future_expenses FOR UPDATE USING (auth.uid() = user_id);

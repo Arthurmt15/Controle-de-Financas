@@ -14,6 +14,10 @@ CREATE TABLE IF NOT EXISTS emergency_reserves (
 
 ALTER TABLE emergency_reserves ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "Users can view own emergency_reserve" ON emergency_reserves;
+DROP POLICY IF EXISTS "Users can insert own emergency_reserve" ON emergency_reserves;
+DROP POLICY IF EXISTS "Users can update own emergency_reserve" ON emergency_reserves;
+DROP POLICY IF EXISTS "Users can delete own emergency_reserve" ON emergency_reserves;
 CREATE POLICY "Users can view own emergency_reserve" ON emergency_reserves FOR SELECT USING (auth.uid() = user_id);
 CREATE POLICY "Users can insert own emergency_reserve" ON emergency_reserves FOR INSERT WITH CHECK (auth.uid() = user_id);
 CREATE POLICY "Users can update own emergency_reserve" ON emergency_reserves FOR UPDATE USING (auth.uid() = user_id);
