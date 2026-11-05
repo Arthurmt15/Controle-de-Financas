@@ -56,7 +56,6 @@ export function groupExpensesByCategory(
   fallbackColor = '#6b7280',
   match: (d: Date) => boolean = periodMatcher('month')
 ): CategoryTotal[] {
-
   const expenses = transactions.filter((t) => {
     if (t.type !== 'expense') return false;
     return match(parseLocalDate(t.date));

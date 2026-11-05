@@ -110,7 +110,9 @@ function ensureUnlockListeners(): void {
   unlocked = true;
   const unlock = () => {
     try {
-      getContext()?.resume().catch(() => {});
+      getContext()
+        ?.resume()
+        .catch(() => {});
     } catch {
       // ignora — áudio é opcional
     }
@@ -171,7 +173,10 @@ export function playSound(name: SoundName, opts?: { force?: boolean }): void {
       osc.type = tone.type || 'sine';
       osc.frequency.setValueAtTime(tone.freq, now + tone.at);
       if (tone.slideTo) {
-        osc.frequency.exponentialRampToValueAtTime(Math.max(tone.slideTo, 1), now + tone.at + tone.dur);
+        osc.frequency.exponentialRampToValueAtTime(
+          Math.max(tone.slideTo, 1),
+          now + tone.at + tone.dur
+        );
       }
       const vol = tone.vol ?? 0.12;
       gain.gain.setValueAtTime(0.0001, now + tone.at);

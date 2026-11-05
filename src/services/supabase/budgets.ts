@@ -59,11 +59,7 @@ export const budgetService = {
 
   async delete(id: string): Promise<void> {
     const userId = await requireUserId();
-    const { error } = await supabase
-      .from('budgets')
-      .delete()
-      .eq('id', id)
-      .eq('user_id', userId);
+    const { error } = await supabase.from('budgets').delete().eq('id', id).eq('user_id', userId);
 
     if (error) throw error;
   },

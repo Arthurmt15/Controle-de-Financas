@@ -24,7 +24,11 @@ import {
 import { useTransactions } from '../../../hooks/useTransactions';
 import { formatCurrency, getMonthAbbreviation } from '../../../utils/formatters';
 import { getLastNMonths, getCurrentYearMonths } from '../../../utils/helpers';
-import { groupExpensesByCategory, periodMatcher, type CategoryPeriod } from '../../../utils/categoryTotals';
+import {
+  groupExpensesByCategory,
+  periodMatcher,
+  type CategoryPeriod,
+} from '../../../utils/categoryTotals';
 import { Card, CardContent, CardHeader, CardTitle } from '../../ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../ui/select';
 import { BarChart3, PieChart as PieChartIcon, Inbox } from 'lucide-react';

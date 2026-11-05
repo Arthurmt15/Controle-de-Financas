@@ -111,13 +111,11 @@ export function shareOrDownloadFile(blob: Blob, filename: string): void {
       try {
         if (nav.canShare({ files: [file] })) {
           const url = URL.createObjectURL(blob);
-          nav
-            .share({ files: [file], title: filename })
-            .catch((err: unknown) => {
-              // Cancelamento pelo usuário não deve disparar download
-              if ((err as Error)?.name !== 'AbortError') anchorDownload(url, filename);
-              else URL.revokeObjectURL(url);
-            });
+          nav.share({ files: [file], title: filename }).catch((err: unknown) => {
+            // Cancelamento pelo usuário não deve disparar download
+            if ((err as Error)?.name !== 'AbortError') anchorDownload(url, filename);
+            else URL.revokeObjectURL(url);
+          });
           return;
         }
       } catch {
@@ -193,9 +191,7 @@ export function generatePDF(config: ExportConfig): void {
   try {
     const pdfBlob = doc.output('blob') as Blob;
     const blob =
-      pdfBlob instanceof Blob
-        ? new Blob([pdfBlob], { type: 'application/pdf' })
-        : pdfBlob;
+      pdfBlob instanceof Blob ? new Blob([pdfBlob], { type: 'application/pdf' }) : pdfBlob;
     shareOrDownloadFile(blob, filename);
   } catch {
     doc.save(filename);

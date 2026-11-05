@@ -2,7 +2,14 @@
  * @file utils/sounds.test.ts
  * @description Testes do motor de sons (jsdom não tem AudioContext — deve falhar silencioso).
  */
-import { playSound, isSoundEnabled, setSoundEnabled, SOUND_LABELS, initGlobalSounds, type SoundName } from './sounds';
+import {
+  playSound,
+  isSoundEnabled,
+  setSoundEnabled,
+  SOUND_LABELS,
+  initGlobalSounds,
+  type SoundName,
+} from './sounds';
 
 describe('sounds', () => {
   afterEach(() => {

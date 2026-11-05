@@ -183,7 +183,8 @@ function extractCategory(cleanText: string): { categoryName?: string; rest: stri
   );
   if (m) {
     const name = m[1].trim();
-    if (name.length >= 2) return { categoryName: capitalizeFirst(name), rest: cleanText.replace(m[0], ' ').trim() };
+    if (name.length >= 2)
+      return { categoryName: capitalizeFirst(name), rest: cleanText.replace(m[0], ' ').trim() };
   }
   return { rest: cleanText };
 }
@@ -280,12 +281,7 @@ export function parseTransactionUpdate(text: string): TransactionUpdatePatch | n
   if (!patch.target && patch.filterAmount === undefined && !patch.filterDate) return null;
 
   // Sem nenhuma mudança identificada, não é um comando de edição válido
-  if (
-    patch.amount === undefined &&
-    !patch.date &&
-    !patch.categoryName &&
-    !patch.newDescription
-  ) {
+  if (patch.amount === undefined && !patch.date && !patch.categoryName && !patch.newDescription) {
     return null;
   }
   return patch;

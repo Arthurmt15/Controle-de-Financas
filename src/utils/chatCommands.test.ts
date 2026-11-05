@@ -8,7 +8,13 @@ import { executeCommand } from './chatCommandsExecutor';
 import type { Transaction, Category } from '../types';
 
 const mockCategories: Category[] = [
-  { id: 'cat-1', name: 'Alimentação', color: '#ef4444', icon: 'FaUtensils', defaultType: 'expense' },
+  {
+    id: 'cat-1',
+    name: 'Alimentação',
+    color: '#ef4444',
+    icon: 'FaUtensils',
+    defaultType: 'expense',
+  },
   { id: 'cat-2', name: 'Transporte', color: '#4ECDC4', icon: 'FaTag', defaultType: 'expense' },
 ];
 
@@ -178,13 +184,24 @@ describe('chatCommands - executeCommand transações', () => {
 
   it('sugere candidatos próximos quando a data está errada', async () => {
     const txs = [
-      makeTx({ id: 'a', description: 'Colocar custo de 1/2', amount: 70, date: '2026-10-07T12:00:00.000Z' }),
+      makeTx({
+        id: 'a',
+        description: 'Colocar custo de 1/2',
+        amount: 70,
+        date: '2026-10-07T12:00:00.000Z',
+      }),
     ];
     let calls = 0;
     const msg = await executeCommand(
       {
         type: 'update_transaction',
-        patch: { target: '', filterAmount: 70, filterDate: '2026-10-08', txType: 'expense', newDescription: 'Festa Rave' },
+        patch: {
+          target: '',
+          filterAmount: 70,
+          filterDate: '2026-10-08',
+          txType: 'expense',
+          newDescription: 'Festa Rave',
+        },
       },
       mockCategories,
       minimal.createCategory,
@@ -210,7 +227,12 @@ describe('chatCommands - executeCommand transações', () => {
 
   it('casa descrição ignorando preposições ("custo" acha "Colocar custo de 1/2")', async () => {
     const txs = [
-      makeTx({ id: 'a', description: 'Colocar custo de 1/2', amount: 70, date: '2026-10-07T12:00:00.000Z' }),
+      makeTx({
+        id: 'a',
+        description: 'Colocar custo de 1/2',
+        amount: 70,
+        date: '2026-10-07T12:00:00.000Z',
+      }),
     ];
     const updated: Transaction[] = [];
     const msg = await executeCommand(

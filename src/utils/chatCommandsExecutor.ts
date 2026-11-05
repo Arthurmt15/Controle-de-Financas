@@ -15,7 +15,13 @@ export type CommandType =
   | { type: 'delete_recurring'; name: string }
   | { type: 'generate_bills' }
   | { type: 'update_transaction'; patch: TransactionUpdatePatch }
-  | { type: 'delete_transaction'; target: string; filterAmount?: number; filterDate?: string; txType?: 'income' | 'expense' }
+  | {
+      type: 'delete_transaction';
+      target: string;
+      filterAmount?: number;
+      filterDate?: string;
+      txType?: 'income' | 'expense';
+    }
   | { type: null };
 
 function formatBRL(value: number): string {
@@ -58,7 +64,9 @@ function findNearMisses(
       return { t, score };
     })
     .filter((s) => s.score > 0)
-    .sort((a, b) => b.score - a.score || new Date(b.t.date).getTime() - new Date(a.t.date).getTime());
+    .sort(
+      (a, b) => b.score - a.score || new Date(b.t.date).getTime() - new Date(a.t.date).getTime()
+    );
   return scored.slice(0, limit).map((s) => s.t);
 }
 

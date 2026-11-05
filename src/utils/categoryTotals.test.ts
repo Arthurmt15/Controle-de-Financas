@@ -6,7 +6,13 @@ import { groupExpensesByCategory, periodMatcher } from './categoryTotals';
 import type { Transaction, Category } from '../types';
 
 const mockCategories: Category[] = [
-  { id: 'cat-1', name: 'Alimentação', color: '#ef4444', icon: 'FaUtensils', defaultType: 'expense' },
+  {
+    id: 'cat-1',
+    name: 'Alimentação',
+    color: '#ef4444',
+    icon: 'FaUtensils',
+    defaultType: 'expense',
+  },
   { id: 'cat-2', name: 'Outros', color: '#6b7280', icon: 'FaTag', defaultType: 'both' },
 ];
 
@@ -75,10 +81,7 @@ describe('categoryTotals - groupExpensesByCategory', () => {
     const prev = new Date(now.getFullYear(), now.getMonth() - 1, 12);
     const fmt = (d: Date) =>
       `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}T12:00:00`;
-    const txs = [
-      txMonth(5, { amount: 10 }),
-      { ...txMonth(6, { amount: 999 }), date: fmt(prev) },
-    ];
+    const txs = [txMonth(5, { amount: 10 }), { ...txMonth(6, { amount: 999 }), date: fmt(prev) }];
     const result = groupExpensesByCategory(
       txs,
       mockCategories,
@@ -99,7 +102,12 @@ describe('categoryTotals - groupExpensesByCategory', () => {
       { ...txMonth(6, { amount: 20 }), date: fmt(twoAgo) },
       { ...txMonth(7, { amount: 999 }), date: fmt(fourAgo) },
     ];
-    const result = groupExpensesByCategory(txs, mockCategories, '#000', periodMatcher('quarter', now));
+    const result = groupExpensesByCategory(
+      txs,
+      mockCategories,
+      '#000',
+      periodMatcher('quarter', now)
+    );
     const total = result.reduce((s, r) => s + r.total, 0);
     expect(total).toBe(30);
   });

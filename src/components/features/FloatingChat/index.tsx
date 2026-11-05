@@ -242,7 +242,9 @@ const FloatingChat: React.FC = () => {
       );
       // Comandos que alteram dados já tocam som no contexto; aqui só erro ou leitura
       if (/\berro\b/i.test(response)) playSound('error');
-      else if (['list_categories', 'summary', 'analysis', 'help', 'list_recurring'].includes(command.type))
+      else if (
+        ['list_categories', 'summary', 'analysis', 'help', 'list_recurring'].includes(command.type)
+      )
         playSound('receive');
       addMessage(response, false);
       setIsProcessing(false);
