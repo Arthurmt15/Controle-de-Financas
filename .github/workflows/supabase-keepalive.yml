@@ -1,5 +1,5 @@
 # @file .github/workflows/supabase-keepalive.yml
-# @description Job anti-congelamento: pinga o Supabase a cada 3 dias (free tier pausa após ~7 dias sem tráfego)
+# @description Job anti-congelamento: pinga o Supabase diariamente (free tier pausa após ~7 dias sem tráfego)
 #   + permite reativação manual via workflow_dispatch com restore=true.
 #
 # Secrets necessários (Settings → Secrets and variables → Actions):
@@ -12,8 +12,8 @@ name: Supabase Keep-Alive
 
 on:
   schedule:
-    # A cada 3 dias às 09:00 UTC (folga segura antes dos 7 dias do free tier)
-    - cron: '0 9 */3 * *'
+    # Diariamente às 09:17 UTC. Minuto não redondo reduz atrasos do GitHub Actions.
+    - cron: '17 9 * * *'
   workflow_dispatch:
     inputs:
       restore:
