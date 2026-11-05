@@ -71,6 +71,11 @@ ALTER TABLE recurring_bills ENABLE ROW LEVEL SECURITY;
 -- POLÍTICAS RLS - CATEGORIES
 -- ============================================
 
+DROP POLICY IF EXISTS "Users can view own categories" ON categories;
+DROP POLICY IF EXISTS "Users can insert own categories" ON categories;
+DROP POLICY IF EXISTS "Users can update own categories" ON categories;
+DROP POLICY IF EXISTS "Users can delete own categories" ON categories;
+
 -- Usuários podem ver apenas suas próprias categorias
 CREATE POLICY "Users can view own categories"
   ON categories FOR SELECT
@@ -94,6 +99,11 @@ CREATE POLICY "Users can delete own categories"
 -- ============================================
 -- POLÍTICAS RLS - TRANSACTIONS
 -- ============================================
+
+DROP POLICY IF EXISTS "Users can view own transactions" ON transactions;
+DROP POLICY IF EXISTS "Users can insert own transactions" ON transactions;
+DROP POLICY IF EXISTS "Users can update own transactions" ON transactions;
+DROP POLICY IF EXISTS "Users can delete own transactions" ON transactions;
 
 -- Usuários podem ver apenas suas próprias transações
 CREATE POLICY "Users can view own transactions"
@@ -119,6 +129,11 @@ CREATE POLICY "Users can delete own transactions"
 -- POLÍTICAS RLS - BUDGETS
 -- ============================================
 
+DROP POLICY IF EXISTS "Users can view own budgets" ON budgets;
+DROP POLICY IF EXISTS "Users can insert own budgets" ON budgets;
+DROP POLICY IF EXISTS "Users can update own budgets" ON budgets;
+DROP POLICY IF EXISTS "Users can delete own budgets" ON budgets;
+
 -- Usuários podem ver apenas seus próprios orçamentos
 CREATE POLICY "Users can view own budgets"
   ON budgets FOR SELECT
@@ -142,6 +157,11 @@ CREATE POLICY "Users can delete own budgets"
 -- ============================================
 -- POLÍTICAS RLS - RECURRING_BILLS
 -- ============================================
+
+DROP POLICY IF EXISTS "Users can view own recurring_bills" ON recurring_bills;
+DROP POLICY IF EXISTS "Users can insert own recurring_bills" ON recurring_bills;
+DROP POLICY IF EXISTS "Users can update own recurring_bills" ON recurring_bills;
+DROP POLICY IF EXISTS "Users can delete own recurring_bills" ON recurring_bills;
 
 -- Usuários podem ver apenas suas próprias contas recorrentes
 CREATE POLICY "Users can view own recurring_bills"
@@ -167,6 +187,11 @@ CREATE POLICY "Users can delete own recurring_bills"
 -- POLÍTICAS RLS - INSTALLMENTS
 -- ============================================
 
+DROP POLICY IF EXISTS "Users can view own installments" ON installments;
+DROP POLICY IF EXISTS "Users can insert own installments" ON installments;
+DROP POLICY IF EXISTS "Users can update own installments" ON installments;
+DROP POLICY IF EXISTS "Users can delete own installments" ON installments;
+
 -- Usuários podem ver apenas seus próprios parcelados
 CREATE POLICY "Users can view own installments"
   ON installments FOR SELECT
@@ -191,6 +216,11 @@ CREATE POLICY "Users can delete own installments"
 -- POLÍTICAS RLS - DEBTS (DÍVIDAS DIVIDIDAS)
 -- ============================================
 
+DROP POLICY IF EXISTS "Users can view own debts" ON debts;
+DROP POLICY IF EXISTS "Users can insert own debts" ON debts;
+DROP POLICY IF EXISTS "Users can update own debts" ON debts;
+DROP POLICY IF EXISTS "Users can delete own debts" ON debts;
+
 CREATE POLICY "Users can view own debts"
   ON debts FOR SELECT
   USING (auth.uid() = user_id);
@@ -210,6 +240,11 @@ CREATE POLICY "Users can delete own debts"
 -- ============================================
 -- POLÍTICAS RLS - FUTURE_EXPENSES
 -- ============================================
+
+DROP POLICY IF EXISTS "Users can view own future_expenses" ON future_expenses;
+DROP POLICY IF EXISTS "Users can insert own future_expenses" ON future_expenses;
+DROP POLICY IF EXISTS "Users can update own future_expenses" ON future_expenses;
+DROP POLICY IF EXISTS "Users can delete own future_expenses" ON future_expenses;
 
 -- Usuários podem ver apenas suas próprias despesas futuras
 CREATE POLICY "Users can view own future_expenses"
@@ -303,6 +338,10 @@ ALTER TABLE installments ENABLE ROW LEVEL SECURITY;
 ALTER TABLE debts ENABLE ROW LEVEL SECURITY;
 ALTER TABLE future_expenses ENABLE ROW LEVEL SECURITY;
 ALTER TABLE emergency_reserves ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Users can view own emergency_reserve" ON emergency_reserves;
+DROP POLICY IF EXISTS "Users can insert own emergency_reserve" ON emergency_reserves;
+DROP POLICY IF EXISTS "Users can update own emergency_reserve" ON emergency_reserves;
+DROP POLICY IF EXISTS "Users can delete own emergency_reserve" ON emergency_reserves;
 CREATE POLICY "Users can view own emergency_reserve" ON emergency_reserves FOR SELECT USING (auth.uid() = user_id);
 CREATE POLICY "Users can insert own emergency_reserve" ON emergency_reserves FOR INSERT WITH CHECK (auth.uid() = user_id);
 CREATE POLICY "Users can update own emergency_reserve" ON emergency_reserves FOR UPDATE USING (auth.uid() = user_id);
