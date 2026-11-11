@@ -72,13 +72,19 @@ describe('exportData - convertToCSV', () => {
   });
 
   it('previne fórmulas precedidas por espaço ou marcador invisível', () => {
-    const payloads = [' =SUM(A1:A10)', '\uFEFF=HYPERLINK("https://attacker.test")'];
-    for (const description of payloads) {
+    const cases = [
+      { description: ' =SUM(A1:A10)', expected: "' =SUM(A1:A10)" },
+      {
+        description: `${'\uFEFF'}=HYPERLINK("https://attacker.test")`,
+        expected: `"'${'\uFEFF'}=HYPERLINK(""https://attacker.test"")"`,
+      },
+    ];
+    for (const { description, expected } of cases) {
       const csv = convertToCSV({
         transactions: [makeTx({ description })],
         categories: mockCategories,
       });
-      expect(csv).toContain(`'${description}`);
+      expect(csv).toContain(expected);
     }
   });
 
