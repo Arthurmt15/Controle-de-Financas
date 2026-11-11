@@ -259,7 +259,7 @@ const InstallmentsPage: React.FC = () => {
           >
             <Card
               className={`relative overflow-hidden rounded-2xl border bg-card shadow-sm hover:shadow-md transition-all hover:-translate-y-0.5 ${
-                card.label === 'Próximo pagamento' ? 'min-h-[150px]' : 'min-h-[118px]'
+                card.label === 'Próximo pagamento' ? 'min-h-[136px]' : 'min-h-[118px]'
               }`}
             >
               <span
@@ -276,39 +276,40 @@ const InstallmentsPage: React.FC = () => {
                 }}
               />
               <CardContent
-                className={`flex ${card.label === 'Próximo pagamento' ? 'p-4 sm:p-[22px] gap-4' : 'p-[18px] gap-3.5'} ${card.label === 'Próximo pagamento' && (card as any).description ? 'items-start' : 'items-center'}`}
+                className={`flex p-[18px] ${card.label === 'Próximo pagamento' && (card as any).description ? 'items-start gap-4' : 'items-center gap-3.5'}`}
               >
                 <span
-                  className={`shrink-0 flex items-center justify-center rounded-xl border ${card.label === 'Próximo pagamento' ? 'w-[52px] h-[52px]' : 'w-[42px] h-[42px]'} ${card.tone === 'violet' ? 'bg-violet-50 border-violet-100 text-violet-600 dark:bg-violet-500/10 dark:border-transparent' : card.tone === 'amber' ? 'bg-amber-50 border-amber-100 text-amber-600 dark:bg-amber-500/10 dark:border-transparent' : card.tone === 'emerald' ? 'bg-emerald-50 border-emerald-100 text-emerald-600 dark:bg-emerald-500/10 dark:border-transparent' : 'bg-slate-50 border-slate-200 text-slate-600 dark:bg-slate-500/10 dark:border-transparent'}`}
+                  className={`shrink-0 flex items-center justify-center rounded-xl border w-[42px] h-[42px] ${card.tone === 'violet' ? 'bg-violet-50 border-violet-100 text-violet-600 dark:bg-violet-500/10 dark:border-transparent' : card.tone === 'amber' ? 'bg-amber-50 border-amber-100 text-amber-600 dark:bg-amber-500/10 dark:border-transparent' : card.tone === 'emerald' ? 'bg-emerald-50 border-emerald-100 text-emerald-600 dark:bg-emerald-500/10 dark:border-transparent' : 'bg-slate-50 border-slate-200 text-slate-600 dark:bg-slate-500/10 dark:border-transparent'}`}
                 >
-                  <card.icon size={card.label === 'Próximo pagamento' ? 22 : 16} />
+                  <card.icon size={16} />
                 </span>
                 {card.label === 'Próximo pagamento' && (card as any).description ? (
-                  <div className="min-w-0 flex-1 flex flex-col gap-1">
-                    <span className="block text-[12px] sm:text-[13px] font-semibold tracking-widest uppercase text-muted-foreground">
-                      {card.label}{' '}
-                      <span className="ml-1 inline-flex align-middle text-[10px] sm:text-[11px] font-bold px-2 py-0.5 rounded-full border bg-muted text-muted-foreground">
+                  <div className="min-w-0 flex-1 flex flex-col gap-2">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="text-[11px] font-semibold tracking-widest uppercase text-muted-foreground">
+                        {card.label}
+                      </span>
+                      <span className="inline-flex items-center text-[9px] font-bold px-1.5 py-0.5 rounded-full border bg-muted text-muted-foreground">
                         {(card as any).typeLabel}
                       </span>
-                    </span>
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <strong className="text-[24px] sm:text-[28px] font-bold tracking-tight leading-none">
-                        {card.value}
-                      </strong>
                       <span
-                        className={`inline-flex items-center text-[11px] sm:text-[12px] font-bold px-2.5 py-1 rounded-full border leading-none ${(card as any).daysUntil !== null && (card as any).daysUntil < 0 ? 'bg-red-50 text-red-700 border-red-200 dark:bg-red-500/10 dark:text-red-300 dark:border-red-500/20' : (card as any).daysUntil === 0 ? 'bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-500/20' : (card as any).daysUntil !== null && (card as any).daysUntil <= 7 ? 'bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-500/10 dark:text-blue-300 dark:border-blue-500/20' : 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/20'}`}
+                        className={`ml-auto inline-flex items-center text-[10px] font-bold px-2 py-0.5 rounded-full border leading-none ${(card as any).daysUntil !== null && (card as any).daysUntil < 0 ? 'bg-red-50 text-red-700 border-red-200 dark:bg-red-500/10 dark:text-red-300 dark:border-red-500/20' : (card as any).daysUntil === 0 ? 'bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-500/20' : (card as any).daysUntil !== null && (card as any).daysUntil <= 7 ? 'bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-500/10 dark:text-blue-300 dark:border-blue-500/20' : 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/20'}`}
                       >
                         {(card as any).daysLabel}
                       </span>
                     </div>
-                    <p
-                      className="text-[14px] sm:text-[15px] font-medium leading-tight truncate text-foreground"
-                      title={(card as any).description}
-                    >
-                      {(card as any).description}
-                    </p>
-                    <div className="flex items-center gap-1.5 flex-wrap">
-                      <span className="inline-flex items-center gap-1 text-[12.5px] sm:text-[13px] font-medium text-muted-foreground bg-muted px-2.5 py-1 rounded-full">
+                    <strong className="text-[16px] font-bold tracking-tight leading-none">
+                      {card.value}
+                    </strong>
+                    <div className="h-px w-full bg-border" />
+                    <div className="flex items-center justify-between gap-2 min-w-0">
+                      <p
+                        className="min-w-0 text-[13px] font-medium leading-tight truncate text-foreground"
+                        title={(card as any).description}
+                      >
+                        {(card as any).description}
+                      </p>
+                      <span className="shrink-0 inline-flex items-center gap-1 text-[11px] font-medium text-muted-foreground bg-muted px-2 py-0.5 rounded-full">
                         {(card as any).parcelLabel} • {(card as any).amountLabel}
                       </span>
                     </div>
