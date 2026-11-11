@@ -30,7 +30,7 @@ export const FieldsContainer = styled.div`
 
 /** Preview do valor da parcela */
 export const InstallmentPreview = styled.div`
-  background-color: ${({ theme }) => theme.colors?.backgroundAlt || '#f0fdf4'};
+  background-color: ${({ theme }) => theme.colors.surfaceHover};
   border: 1px solid ${({ theme }) => theme.colors?.success || '#10b981'};
   border-radius: 8px;
   padding: 12px 16px;

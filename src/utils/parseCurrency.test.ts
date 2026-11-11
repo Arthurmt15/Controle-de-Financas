@@ -12,4 +12,10 @@ describe('parseCurrencyInput', () => {
   it('rejects an empty or invalid value', () => {
     expect(parseCurrencyInput('valor')).toBeNull();
   });
+
+  it('rejects exponent, hexadecimal, and negative numeric payloads', () => {
+    expect(parseCurrencyInput('1e6')).toBeNull();
+    expect(parseCurrencyInput('0x10')).toBeNull();
+    expect(parseCurrencyInput('-100')).toBeNull();
+  });
 });

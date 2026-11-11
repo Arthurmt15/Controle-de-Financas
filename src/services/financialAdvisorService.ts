@@ -122,14 +122,14 @@ export async function* streamAdvisor(
   if (!session?.access_token) {
     throw new Error('Sessão expirada. Saia e entre novamente para usar a IA.');
   }
-  const url = `${process.env.REACT_APP_SUPABASE_URL}/functions/v1/ai-chat`;
+  const url = `${import.meta.env.REACT_APP_SUPABASE_URL}/functions/v1/ai-chat`;
 
   const response = await fetch(url, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
       Authorization: `Bearer ${session.access_token}`,
-      apikey: process.env.REACT_APP_SUPABASE_ANON_KEY || '',
+      apikey: import.meta.env.REACT_APP_SUPABASE_ANON_KEY || '',
     },
     body: JSON.stringify({
       messages: [

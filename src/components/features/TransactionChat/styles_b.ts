@@ -19,7 +19,7 @@ export const SendButton = styled.button`
   flex-shrink: 0;
 
   &:hover:not(:disabled) {
-    background-color: ${({ theme }) => theme.colors.primaryDark};
+    background-color: ${({ theme }) => theme.colors.primaryHover};
     transform: scale(1.05);
   }
 

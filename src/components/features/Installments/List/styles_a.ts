@@ -41,7 +41,7 @@ export const CardsGrid = styled.div`
 
 /** Card do parcelado */
 export const Card = styled.div<{ $isCompleted: boolean }>`
-  background-color: ${({ theme }) => theme.colors?.backgroundAlt || '#f9fafb'};
+  background-color: ${({ theme }) => theme.colors.surface};
   border: 1px solid ${({ theme }) => theme.colors?.border || '#e5e7eb'};
   border-radius: 12px;
   padding: 16px;

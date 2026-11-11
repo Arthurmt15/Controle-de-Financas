@@ -34,7 +34,7 @@ interface ExportConfig {
  */
 function escapeCsvField(value: string): string {
   let v = value;
-  if (/^[=+\-@\t\r]/.test(v)) {
+  if (/^[\s\uFEFF]*[=+\-@]/.test(v)) {
     v = `'${v}`;
   }
   if (v.includes('"') || v.includes(';') || v.includes('\n') || v.includes(',')) {

@@ -13,7 +13,7 @@ const FallbackContainer = styled.div`
   min-height: 60vh;
   text-align: center;
   padding: 24px;
-  color: ${({ theme }) => theme.text || '#374151'};
+  color: ${({ theme }) => theme.colors.text};
 `;
 
 const RetryButton = styled.button`

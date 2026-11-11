@@ -2,22 +2,21 @@
  * @file utils/exportData.test.ts
  * @description Testes para exportação CSV com fix de separador e CSV injection.
  */
-// eslint-disable-next-line import/first
+import { vi } from 'vitest';
 import { convertToCSV } from './exportData';
-// eslint-disable-next-line import/first
 import type { Transaction, Category } from '../types';
 
 // Mock jspdf para evitar TextEncoder error no jsdom
-jest.mock('jspdf', () => ({
+vi.mock('jspdf', () => ({
   __esModule: true,
-  default: jest.fn().mockImplementation(() => ({
-    setFontSize: jest.fn(),
-    text: jest.fn(),
-    save: jest.fn(),
-    autoTable: jest.fn(),
+  default: vi.fn().mockImplementation(() => ({
+    setFontSize: vi.fn(),
+    text: vi.fn(),
+    save: vi.fn(),
+    autoTable: vi.fn(),
   })),
 }));
-jest.mock('jspdf-autotable', () => ({}));
+vi.mock('jspdf-autotable', () => ({}));
 
 const mockCategory: Category = {
   id: 'cat-1',
@@ -69,6 +68,17 @@ describe('exportData - convertToCSV', () => {
         categories: mockCategories,
       });
       expect(csv).toContain(`'${desc}`);
+    }
+  });
+
+  it('previne fórmulas precedidas por espaço ou marcador invisível', () => {
+    const payloads = [' =SUM(A1:A10)', '\uFEFF=HYPERLINK("https://attacker.test")'];
+    for (const description of payloads) {
+      const csv = convertToCSV({
+        transactions: [makeTx({ description })],
+        categories: mockCategories,
+      });
+      expect(csv).toContain(`'${description}`);
     }
   });
 

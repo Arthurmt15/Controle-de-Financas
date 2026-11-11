@@ -12,7 +12,7 @@ import { isSupabase } from '../../services/data';
 import Icon from '../../components/common/Icon';
 import { HeroVisual } from './components/HeroVisual';
 
-const GOOGLE_CLIENT_ID = process.env.REACT_APP_GOOGLE_CLIENT_ID || '';
+const GOOGLE_CLIENT_ID = import.meta.env.REACT_APP_GOOGLE_CLIENT_ID || '';
 
 const LoginPage: React.FC = () => {
   const { isAuthenticated, error, clearError, loginWithGoogle } = useAuth();

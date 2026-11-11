@@ -93,7 +93,7 @@ export const ListItem = styled.div<{ $isUrgent: boolean }>`
 
   &:hover {
     background-color: ${({ $isUrgent, theme }) =>
-      $isUrgent ? '#fef3c7' : theme.colors?.backgroundAlt || '#f9fafb'};
+      $isUrgent ? '#fef3c7' : theme.colors.surfaceHover};
   }
 
   @media (max-width: 640px) {

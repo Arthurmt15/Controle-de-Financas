@@ -21,7 +21,6 @@ import {
   PiggyBank,
   CalendarClock,
   Settings,
-  Landmark,
   LogOut,
   Download,
   ChevronRight,
@@ -35,7 +34,6 @@ const NAV_ITEMS = [
   { path: '/installments', label: 'Parcelados & Dívidas', Icon: CreditCard },
   { path: '/emergency-reserve', label: 'Reserva', Icon: PiggyBank },
   { path: '/future-expenses', label: 'Gastos Futuros', Icon: CalendarClock },
-  { path: '/contas-bancarias', label: 'Contas bancárias', Icon: Landmark },
   { path: '/settings', label: 'Configurações', Icon: Settings },
 ] as const;
 

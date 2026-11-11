@@ -20,6 +20,7 @@ import { playSound } from '../../../utils/sounds';
 import { generateSummary, generateAnalysis } from '../../../utils/analysisEngine';
 import { buildFinancialContext, streamAdvisor } from '../../../services/financialAdvisorService';
 import { parseCurrencyInput } from '../../../utils/parseCurrency';
+import { renderSafeMarkdown } from '../../../utils/safeMarkdown';
 import { useLocation } from 'react-router-dom';
 import { Card, CardHeader, CardTitle } from '../../ui/card';
 import { Button } from '../../ui/button';
@@ -36,24 +37,6 @@ interface ChatMessage {
 }
 
 type ChatMode = 'quick-entry' | 'advisor';
-
-function escapeHtml(text: string): string {
-  return text
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#039;');
-}
-
-function renderMarkdown(text: string): string {
-  const escaped = escapeHtml(text);
-  return escaped
-    .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-    .replace(/^(\d+)\.\s+(.+)/gm, '<strong>$1.</strong> $2')
-    .replace(/^-\s+(.+)/gm, '&bull; $1')
-    .replace(/\n/g, '<br/>');
-}
 
 const SUGGESTIONS_GUIDE = ['Como lançar despesa?', 'Meu saldo este mês'];
 
@@ -672,7 +655,7 @@ Responda como guia quando pergunta for sobre navegação.`;
                             ) : (
                               <span className="block [&>strong]:font-semibold [&>strong]:text-foreground">
                                 <span
-                                  dangerouslySetInnerHTML={{ __html: renderMarkdown(message.text) }}
+                                  dangerouslySetInnerHTML={{ __html: renderSafeMarkdown(message.text) }}
                                 />
                                 {isStreaming && (
                                   <span

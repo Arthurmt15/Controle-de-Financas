@@ -62,7 +62,7 @@ export const HeaderHint = styled.p`
   margin: 12px 0 0 0;
   font-size: 13px;
   color: ${({ theme }) => theme.colors?.textSecondary || '#6b7280'};
-  background: ${({ theme }) => theme.colors?.backgroundAlt || '#f3f4f6'};
+  background: ${({ theme }) => theme.colors.surfaceHover};
   border: 1px solid ${({ theme }) => theme.colors?.border || '#e5e7eb'};
   border-radius: 8px;
   padding: 10px 12px;

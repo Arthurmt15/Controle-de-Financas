@@ -149,7 +149,7 @@ export const CheckboxRow = styled.label`
 `;
 
 export const InstallmentPreview = styled.div`
-  background-color: ${({ theme }) => theme.colors?.backgroundAlt || '#f0fdf4'};
+  background-color: ${({ theme }) => theme.colors.surfaceHover};
   border: 1px solid ${({ theme }) => theme.colors?.success || '#10b981'};
   border-radius: 8px;
   padding: 10px 14px;

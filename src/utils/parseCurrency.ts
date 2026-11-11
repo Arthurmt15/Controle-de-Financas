@@ -7,8 +7,12 @@ export function parseCurrencyInput(value: string): number | null {
   if (!normalized) return null;
 
   const hasComma = normalized.includes(',');
+  const isBrazilian = /^(?:\d{1,3}(?:\.\d{3})+|\d+)(?:,\d{1,2})?$/.test(normalized);
+  const isDotDecimal = /^\d+(?:\.\d{1,2})?$/.test(normalized);
+  if ((hasComma && !isBrazilian) || (!hasComma && !isDotDecimal)) return null;
+
   const numeric = hasComma ? normalized.replace(/\./g, '').replace(',', '.') : normalized;
   const amount = Number(numeric);
 
-  return Number.isFinite(amount) ? amount : null;
+  return Number.isFinite(amount) && amount > 0 ? amount : null;
 }

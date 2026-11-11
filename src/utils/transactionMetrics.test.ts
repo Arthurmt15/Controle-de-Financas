@@ -1,5 +1,6 @@
 import { calculateMetrics } from './transactionMetrics';
 import type { Transaction } from '../types';
+import { vi } from 'vitest';
 
 const pad = (value: number) => String(value).padStart(2, '0');
 const dateOf = (year: number, month: number, day: number) =>
@@ -18,7 +19,7 @@ function makeTransaction(
 
 describe('calculateMetrics', () => {
   afterEach(() => {
-    jest.useRealTimers();
+    vi.useRealTimers();
   });
 
   it('compara o mês atual com o mês anterior, não com a média anual', () => {
@@ -57,7 +58,7 @@ describe('calculateMetrics', () => {
   });
 
   it('usa dezembro do ano anterior quando o mês atual é janeiro', () => {
-    jest.useFakeTimers().setSystemTime(new Date(2026, 0, 15, 12, 0, 0));
+    vi.useFakeTimers().setSystemTime(new Date(2026, 0, 15, 12, 0, 0));
 
     const transactions = [
       makeTransaction({ amount: 300, type: 'income', date: '2026-01-10' }),
