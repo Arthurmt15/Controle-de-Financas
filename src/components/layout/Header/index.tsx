@@ -12,6 +12,7 @@ import { useInstallPrompt } from '../../../hooks/useInstallPrompt';
 import { playSound, playHover } from '../../../utils/sounds';
 import Icon from '../../common/Icon';
 import ColorPicker from '../../common/ColorPicker';
+import SoundToggle from '../../common/SoundToggle';
 import * as C from './styles';
 import {
   LayoutDashboard,
@@ -147,6 +148,7 @@ const Header: React.FC = () => {
           </C.InstallButton>
         )}
         <ColorPicker />
+        <SoundToggle />
         <C.ThemeToggle
           onClick={toggleTheme}
           title={`Tema ${themeType === 'light' ? 'escuro' : 'claro'}`}
