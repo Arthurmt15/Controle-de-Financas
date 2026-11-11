@@ -386,6 +386,11 @@ enabled = true
 verify_jwt = false
 entrypoint = "./functions/ai-chat/index.ts"
 
+[functions.pluggy]
+enabled = true
+verify_jwt = true
+entrypoint = "./functions/pluggy/index.ts"
+
 # [edge_runtime.secrets]
 # secret_key = "env(SECRET_VALUE)"
 

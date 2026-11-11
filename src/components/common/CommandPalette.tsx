@@ -6,6 +6,7 @@ import {
   Receipt,
   BarChart3,
   Settings,
+  Landmark,
   CreditCard,
   CalendarClock,
   Search,
@@ -18,6 +19,7 @@ const ITEMS = [
   { label: 'Parcelados', path: '/installments', icon: CreditCard },
   { label: 'Gastos Futuros', path: '/future-expenses', icon: CalendarClock },
   { label: 'Configurações', path: '/settings', icon: Settings },
+  { label: 'Contas bancárias', path: '/contas-bancarias', icon: Landmark },
 ];
 
 export const CommandPalette: React.FC<{ open: boolean; onOpenChange: (o: boolean) => void }> = ({

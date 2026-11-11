@@ -48,7 +48,7 @@ const SettingsPage: React.FC = () => {
           </h1>
         </div>
         <p className="text-[13.5px] text-muted-foreground max-w-[560px] leading-relaxed">
-          Gerencie categorias, orçamentos mensais e lançamentos em lote.
+          Gerencie categorias, orçamentos e lançamentos em lote.
         </p>
       </motion.div>
 

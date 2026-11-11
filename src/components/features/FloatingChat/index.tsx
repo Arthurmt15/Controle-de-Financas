@@ -8,7 +8,7 @@
 
 import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Bot, Sparkles, Send, X, User } from 'lucide-react';
+import { ArrowDownLeft, ArrowUpRight, Bot, MessageCircle, Send, X, User } from 'lucide-react';
 import { useTransactions } from '../../../hooks/useTransactions';
 import { useInstallments } from '../../../contexts/InstallmentsContext';
 import { useDebts } from '../../../contexts/DebtsContext';
@@ -19,6 +19,7 @@ import { detectCommand, executeCommand } from '../../../utils/chatCommands';
 import { playSound } from '../../../utils/sounds';
 import { generateSummary, generateAnalysis } from '../../../utils/analysisEngine';
 import { buildFinancialContext, streamAdvisor } from '../../../services/financialAdvisorService';
+import { parseCurrencyInput } from '../../../utils/parseCurrency';
 import { useLocation } from 'react-router-dom';
 import { Card, CardHeader, CardTitle } from '../../ui/card';
 import { Button } from '../../ui/button';
@@ -33,6 +34,8 @@ interface ChatMessage {
   timestamp: Date;
   transaction?: Transaction;
 }
+
+type ChatMode = 'quick-entry' | 'advisor';
 
 function escapeHtml(text: string): string {
   return text
@@ -52,11 +55,7 @@ function renderMarkdown(text: string): string {
     .replace(/\n/g, '<br/>');
 }
 
-const SUGGESTIONS_GUIDE = [
-  'Como lançar despesa?',
-  'Ver parcelados e dívidas',
-  'Meu saldo este mês',
-];
+const SUGGESTIONS_GUIDE = ['Como lançar despesa?', 'Meu saldo este mês'];
 
 const FloatingChat: React.FC = () => {
   const location = useLocation();
@@ -83,6 +82,12 @@ const FloatingChat: React.FC = () => {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [inputValue, setInputValue] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
+  const [mode, setMode] = useState<ChatMode>('quick-entry');
+  const [quickType, setQuickType] = useState<'expense' | 'income'>('expense');
+  const [quickDescription, setQuickDescription] = useState('');
+  const [quickAmount, setQuickAmount] = useState('');
+  const [quickFeedback, setQuickFeedback] = useState<string | null>(null);
+  const [isQuickSaving, setIsQuickSaving] = useState(false);
 
   const inputRef = useRef<HTMLInputElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -164,17 +169,7 @@ const FloatingChat: React.FC = () => {
     setMessages([
       {
         id: 'welcome',
-        text:
-          'Olá! Sou seu **Guia Inteligente** — faço tudo que os chats faziam, num só lugar. \n\n' +
-          '**Posso te guiar no site:**\n' +
-          '• Dashboard, Transações, Parcelados & Dívidas, Reserva, Análise, Gastos Futuros\n' +
-          '• Como lançar: `"Mercado ontem 150,50"` ou `"Recebi 4k de salário"`\n' +
-          '• Parcelado: `"Compra 1000 reais 10x"` → vai para Parcelados\n' +
-          '• Dívida dividida: `"jantar 200 dividido"` ou `"divida 500 em 5x"`\n' +
-          '• Reserva: vá em **Reserva** para definir meta (6x despesas) e depositar\n' +
-          '• Recorrente: `"conta recorrente cartão 1500 dia 10"`\n\n' +
-          '**E sou seu Consultor IA:** pergunte `"Como estão meus gastos?"` ou `"Posso viajar este mês?"`\n\n' +
-          'Me pergunte qualquer coisa — respondo com seus dados reais!',
+        text: 'Posso responder perguntas sobre suas finanças. Para cadastrar um lançamento, use a aba **Lançar**.',
         isUser: false,
         timestamp: new Date(),
       },
@@ -410,6 +405,43 @@ Responda como guia quando pergunta for sobre navegação.`;
     inputRef.current?.focus();
   };
 
+  const saveQuickEntry = async () => {
+    const amount = parseCurrencyInput(quickAmount);
+    if (!quickDescription.trim() || amount === null || amount <= 0) {
+      setQuickFeedback('Informe uma descrição e um valor maior que zero.');
+      return;
+    }
+
+    const category =
+      categories.find((item) => item.name.toLowerCase() === 'outros') ??
+      categories.find((item) => item.defaultType === quickType || item.defaultType === 'both');
+    if (!category) {
+      setQuickFeedback('Crie uma categoria antes de registrar o lançamento.');
+      return;
+    }
+
+    setIsQuickSaving(true);
+    setQuickFeedback(null);
+    try {
+      await addTransaction({
+        description: quickDescription.trim(),
+        amount,
+        type: quickType,
+        date: new Date().toISOString(),
+        categoryId: category.id,
+      });
+      setQuickFeedback(
+        `${quickType === 'expense' ? 'Gasto' : 'Entrada'} registrado em ${category.name}.`
+      );
+      setQuickDescription('');
+      setQuickAmount('');
+    } catch {
+      setQuickFeedback('Não foi possível registrar o lançamento. Tente novamente.');
+    } finally {
+      setIsQuickSaving(false);
+    }
+  };
+
   const formatTime = (date: Date) =>
     date.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
 
@@ -480,11 +512,13 @@ Responda como guia quando pergunta for sobre navegação.`;
                   </span>
                   <div>
                     <CardTitle className="text-[14px] font-semibold text-white leading-none flex items-center gap-1.5">
-                      Guia Inteligente <Sparkles className="h-3 w-3 text-white/80" />
+                      {mode === 'quick-entry' ? 'Lançamento rápido' : 'Pergunte ao guia'}
                     </CardTitle>
                     <p className="text-[11px] text-white/80 leading-none mt-1 flex items-center gap-1.5">
                       <span className="w-1.5 h-1.5 bg-emerald-400 rounded-full animate-pulse" />{' '}
-                      Online • faz tudo
+                      {mode === 'quick-entry'
+                        ? 'Registre em poucos segundos'
+                        : 'Consultor financeiro'}
                     </p>
                   </div>
                 </div>
@@ -500,147 +534,223 @@ Responda como guia quando pergunta for sobre navegação.`;
                 </div>
               </CardHeader>
 
-              <div
-                ref={scrollRef}
-                role="log"
-                aria-live="polite"
-                aria-label="Mensagens do guia"
-                className="flex-1 min-h-0 overflow-y-auto p-3 flex flex-col gap-3 bg-muted/20 scroll-smooth"
-              >
-                {messages.map((message, idx) => {
-                  const isTyping = !message.isUser && isProcessing && !message.text;
-                  const isStreaming =
-                    !message.isUser &&
-                    isProcessing &&
-                    !!message.text &&
-                    idx === messages.length - 1;
-                  return (
-                    <motion.div
-                      key={message.id}
-                      initial={{ opacity: 0, y: 6 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: idx * 0.01 }}
-                      className={`flex flex-col gap-1 ${message.isUser ? 'items-end' : 'items-start'}`}
-                    >
-                      <span
-                        className={`flex items-center gap-1 text-[10px] font-semibold tracking-widest uppercase px-1 ${message.isUser ? '' : 'text-muted-foreground'}`}
-                        style={message.isUser ? { color: theme.colors.primary } : undefined}
-                      >
-                        {message.isUser ? (
-                          <>
-                            <User className="h-3 w-3" /> Você
-                          </>
-                        ) : (
-                          <>
-                            <Bot className="h-3 w-3" /> Guia
-                          </>
-                        )}
-                      </span>
-                      <div
-                        className={`${message.isUser ? 'w-fit max-w-[85%]' : 'w-fit max-w-[88%] min-w-[64px]'} px-3.5 py-2.5 rounded-2xl text-[13px] leading-6 shadow-sm break-words [overflow-wrap:anywhere] whitespace-pre-wrap ${message.isUser ? 'text-white rounded-br-md' : 'bg-card border rounded-bl-md'}`}
-                        style={
-                          message.isUser ? { backgroundColor: theme.colors.primary } : undefined
-                        }
-                      >
-                        {message.isUser ? (
-                          <span className="whitespace-pre-wrap break-words [overflow-wrap:anywhere]">
-                            {message.text}
-                          </span>
-                        ) : isTyping ? (
-                          <span className="inline-flex items-center justify-center gap-1.5 min-h-[20px] py-0.5">
-                            <span
-                              className="w-1.5 h-1.5 rounded-full animate-bounce [animation-delay:-0.3s]"
-                              style={{ backgroundColor: theme.colors.primary }}
-                            />
-                            <span
-                              className="w-1.5 h-1.5 rounded-full animate-bounce [animation-delay:-0.15s]"
-                              style={{ backgroundColor: theme.colors.primary }}
-                            />
-                            <span
-                              className="w-1.5 h-1.5 rounded-full animate-bounce"
-                              style={{ backgroundColor: theme.colors.primary }}
-                            />
-                          </span>
-                        ) : (
-                          <span className="block [&>strong]:font-semibold [&>strong]:text-foreground">
-                            <span
-                              dangerouslySetInnerHTML={{ __html: renderMarkdown(message.text) }}
-                            />
-                            {isStreaming && (
-                              <span
-                                className="inline-block w-[2px] h-[14px] animate-pulse ml-1 align-text-bottom"
-                                style={{ backgroundColor: theme.colors.primary }}
-                                aria-hidden
-                              />
-                            )}
-                          </span>
-                        )}
-                      </div>
-                      <span className="text-[10px] text-muted-foreground px-1">
-                        {formatTime(message.timestamp)}
-                      </span>
-                    </motion.div>
-                  );
-                })}
-                <div ref={endRef} aria-hidden className="h-0" />
-              </div>
-
-              {/* Input */}
-              <div className="p-2.5 border-t bg-card shrink-0 flex items-center gap-2">
-                <Input
-                  ref={inputRef}
-                  value={inputValue}
-                  onChange={(e) => setInputValue(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter' && !e.shiftKey) {
-                      e.preventDefault();
-                      handleSend();
-                    }
-                  }}
-                  placeholder="Pergunte ou digite 'almoço 25'..."
-                  disabled={isProcessing}
-                  aria-label="Digite sua mensagem"
-                  className="flex-1 h-9 rounded-full bg-muted/50"
-                />
+              <div className="grid grid-cols-2 gap-1.5 p-2 border-b bg-card">
                 <Button
-                  onClick={handleSend}
-                  disabled={!inputValue.trim() || isProcessing}
-                  size="icon"
-                  className="h-9 w-9 rounded-full shrink-0 text-white hover:opacity-90"
-                  style={{ backgroundColor: theme.colors.primary }}
-                  aria-label="Enviar"
+                  type="button"
+                  variant={mode === 'quick-entry' ? 'default' : 'ghost'}
+                  className="h-8 rounded-lg gap-1.5 text-xs"
+                  onClick={() => setMode('quick-entry')}
                 >
-                  <Send className="h-4 w-4" />
+                  <ArrowDownLeft className="h-3.5 w-3.5" /> Lançar
+                </Button>
+                <Button
+                  type="button"
+                  variant={mode === 'advisor' ? 'default' : 'ghost'}
+                  className="h-8 rounded-lg gap-1.5 text-xs"
+                  onClick={() => setMode('advisor')}
+                >
+                  <MessageCircle className="h-3.5 w-3.5" /> Perguntar
                 </Button>
               </div>
 
-              {/* Atalhos resumidos — 2 a 3 chips apenas */}
-              <div className="px-3 py-2 bg-card border-t">
-                <div className="flex flex-wrap gap-1.5">
-                  {visibleShortcuts.map((s) => (
-                    <Badge
-                      key={s}
-                      variant="outline"
-                      className="rounded-full px-2.5 py-1 text-[11px] font-medium cursor-pointer bg-card hover:text-white transition-colors"
-                      style={{ borderColor: theme.colors.border } as any}
-                      onMouseEnter={(e) => {
-                        (e.currentTarget as HTMLElement).style.backgroundColor =
-                          theme.colors.primary;
-                        (e.currentTarget as HTMLElement).style.borderColor = theme.colors.primary;
-                        (e.currentTarget as HTMLElement).style.color = 'white';
-                      }}
-                      onMouseLeave={(e) => {
-                        (e.currentTarget as HTMLElement).style.backgroundColor = '';
-                        (e.currentTarget as HTMLElement).style.borderColor = theme.colors.border;
-                        (e.currentTarget as HTMLElement).style.color = '';
-                      }}
-                      onClick={() => handleExampleClick(s)}
+              {mode === 'quick-entry' ? (
+                <div className="flex-1 p-4 bg-muted/20">
+                  <p className="text-sm font-medium">O que aconteceu?</p>
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    A categoria fica como Outros e pode ser ajustada depois.
+                  </p>
+                  <div className="grid grid-cols-2 gap-2 mt-4">
+                    <Button
+                      type="button"
+                      variant={quickType === 'expense' ? 'default' : 'outline'}
+                      className="gap-2"
+                      onClick={() => setQuickType('expense')}
                     >
-                      {s}
-                    </Badge>
-                  ))}
+                      <ArrowDownLeft className="h-4 w-4" /> Gasto
+                    </Button>
+                    <Button
+                      type="button"
+                      variant={quickType === 'income' ? 'default' : 'outline'}
+                      className="gap-2"
+                      onClick={() => setQuickType('income')}
+                    >
+                      <ArrowUpRight className="h-4 w-4" /> Entrada
+                    </Button>
+                  </div>
+                  <div className="mt-4 space-y-3">
+                    <Input
+                      value={quickDescription}
+                      onChange={(event) => setQuickDescription(event.target.value)}
+                      placeholder="Ex.: almoço, salário, gasolina"
+                      aria-label="Descrição do lançamento"
+                      disabled={isQuickSaving}
+                    />
+                    <Input
+                      value={quickAmount}
+                      onChange={(event) => setQuickAmount(event.target.value)}
+                      inputMode="decimal"
+                      placeholder="Valor, ex.: 42,50"
+                      aria-label="Valor do lançamento"
+                      disabled={isQuickSaving}
+                      onKeyDown={(event) => {
+                        if (event.key === 'Enter') saveQuickEntry();
+                      }}
+                    />
+                    <Button className="w-full" onClick={saveQuickEntry} disabled={isQuickSaving}>
+                      {isQuickSaving
+                        ? 'Registrando...'
+                        : `Registrar ${quickType === 'expense' ? 'gasto' : 'entrada'}`}
+                    </Button>
+                    {quickFeedback && (
+                      <p className="rounded-lg bg-card border px-3 py-2 text-xs">{quickFeedback}</p>
+                    )}
+                  </div>
                 </div>
-              </div>
+              ) : (
+                <>
+                  <div
+                    ref={scrollRef}
+                    role="log"
+                    aria-live="polite"
+                    aria-label="Mensagens do guia"
+                    className="flex-1 min-h-0 overflow-y-auto p-3 flex flex-col gap-3 bg-muted/20 scroll-smooth"
+                  >
+                    {messages.map((message, idx) => {
+                      const isTyping = !message.isUser && isProcessing && !message.text;
+                      const isStreaming =
+                        !message.isUser &&
+                        isProcessing &&
+                        !!message.text &&
+                        idx === messages.length - 1;
+                      return (
+                        <motion.div
+                          key={message.id}
+                          initial={{ opacity: 0, y: 6 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ delay: idx * 0.01 }}
+                          className={`flex flex-col gap-1 ${message.isUser ? 'items-end' : 'items-start'}`}
+                        >
+                          <span
+                            className={`flex items-center gap-1 text-[10px] font-semibold tracking-widest uppercase px-1 ${message.isUser ? '' : 'text-muted-foreground'}`}
+                            style={message.isUser ? { color: theme.colors.primary } : undefined}
+                          >
+                            {message.isUser ? (
+                              <>
+                                <User className="h-3 w-3" /> Você
+                              </>
+                            ) : (
+                              <>
+                                <Bot className="h-3 w-3" /> Guia
+                              </>
+                            )}
+                          </span>
+                          <div
+                            className={`${message.isUser ? 'w-fit max-w-[85%]' : 'w-fit max-w-[88%] min-w-[64px]'} px-3.5 py-2.5 rounded-2xl text-[13px] leading-6 shadow-sm break-words [overflow-wrap:anywhere] whitespace-pre-wrap ${message.isUser ? 'text-white rounded-br-md' : 'bg-card border rounded-bl-md'}`}
+                            style={
+                              message.isUser ? { backgroundColor: theme.colors.primary } : undefined
+                            }
+                          >
+                            {message.isUser ? (
+                              <span className="whitespace-pre-wrap break-words [overflow-wrap:anywhere]">
+                                {message.text}
+                              </span>
+                            ) : isTyping ? (
+                              <span className="inline-flex items-center justify-center gap-1.5 min-h-[20px] py-0.5">
+                                <span
+                                  className="w-1.5 h-1.5 rounded-full animate-bounce [animation-delay:-0.3s]"
+                                  style={{ backgroundColor: theme.colors.primary }}
+                                />
+                                <span
+                                  className="w-1.5 h-1.5 rounded-full animate-bounce [animation-delay:-0.15s]"
+                                  style={{ backgroundColor: theme.colors.primary }}
+                                />
+                                <span
+                                  className="w-1.5 h-1.5 rounded-full animate-bounce"
+                                  style={{ backgroundColor: theme.colors.primary }}
+                                />
+                              </span>
+                            ) : (
+                              <span className="block [&>strong]:font-semibold [&>strong]:text-foreground">
+                                <span
+                                  dangerouslySetInnerHTML={{ __html: renderMarkdown(message.text) }}
+                                />
+                                {isStreaming && (
+                                  <span
+                                    className="inline-block w-[2px] h-[14px] animate-pulse ml-1 align-text-bottom"
+                                    style={{ backgroundColor: theme.colors.primary }}
+                                    aria-hidden
+                                  />
+                                )}
+                              </span>
+                            )}
+                          </div>
+                          <span className="text-[10px] text-muted-foreground px-1">
+                            {formatTime(message.timestamp)}
+                          </span>
+                        </motion.div>
+                      );
+                    })}
+                    <div ref={endRef} aria-hidden className="h-0" />
+                  </div>
+
+                  <div className="p-2.5 border-t bg-card shrink-0 flex items-center gap-2">
+                    <Input
+                      ref={inputRef}
+                      value={inputValue}
+                      onChange={(e) => setInputValue(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' && !e.shiftKey) {
+                          e.preventDefault();
+                          handleSend();
+                        }
+                      }}
+                      placeholder="Pergunte ou digite 'almoço 25'..."
+                      disabled={isProcessing}
+                      aria-label="Digite sua mensagem"
+                      className="flex-1 h-9 rounded-full bg-muted/50"
+                    />
+                    <Button
+                      onClick={handleSend}
+                      disabled={!inputValue.trim() || isProcessing}
+                      size="icon"
+                      className="h-9 w-9 rounded-full shrink-0 text-white hover:opacity-90"
+                      style={{ backgroundColor: theme.colors.primary }}
+                      aria-label="Enviar"
+                    >
+                      <Send className="h-4 w-4" />
+                    </Button>
+                  </div>
+
+                  <div className="px-3 py-2 bg-card border-t">
+                    <div className="flex flex-wrap gap-1.5">
+                      {visibleShortcuts.map((s) => (
+                        <Badge
+                          key={s}
+                          variant="outline"
+                          className="rounded-full px-2.5 py-1 text-[11px] font-medium cursor-pointer bg-card hover:text-white transition-colors"
+                          style={{ borderColor: theme.colors.border } as any}
+                          onMouseEnter={(e) => {
+                            (e.currentTarget as HTMLElement).style.backgroundColor =
+                              theme.colors.primary;
+                            (e.currentTarget as HTMLElement).style.borderColor =
+                              theme.colors.primary;
+                            (e.currentTarget as HTMLElement).style.color = 'white';
+                          }}
+                          onMouseLeave={(e) => {
+                            (e.currentTarget as HTMLElement).style.backgroundColor = '';
+                            (e.currentTarget as HTMLElement).style.borderColor =
+                              theme.colors.border;
+                            (e.currentTarget as HTMLElement).style.color = '';
+                          }}
+                          onClick={() => handleExampleClick(s)}
+                        >
+                          {s}
+                        </Badge>
+                      ))}
+                    </div>
+                  </div>
+                </>
+              )}
             </Card>
           </motion.div>
         )}

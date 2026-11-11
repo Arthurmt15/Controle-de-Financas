@@ -27,6 +27,23 @@ export interface Transaction {
   createdAt?: string;
 }
 
+export interface BankAccount {
+  id: string;
+  name: string;
+  type?: string;
+  balance?: number;
+  currency: string;
+}
+
+export interface BankConnection {
+  id: string;
+  institutionName?: string;
+  status: 'pending' | 'updating' | 'updated' | 'error' | 'login_required' | 'disconnected';
+  lastSyncedAt?: string;
+  errorMessage?: string;
+  accounts: BankAccount[];
+}
+
 /**
  * Interface que representa uma categoria de transação
  * @interface Category

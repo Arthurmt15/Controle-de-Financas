@@ -43,6 +43,7 @@ const DashboardPage = lazyWithRetry(() => import('./pages/Dashboard'));
 const TransactionsPage = lazyWithRetry(() => import('./pages/Transactions'));
 const AnalysisPage = lazyWithRetry(() => import('./pages/Analysis'));
 const SettingsPage = lazyWithRetry(() => import('./pages/Settings'));
+const BankingPage = lazyWithRetry(() => import('./pages/Banking'));
 const InstallmentsPage = lazyWithRetry(() => import('./pages/Installments'));
 const DebtsPage = lazyWithRetry(() => import('./pages/Debts'));
 const EmergencyReservePage = lazyWithRetry(() => import('./pages/EmergencyReserve'));
@@ -126,6 +127,7 @@ const AuthenticatedRoutes: React.FC = () => (
                     <Route path="/transactions" element={<TransactionsPage />} />
                     <Route path="/analysis" element={<AnalysisPage />} />
                     <Route path="/settings" element={<SettingsPage />} />
+                    <Route path="/contas-bancarias" element={<BankingPage />} />
                     <Route path="/installments" element={<InstallmentsPage />} />
                     <Route path="/debts" element={<DebtsPage />} />
                     <Route path="/emergency-reserve" element={<EmergencyReservePage />} />

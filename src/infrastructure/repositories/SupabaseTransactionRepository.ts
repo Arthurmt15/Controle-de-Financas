@@ -34,7 +34,26 @@ function mapRow(row: TransactionRow): Transaction {
  * Encapsula acesso a dados e usa entidade para validação.
  */
 export class SupabaseTransactionRepository implements ITransactionRepository {
-  async getAll(page = 1, limit = 50): Promise<Transaction[]> {
+  async getAll(page?: number, limit?: number): Promise<Transaction[]> {
+    if (page && limit) {
+      return this.getPage(page, limit);
+    }
+
+    // Dashboard and reports need the complete ledger; fetch every page instead
+    // of silently treating the first 50 records as the user's full history.
+    const allTransactions: Transaction[] = [];
+    const pageSize = 1000;
+    let currentPage = 1;
+
+    while (true) {
+      const transactions = await this.getPage(currentPage, pageSize);
+      allTransactions.push(...transactions);
+      if (transactions.length < pageSize) return allTransactions;
+      currentPage += 1;
+    }
+  }
+
+  private async getPage(page: number, limit: number): Promise<Transaction[]> {
     const offset = (page - 1) * limit;
     const userId = await requireUserId();
     const { data, error } = await supabase
