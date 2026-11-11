@@ -32,3 +32,5 @@ nul
 .vercel
 .env*
 !.env.example
+
+/dist
