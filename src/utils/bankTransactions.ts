@@ -10,9 +10,18 @@ export interface BankTransactionClassification {
 }
 
 const categoryMatchers: Array<{ categoryName: string; pattern: RegExp }> = [
-  { categoryName: 'Alimentação', pattern: /\b(ifood|uber\s*eats|rappi|restaurante|mercado|supermercado)\b/i },
-  { categoryName: 'Transporte', pattern: /\b(uber|99\s*(pop|taxi)?|posto|combustivel|gasolina)\b/i },
-  { categoryName: 'Moradia', pattern: /\b(aluguel|condominio|energia|luz|agua|saneamento|internet)\b/i },
+  {
+    categoryName: 'Alimentação',
+    pattern: /\b(ifood|uber\s*eats|rappi|restaurante|mercado|supermercado)\b/i,
+  },
+  {
+    categoryName: 'Transporte',
+    pattern: /\b(uber|99\s*(pop|taxi)?|posto|combustivel|gasolina)\b/i,
+  },
+  {
+    categoryName: 'Moradia',
+    pattern: /\b(aluguel|condominio|energia|luz|agua|saneamento|internet)\b/i,
+  },
   { categoryName: 'Saúde', pattern: /\b(farmacia|drogaria|hospital|clinica|laboratorio)\b/i },
   { categoryName: 'Educação', pattern: /\b(escola|faculdade|curso|udemy|alura)\b/i },
   { categoryName: 'Lazer', pattern: /\b(netflix|spotify|cinema|steam|playstation)\b/i },

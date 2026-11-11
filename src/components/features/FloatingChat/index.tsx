@@ -655,7 +655,9 @@ Responda como guia quando pergunta for sobre navegação.`;
                             ) : (
                               <span className="block [&>strong]:font-semibold [&>strong]:text-foreground">
                                 <span
-                                  dangerouslySetInnerHTML={{ __html: renderSafeMarkdown(message.text) }}
+                                  dangerouslySetInnerHTML={{
+                                    __html: renderSafeMarkdown(message.text),
+                                  }}
                                 />
                                 {isStreaming && (
                                   <span

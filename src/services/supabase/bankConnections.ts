@@ -34,11 +34,16 @@ function mapConnection(row: BankConnectionRow): BankConnection {
 }
 
 async function invoke(action: string, payload: Record<string, string> = {}) {
-  const { data, error } = await supabase.functions.invoke('pluggy', { body: { action, ...payload } });
+  const { data, error } = await supabase.functions.invoke('pluggy', {
+    body: { action, ...payload },
+  });
   if (error) {
     const response = (error as { context?: Response }).context;
     if (response) {
-      const body = (await response.clone().json().catch(() => null)) as { error?: string } | null;
+      const body = (await response
+        .clone()
+        .json()
+        .catch(() => null)) as { error?: string } | null;
       if (body?.error) throw new Error(body.error);
     }
     throw error;
@@ -51,7 +56,9 @@ export const bankConnectionService = {
   async getAll(): Promise<BankConnection[]> {
     const { data, error } = await supabase
       .from('bank_connections')
-      .select('id, institution_name, status, last_synced_at, error_message, bank_accounts(id, name, type, balance, currency)')
+      .select(
+        'id, institution_name, status, last_synced_at, error_message, bank_accounts(id, name, type, balance, currency)'
+      )
       .order('created_at', { ascending: false });
     if (error) throw error;
     return (data as BankConnectionRow[]).map(mapConnection);
