@@ -72,7 +72,7 @@ export class FinanceService {
     return this.instRepo.advance(id);
   }
 
-  /** Dívidas divididas */
+  /** Dívidas */
   listDebts() {
     return this.debtRepo.getAll();
   }

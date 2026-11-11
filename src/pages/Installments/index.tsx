@@ -2,7 +2,7 @@
  * @file pages/Installments/index.tsx
  * @description Página unificada Parcelados & Dívidas — melhor UX sem duplicação.
  * Mostra métricas combinadas, próximo pagamento mais cedo (entre os dois), filtros por tipo e tabs.
- * Ao criar transação como dividida, aparece aqui automaticamente (Dívidas).
+ * Ao criar transação como dívida, aparece aqui automaticamente (Dívidas).
  */
 
 import React, { useState, useMemo } from 'react';
@@ -167,7 +167,7 @@ const InstallmentsPage: React.FC = () => {
     {
       tone: 'amber' as const,
       icon: HandCoins,
-      label: 'Dívidas divididas',
+      label: 'Dívidas',
       value: formatCurrency(metrics.totalAmountDebts),
       sub: `${metrics.activeDebts} ativas • ${formatCurrency(metrics.totalRemainingDebts)} restante`,
     },
@@ -211,8 +211,8 @@ const InstallmentsPage: React.FC = () => {
               Parcelados & Dívidas
             </h1>
             <p className="mt-2 text-[13.5px] text-muted-foreground max-w-[620px] leading-relaxed">
-              Um só lugar para parcelados e dívidas divididas. Ao lançar uma transação como
-              dividida, ela aparece automaticamente aqui.
+              Um só lugar para parcelados e dívidas. Ao lançar uma transação como dívida, ela
+              aparece automaticamente aqui.
             </p>
           </div>
           <div className="flex items-center gap-2 shrink-0">
@@ -222,7 +222,7 @@ const InstallmentsPage: React.FC = () => {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="installment">Parcelado</SelectItem>
-                <SelectItem value="debt">Dívida dividida</SelectItem>
+                <SelectItem value="debt">Dívida</SelectItem>
               </SelectContent>
             </Select>
             <Button
@@ -244,7 +244,7 @@ const InstallmentsPage: React.FC = () => {
             <p className="text-[13px] leading-relaxed text-muted-foreground">
               Parcelados e dívidas compartilham a mesma lógica (parcelas, vencimento, progresso).
               Use o filtro <strong>Tipo</strong> para ver só um deles. Transações marcadas como
-              divididas viram dívidas automaticamente.
+              dívida entram aqui automaticamente.
             </p>
           </CardContent>
         </Card>
@@ -460,7 +460,7 @@ const InstallmentsPage: React.FC = () => {
           <div>
             {activeTab === 'all' && showInstallments && (
               <h3 className="text-[13px] font-semibold tracking-widest uppercase text-muted-foreground mb-3 flex items-center gap-2">
-                <HandCoins className="h-3.5 w-3.5" /> Dívidas divididas • {filteredDebts.length}
+                <HandCoins className="h-3.5 w-3.5" /> Dívidas • {filteredDebts.length}
               </h3>
             )}
             <DebtList debts={filteredDebts} />

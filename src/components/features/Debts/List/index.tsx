@@ -90,9 +90,9 @@ const DebtList: React.FC<DebtListProps> = ({ debts: propDebts }) => {
           <span className="p-3 rounded-2xl bg-muted">
             <Inbox className="h-6 w-6 text-muted-foreground" />
           </span>
-          <p className="text-sm font-semibold">Nenhuma dívida dividida encontrada</p>
+          <p className="text-sm font-semibold">Nenhuma dívida encontrada</p>
           <p className="text-sm text-muted-foreground max-w-md">
-            Crie uma dívida ou marque uma transação como dividida para acompanhar aqui.
+            Crie uma dívida ou marque uma transação como dívida para acompanhar aqui.
           </p>
         </CardContent>
       </Card>

@@ -275,7 +275,7 @@ const FloatingChat: React.FC = () => {
             ? `${parsed.descricao} ${installmentLabel}`
             : parsed.descricao;
           const transactionData: Omit<Transaction, 'id'> = {
-            description: descriptionWithInstallment + (isDivided ? ' [Dividida]' : ''),
+            description: descriptionWithInstallment + (isDivided ? ' [Dívida]' : ''),
             amount: perInstallment,
             type: parsed.tipo === 'despesa' ? 'expense' : 'income',
             date: new Date(parsed.data + 'T12:00:00').toISOString(),
@@ -312,7 +312,7 @@ const FloatingChat: React.FC = () => {
                 currentInstallment: parcels > 1 ? 1 : 0,
                 startDate: parsed.data,
                 categoryId: matchCat.id,
-                notes: `Criado via chat (dívida dividida) - Total R$ ${parsed.valor.toFixed(2).replace('.', ',')} ${parcels > 1 ? `em ${parcels}x` : 'à vista'}`,
+                notes: `Criado via chat (dívida) - Total R$ ${parsed.valor.toFixed(2).replace('.', ',')} ${parcels > 1 ? `em ${parcels}x` : 'à vista'}`,
                 source: 'manual',
               });
             } catch {}
@@ -344,7 +344,7 @@ const FloatingChat: React.FC = () => {
 GUIA DO SITE:
 - Dashboard: visão geral, saldo, gráficos e atalho para Reserva
 - Transações: lançar por chat ("almoço 25") ou formulário; parcelado/divida via chat ou formulário unificado
-- Parcelados & Dívidas (/installments): lista unificada, métricas, próximo pagamento, avançar parcela; dívidas também aparecem aqui quando transação marcada como dividida
+- Parcelados & Dívidas (/installments): lista unificada, métricas, próximo pagamento, avançar parcela; dívidas também aparecem aqui quando transação marcada como dívida
 - Reserva de Emergência (/emergency-reserve): defina meta (sugestão 6x despesas), deposite/saque e acompanhe progresso
 - Análise (/analysis): evolução mensal, insights, consultor
 - Gastos Futuros: planejar despesas futuras

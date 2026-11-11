@@ -1,6 +1,6 @@
 /**
  * @file components/features/Debts/Form/index.tsx
- * @description Formulário de dívidas divididas - mesma lógica de Installments.
+ * @description Formulário de dívidas - mesma lógica de Installments.
  */
 
 import React, { useState, useEffect } from 'react';
@@ -107,8 +107,8 @@ const DebtForm: React.FC<DebtFormProps> = ({ debt = null, onClose }) => {
             date: new Date(formData.startDate).toISOString(),
             categoryId: formData.categoryId,
             notes: formData.notes.trim()
-              ? `Dívida dividida ${parcels}x - ${formData.notes.trim()}`
-              : `Dívida dividida ${parcels}x - ${formData.description.trim()}`,
+              ? `Dívida ${parcels}x - ${formData.notes.trim()}`
+              : `Dívida ${parcels}x - ${formData.description.trim()}`,
           });
         } catch (txError) {
           console.error('Dívida criada, mas falhou ao criar transação da 1ª parcela:', txError);
@@ -143,7 +143,7 @@ const DebtForm: React.FC<DebtFormProps> = ({ debt = null, onClose }) => {
           <HandCoins className="h-4 w-4" />
         </span>
         <h3 className="text-base font-semibold tracking-tight">
-          {debt ? 'Editar Dívida' : 'Nova Dívida Dividida'}
+          {debt ? 'Editar Dívida' : 'Nova Dívida'}
         </h3>
       </div>
 
@@ -157,7 +157,7 @@ const DebtForm: React.FC<DebtFormProps> = ({ debt = null, onClose }) => {
             name="description"
             value={formData.description}
             onChange={handleChange}
-            placeholder="Ex: Jantar dividido com João"
+            placeholder="Ex: Empréstimo com João"
             error={errors.description}
           />
         </div>
@@ -250,7 +250,7 @@ const DebtForm: React.FC<DebtFormProps> = ({ debt = null, onClose }) => {
             name="notes"
             value={formData.notes}
             onChange={handleChange}
-            placeholder="Ex: Dividido com 3 pessoas, cada um R$..."
+            placeholder="Ex: Empréstimo com 3 pessoas, cada um R$..."
             rows={3}
           />
         </div>

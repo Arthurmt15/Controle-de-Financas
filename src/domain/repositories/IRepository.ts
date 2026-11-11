@@ -20,7 +20,7 @@ export interface IInstallmentRepository extends IRepository<import('../../types'
   advance(id: string): Promise<import('../../types').Installment>;
 }
 
-/** Repositório de dívidas divididas com avanço de parcela */
+/** Repositório de dívidas com avanço de parcela */
 export interface IDebtRepository extends IRepository<import('../../types').Debt> {
   advance(id: string): Promise<import('../../types').Debt>;
 }

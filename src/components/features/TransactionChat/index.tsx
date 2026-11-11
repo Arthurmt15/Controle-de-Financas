@@ -239,7 +239,7 @@ const TransactionChat: React.FC = () => {
             ? `${parsed.descricao} ${installmentLabel}`
             : parsed.descricao;
           const transactionData: Omit<Transaction, 'id'> = {
-            description: descriptionWithInstallment + (isDivided ? ' [Dividida]' : ''),
+            description: descriptionWithInstallment + (isDivided ? ' [Dívida]' : ''),
             amount: perInstallment,
             type: parsed.tipo === 'despesa' ? 'expense' : 'income',
             date: new Date(parsed.data + 'T12:00:00').toISOString(),
@@ -267,7 +267,7 @@ const TransactionChat: React.FC = () => {
               console.error('Transação criada, mas falhou ao criar parcelado:', installmentError);
             }
           }
-          // Se mencionar dívida/dividida no chat, cria também em Dívidas (mesma lógica de parcelados)
+          // Se mencionar dívida no chat, cria também em Dívidas (mesma lógica de parcelados)
           if (isDivided) {
             try {
               const parcels = installmentCount > 1 ? installmentCount : 1;
@@ -279,7 +279,7 @@ const TransactionChat: React.FC = () => {
                 currentInstallment: parcels > 1 ? 1 : 0,
                 startDate: parsed.data,
                 categoryId: matchCat.id,
-                notes: `Criado via chat (dívida dividida) - Total R$ ${parsed.valor.toFixed(2).replace('.', ',')} ${parcels > 1 ? `em ${parcels}x` : 'à vista'}`,
+                notes: `Criado via chat (dívida) - Total R$ ${parsed.valor.toFixed(2).replace('.', ',')} ${parcels > 1 ? `em ${parcels}x` : 'à vista'}`,
                 source: 'manual',
               });
             } catch (debtError) {

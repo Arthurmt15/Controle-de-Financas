@@ -454,7 +454,7 @@ const TransactionForm: React.FC<TransactionFormProps> = ({
                     </Badge>
                   )}
                   <p className="text-[11px] text-muted-foreground">
-                    Aparecerá em <strong>Parcelados & Dívidas</strong> como Dívida dividida.
+                    Aparecerá em <strong>Parcelados & Dívidas</strong> como Dívida.
                   </p>
                 </div>
               )}

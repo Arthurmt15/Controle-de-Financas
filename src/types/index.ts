@@ -161,14 +161,14 @@ export interface Installment {
 }
 
 /**
- * Interface que representa uma dívida dividida.
+ * Interface que representa uma dívida.
  * Mesma lógica de parcelados: controla prestações e vencimentos.
  * Ao criar uma transação com dívida, o registro aparece em Dívidas.
  */
 export interface Debt {
   /** Identificador único da dívida */
   id: string;
-  /** Descrição da dívida (ex: "Jantar dividido com João") */
+  /** Descrição da dívida (ex: "Empréstimo com João") */
   description: string;
   /** Valor total da dívida */
   totalAmount: number;
@@ -249,7 +249,7 @@ export interface TransactionState {
   recurringBills: RecurringBill[];
   /** Lista de compras parceladas */
   installments: Installment[];
-  /** Lista de dívidas divididas */
+  /** Lista de dívidas */
   debts: Debt[];
   /** Lista de despesas futuras */
   futureExpenses: FutureExpense[];

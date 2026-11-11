@@ -3,7 +3,7 @@ import type { Debt } from '../../types';
 
 /**
  * Entidade Debt com mesma lógica de Installment: progresso e vencimentos.
- * Reutiliza regras de parcelamento para dívidas divididas.
+ * Reutiliza regras de parcelamento para dívidas.
  */
 export class DebtEntity extends BaseEntity {
   public readonly description: string;
