@@ -65,10 +65,7 @@ interface AuthContextType extends AuthState {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [, setStoredUser, removeStoredUser] = useLocalStorage<User | null>(
-    'financas_user',
-    null
-  );
+  const [, setStoredUser, removeStoredUser] = useLocalStorage<User | null>('financas_user', null);
 
   const [state, dispatch] = useReducer(authReducer, initialState);
   // Sempre inicia "verificando" quando há sessão remota a validar.
@@ -103,8 +100,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
         const user: User = {
           id: session.user.id,
-          name:
-            session.user.user_metadata?.full_name || session.user.email?.split('@')[0] || '',
+          name: session.user.user_metadata?.full_name || session.user.email?.split('@')[0] || '',
           email: session.user.email || '',
           avatar: session.user.user_metadata?.avatar_url,
         };
@@ -173,9 +169,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   return (
-    <AuthContext.Provider
-      value={{ ...state, isInitializing, loginWithGoogle, logout, clearError }}
-    >
+    <AuthContext.Provider value={{ ...state, isInitializing, loginWithGoogle, logout, clearError }}>
       {children}
     </AuthContext.Provider>
   );
