@@ -14,26 +14,28 @@ const corsHeadersBase = {
   'Access-Control-Max-Age': '86400',
 };
 
+const DEFAULT_ALLOWED_ORIGINS = [
+  'https://controle-de-financas-nine.vercel.app',
+  'http://localhost:3000',
+  'http://localhost:5173',
+];
+
 function getCorsHeaders(req: Request): Record<string, string> {
   const allowedOriginEnv = Deno.env.get('SUPABASE_CORS_ORIGIN');
   const requestOrigin = req.headers.get('origin') || '';
 
-  let allowOrigin = '';
-  if (allowedOriginEnv) {
-    const allowedList = allowedOriginEnv
-      .split(',')
-      .map((s) => s.trim())
-      .filter(Boolean);
-    if (requestOrigin && allowedList.includes(requestOrigin)) {
-      allowOrigin = requestOrigin;
-    } else {
-      // Se request sem origin ou não listado, usa o primeiro permitido (evita "*")
-      allowOrigin = allowedList[0] || '';
-    }
-  } else if (requestOrigin) {
-    // Sem env configurado: ecoa origin da requisição (nunca "*")
-    allowOrigin = requestOrigin;
+  const configuredOrigins = (allowedOriginEnv ?? '')
+    .split(',')
+    .map((s) => s.trim())
+    .filter(Boolean);
+
+  if (configuredOrigins.length === 0) {
+    console.error('❌ SUPABASE_CORS_ORIGIN não configurado — usando allowlist padrão');
   }
+
+  // Sempre permite apenas origens conhecidas. Nunca ecoa origin arbitrário.
+  const allowedOrigins = configuredOrigins.length > 0 ? configuredOrigins : DEFAULT_ALLOWED_ORIGINS;
+  const allowOrigin = allowedOrigins.includes(requestOrigin) ? requestOrigin : '';
 
   return {
     ...corsHeadersBase,
@@ -56,6 +58,75 @@ async function authenticateUser(req: Request) {
     data: { user },
   } = await supabase.auth.getUser();
   return user;
+}
+
+/**
+ * Prompt de sistema controlado pelo servidor. As regras NUNCA vêm do cliente,
+ * evitando prompt injection e uso indevido da chave Groq como chatbot genérico.
+ */
+function buildSystemPrompt(financialContext: string): string {
+  return `Você é um consultor financeiro pessoal experiente e direto. Analise os dados reais do usuário abaixo para dar conselhos personalizados.
+
+DADOS FINANCEIROS DO USUÁRIO:
+${financialContext || 'Nenhum dado financeiro disponível'}
+
+REGRAS:
+- Responda SEMPRE em português brasileiro
+- Seja direto, prático e objetivo
+- Fundamente suas respostas nos dados REAIS do usuário (não invente dados)
+- Use valores específicos do usuário quando possível
+- Considere: reserva de emergência (6 meses de despesas), regra 50-30-20 (necessidades/desejos/futuro)
+- Se não tiver dados suficientes, peça mais informações
+- Formatando: use **negrito** para valores e listas para recomendações
+- Máximo de 200 palavras por resposta`;
+}
+
+interface ClientMessage {
+  role: 'user' | 'assistant';
+  content: string;
+}
+
+/**
+ * Aceita apenas mensagens de usuário/assistente. Qualquer `role: system`
+ * enviado pelo cliente é descartado — o system prompt é definido no servidor.
+ */
+function sanitizeMessages(raw: unknown): ClientMessage[] {
+  if (!Array.isArray(raw)) return [];
+
+  return raw
+    .filter((message) => message && typeof message === 'object')
+    .map((message) => message as { role?: unknown; content?: unknown })
+    .filter(
+      (message) =>
+        (message.role === 'user' || message.role === 'assistant') &&
+        typeof message.content === 'string'
+    )
+    .slice(-30)
+    .map((message) => ({
+      role: message.role as 'user' | 'assistant',
+      content: (message.content as string).slice(0, 8000),
+    }));
+}
+
+const RATE_LIMIT_WINDOW_MS = 60_000;
+const RATE_LIMIT_MAX_REQUESTS = 10;
+const rateBuckets = new Map<string, number[]>();
+
+/** Rate limit em memória por usuário/IP (best-effort por instância). */
+function isRateLimited(key: string): boolean {
+  const now = Date.now();
+  const timestamps = (rateBuckets.get(key) ?? []).filter(
+    (timestamp) => now - timestamp < RATE_LIMIT_WINDOW_MS
+  );
+
+  if (timestamps.length >= RATE_LIMIT_MAX_REQUESTS) {
+    rateBuckets.set(key, timestamps);
+    return true;
+  }
+
+  timestamps.push(now);
+  rateBuckets.set(key, timestamps);
+  return false;
 }
 
 serve(async (req) => {
@@ -89,22 +160,37 @@ serve(async (req) => {
       });
     }
 
-    const { messages } = await req.json();
-    const model = Deno.env.get('GROQ_MODEL') || 'qwen/qwen3.8-27b';
+    const clientIp = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 'unknown';
+    if (isRateLimited(`${user.id}:${clientIp}`)) {
+      return new Response(
+        JSON.stringify({ error: 'Limite de consultas à IA atingido. Aguarde 1 minuto.' }),
+        {
+          status: 429,
+          headers: { ...headers, 'Content-Type': 'application/json' },
+        }
+      );
+    }
 
-    const messagesSize = JSON.stringify(messages || []).length;
-    if (
-      !messages ||
-      !Array.isArray(messages) ||
-      messages.length === 0 ||
-      messages.length > 30 ||
-      messagesSize > 30000
-    ) {
+    const body = await req.json().catch(() => null);
+    if (!body) {
+      return new Response(JSON.stringify({ error: 'Corpo da requisição inválido' }), {
+        status: 400,
+        headers: { ...headers, 'Content-Type': 'application/json' },
+      });
+    }
+
+    const sanitizedMessages = sanitizeMessages(body.messages);
+    const messagesSize = JSON.stringify(sanitizedMessages).length;
+    if (sanitizedMessages.length === 0 || messagesSize > 30000) {
       return new Response(JSON.stringify({ error: 'Mensagens inválidas ou muito longas' }), {
         status: 400,
         headers: { ...headers, 'Content-Type': 'application/json' },
       });
     }
+
+    const financialContext =
+      typeof body.financialContext === 'string' ? body.financialContext.slice(0, 8000) : '';
+    const model = Deno.env.get('GROQ_MODEL') || 'qwen/qwen3.8-27b';
 
     const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
       method: 'POST',
@@ -114,7 +200,10 @@ serve(async (req) => {
       },
       body: JSON.stringify({
         model,
-        messages,
+        messages: [
+          { role: 'system', content: buildSystemPrompt(financialContext) },
+          ...sanitizedMessages,
+        ],
         stream: true,
         temperature: 0.7,
         max_tokens: 500,
@@ -190,7 +279,8 @@ serve(async (req) => {
       },
     });
   } catch (error) {
-    return new Response(JSON.stringify({ error: error.message }), {
+    console.error('Erro na função ai-chat:', error);
+    return new Response(JSON.stringify({ error: 'Erro interno ao processar a solicitação' }), {
       status: 500,
       headers: { ...headers, 'Content-Type': 'application/json' },
     });

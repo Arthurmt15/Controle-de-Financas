@@ -10,12 +10,29 @@ import dotenv from 'dotenv';
 dotenv.config();
 
 /**
+ * Configuração de SSL da conexão com o PostgreSQL.
+ * Verifica o certificado do servidor por padrão. Para usar um CA próprio,
+ * defina DATABASE_CA_CERT. Somente aceite certificados não confiáveis
+ * (rejectUnauthorized: false) de forma explícita via
+ * DATABASE_SSL_REJECT_UNAUTHORIZED=false.
+ */
+function getSslConfig() {
+  const caCert = process.env.DATABASE_CA_CERT?.replace(/\\n/g, '\n');
+  if (caCert) {
+    return { ca: caCert, rejectUnauthorized: true };
+  }
+  return {
+    rejectUnauthorized: process.env.DATABASE_SSL_REJECT_UNAUTHORIZED !== 'false',
+  };
+}
+
+/**
  * Pool de conexões com o PostgreSQL (Supabase)
  * Porta 5432 = Session mode (transações isoladas)
  */
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
-  ssl: { rejectUnauthorized: false },
+  ssl: getSslConfig(),
   max: 10,
   idleTimeoutMillis: 30000,
   connectionTimeoutMillis: 10000,

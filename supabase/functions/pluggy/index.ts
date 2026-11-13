@@ -4,6 +4,12 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 const jsonHeaders = { 'Content-Type': 'application/json' };
 const pluggyApiUrl = 'https://api.pluggy.ai';
 
+const DEFAULT_ALLOWED_ORIGINS = [
+  'https://controle-de-financas-nine.vercel.app',
+  'http://localhost:3000',
+  'http://localhost:5173',
+];
+
 function getCorsHeaders(req: Request) {
   const configuredOrigins =
     Deno.env
@@ -12,15 +18,42 @@ function getCorsHeaders(req: Request) {
       .map((origin) => origin.trim())
       .filter(Boolean) ?? [];
   const origin = req.headers.get('origin') ?? '';
-  const allowOrigin = configuredOrigins.includes(origin)
-    ? origin
-    : (configuredOrigins[0] ?? origin);
+
+  if (configuredOrigins.length === 0) {
+    console.error('❌ SUPABASE_CORS_ORIGIN não configurado — usando allowlist padrão');
+  }
+
+  // Sempre permite apenas origens conhecidas. Nunca ecoa origin arbitrário.
+  const allowedOrigins = configuredOrigins.length > 0 ? configuredOrigins : DEFAULT_ALLOWED_ORIGINS;
+  const allowOrigin = allowedOrigins.includes(origin) ? origin : '';
+
   return {
     'Access-Control-Allow-Origin': allowOrigin,
     'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
     'Access-Control-Allow-Methods': 'POST, OPTIONS',
     Vary: 'Origin',
   };
+}
+
+const RATE_LIMIT_WINDOW_MS = 60_000;
+const RATE_LIMIT_MAX_REQUESTS = 20;
+const rateBuckets = new Map<string, number[]>();
+
+/** Rate limit em memória por usuário/IP (best-effort por instância). */
+function isRateLimited(key: string): boolean {
+  const now = Date.now();
+  const timestamps = (rateBuckets.get(key) ?? []).filter(
+    (timestamp) => now - timestamp < RATE_LIMIT_WINDOW_MS
+  );
+
+  if (timestamps.length >= RATE_LIMIT_MAX_REQUESTS) {
+    rateBuckets.set(key, timestamps);
+    return true;
+  }
+
+  timestamps.push(now);
+  rateBuckets.set(key, timestamps);
+  return false;
 }
 
 function response(req: Request, body: unknown, status = 200) {
@@ -107,6 +140,11 @@ serve(async (req) => {
   try {
     const user = await getUser(req);
     if (!user) return response(req, { error: 'Não autenticado' }, 401);
+
+    const clientIp = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 'unknown';
+    if (isRateLimited(`${user.id}:${clientIp}`)) {
+      return response(req, { error: 'Muitas requisições. Aguarde 1 minuto.' }, 429);
+    }
 
     const { action, itemId, connectionId } = await req.json();
     const admin = createClient(

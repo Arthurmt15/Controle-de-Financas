@@ -162,7 +162,14 @@ const PublicRoutes: React.FC = () => (
  * Gerenciador de rotas baseado em autenticação
  */
 const AppRoutes: React.FC = () => {
-  const { isAuthenticated, user } = useAuth();
+  const { isAuthenticated, user, isInitializing } = useAuth();
+
+  // Não decide a rota antes de validar a sessão real (evita autenticação
+  // baseada apenas no localStorage).
+  if (isInitializing) {
+    return <LoadingFallback />;
+  }
+
   // A key por usuário remonta todos os providers ao trocar de conta,
   // evitando que dados do usuário anterior permaneçam em memória.
   return isAuthenticated ? <AuthenticatedRoutes key={user?.id} /> : <PublicRoutes />;

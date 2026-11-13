@@ -37,12 +37,30 @@ function validateEnv(): void {
     console.error('❌ DATABASE_URL é obrigatório em produção');
     process.exit(1);
   }
+
+  if (
+    isProduction &&
+    !process.env.GOOGLE_CLIENT_ID &&
+    !process.env.REACT_APP_GOOGLE_CLIENT_ID
+  ) {
+    console.error('❌ GOOGLE_CLIENT_ID é obrigatório em produção');
+    process.exit(1);
+  }
 }
 
 validateEnv();
 
 const app = express();
 const PORT = process.env.PORT || 5000;
+
+/**
+ * Configura confiança em proxy reverso apenas quando explicitamente habilitado.
+ * Sem isso, o rate limit por IP usa o IP da conexão direta (seguro contra spoofing).
+ */
+if (process.env.TRUST_PROXY) {
+  const trustProxy = process.env.TRUST_PROXY;
+  app.set('trust proxy', /^\d+$/.test(trustProxy) ? Number(trustProxy) : trustProxy);
+}
 
 /** URL do frontend configurada via variável de ambiente */
 const FRONTEND_URL = process.env.FRONTEND_URL || '';

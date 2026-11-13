@@ -132,27 +132,8 @@ export async function* streamAdvisor(
       apikey: import.meta.env.REACT_APP_SUPABASE_ANON_KEY || '',
     },
     body: JSON.stringify({
-      messages: [
-        {
-          role: 'system',
-          content: `Você é um consultor financeiro pessoal experiente e direto. Analise os dados reais do usuário abaixo para dar conselhos personalizados.
-
-DADOS FINANCEIROS DO USUÁRIO:
-${financialContext || 'Nenhum dado financeiro disponível'}
-
-REGRAS:
-- Responda SEMPRE em português brasileiro
-- Seja direto, prático e objetivo
-- Fundamente suas respostas nos dados REAIS do usuário (não invente dados)
-- Use valores específicos do usuário quando possível
-- Considere: reserva de emergência (6 meses de despesas), regra 50-30-20 (necessidades/desejos/futuro)
-- Se não tiver dados suficientes, peça mais informações
-- Formatando: use **negrito** para valores e listas para recomendações
-- Máximo de 200 palavras por resposta`,
-        },
-        ...history,
-        { role: 'user', content: userMessage },
-      ],
+      financialContext,
+      messages: [...history, { role: 'user', content: userMessage }],
     }),
   });
 

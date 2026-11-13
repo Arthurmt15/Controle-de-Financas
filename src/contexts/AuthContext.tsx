@@ -1,38 +1,22 @@
 /**
  * @file contexts/AuthContext.tsx
  * @description Contexto de autenticação unificado.
- * Suporta Google OAuth + JWT (local) e Supabase Auth (produção).
+ * A sessão do Supabase Auth é a única fonte de verdade: o localStorage é usado
+ * apenas como cache de exibição do usuário, nunca como prova de autenticação.
  */
 
-import React, { createContext, useContext, useCallback, useEffect, useReducer } from 'react';
+import React, {
+  createContext,
+  useContext,
+  useCallback,
+  useEffect,
+  useReducer,
+  useState,
+} from 'react';
 import { useLocalStorage } from '../hooks/useLocalStorage';
 import { authService, isSupabase } from '../services/data';
 import { playSound } from '../utils/sounds';
 import type { User, AuthState, AuthAction } from '../types';
-
-interface GooglePayload {
-  email: string;
-  name: string;
-  picture: string;
-  sub: string;
-}
-
-function decodeGoogleToken(token: string): GooglePayload {
-  try {
-    const base64Url = token.split('.')[1];
-    const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
-    const jsonPayload = decodeURIComponent(
-      atob(base64)
-        .split('')
-        .map((c) => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
-        .join('')
-    );
-    return JSON.parse(jsonPayload);
-  } catch (error) {
-    console.error('Erro ao decodificar token Google:', error);
-    throw new Error('Token inválido');
-  }
-}
 
 const initialState: AuthState = {
   isAuthenticated: false,
@@ -71,6 +55,8 @@ function authReducer(state: AuthState, action: AuthAction): AuthState {
 }
 
 interface AuthContextType extends AuthState {
+  /** true enquanto a sessão inicial ainda está sendo verificada */
+  isInitializing: boolean;
   loginWithGoogle: (credentialResponse?: { credential: string }) => void;
   logout: () => void;
   clearError: () => void;
@@ -79,140 +65,97 @@ interface AuthContextType extends AuthState {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [storedUser, setStoredUser, removeStoredUser] = useLocalStorage<User | null>(
+  const [, setStoredUser, removeStoredUser] = useLocalStorage<User | null>(
     'financas_user',
     null
   );
 
-  const [state, dispatch] = useReducer(authReducer, {
-    ...initialState,
-    user: storedUser,
-    isAuthenticated: !!storedUser,
-  });
+  const [state, dispatch] = useReducer(authReducer, initialState);
+  // Sempre inicia "verificando" quando há sessão remota a validar.
+  const [isInitializing, setIsInitializing] = useState(isSupabase);
 
   useEffect(() => {
-    if (isSupabase) {
-      authService
-        .getSession()
-        .then(async (session) => {
-          if (session?.user) {
-            // Auto-cura: sessão local pode estar morta no servidor (refresh 400
-            // após pausa do projeto). Valida e purga sozinha, sem ação do usuário.
-            const valid = await authService.validateSession().catch(() => true);
-            if (!valid) {
-              dispatch({ type: 'LOGOUT' });
-              removeStoredUser();
-              return;
-            }
-            const user: User = {
-              id: session.user.id,
-              name:
-                session.user.user_metadata?.full_name || session.user.email?.split('@')[0] || '',
-              email: session.user.email || '',
-              avatar: session.user.user_metadata?.avatar_url,
-            };
-            dispatch({ type: 'LOGIN_SUCCESS', payload: user });
-            setStoredUser(user);
-          } else if (storedUser) {
-            // Sessão Supabase ausente/expirada (ex.: projeto pausado por dias):
-            // o usuário do localStorage é obsoleto e todas as chamadas (incluindo
-            // a edge function ai-chat) falhariam com 401. Força novo login.
-            dispatch({ type: 'LOGOUT' });
-            removeStoredUser();
-          }
-        })
-        .catch(() => {});
+    if (!isSupabase) {
+      // Login local legado está desativado: nunca confiar no localStorage.
+      dispatch({ type: 'LOGOUT' });
+      removeStoredUser();
+      setIsInitializing(false);
+      return;
+    }
 
-      const {
-        data: { subscription },
-      } = authService.onAuthStateChange((user) => {
-        if (user) {
-          dispatch({ type: 'LOGIN_SUCCESS', payload: user });
-          setStoredUser(user);
-        } else {
-          dispatch({ type: 'LOGOUT' });
-          removeStoredUser();
-        }
-      });
+    let active = true;
 
-      return () => subscription.unsubscribe();
-    } else {
-      if (storedUser) {
-        if (!authService.hasStoredToken()) {
+    authService
+      .getSession()
+      .then(async (session) => {
+        if (!session?.user) {
           removeStoredUser();
+          if (active) dispatch({ type: 'LOGOUT' });
           return;
         }
-        dispatch({ type: 'LOGIN_SUCCESS', payload: storedUser });
-      } else {
-        const cookieToken = authService.getTokenFromCookie();
-        if (cookieToken) {
-          authService.setAuthToken(cookieToken);
-          dispatch({ type: 'LOGIN_START' });
-          authService
-            .getCurrentUser()
-            .then((userData) => {
-              if (userData) {
-                const user: User = {
-                  id: userData.id,
-                  name: userData.name,
-                  email: userData.email,
-                  avatar: userData.avatar ?? undefined,
-                };
-                dispatch({ type: 'LOGIN_SUCCESS', payload: user });
-                setStoredUser(user);
-              }
-            })
-            .catch(() => {
-              authService.setAuthToken(null);
-              dispatch({ type: 'LOGOUT' });
-            });
+
+        const valid = await authService.validateSession().catch(() => true);
+        if (!valid) {
+          removeStoredUser();
+          if (active) dispatch({ type: 'LOGOUT' });
+          return;
         }
+
+        const user: User = {
+          id: session.user.id,
+          name:
+            session.user.user_metadata?.full_name || session.user.email?.split('@')[0] || '',
+          email: session.user.email || '',
+          avatar: session.user.user_metadata?.avatar_url,
+        };
+
+        if (active) {
+          dispatch({ type: 'LOGIN_SUCCESS', payload: user });
+          setStoredUser(user);
+        }
+      })
+      .catch(() => {
+        removeStoredUser();
+        if (active) dispatch({ type: 'LOGOUT' });
+      })
+      .finally(() => {
+        if (active) setIsInitializing(false);
+      });
+
+    const {
+      data: { subscription },
+    } = authService.onAuthStateChange((user) => {
+      if (user) {
+        dispatch({ type: 'LOGIN_SUCCESS', payload: user });
+        setStoredUser(user);
+      } else {
+        dispatch({ type: 'LOGOUT' });
+        removeStoredUser();
       }
-    }
+      setIsInitializing(false);
+    });
+
+    return () => {
+      active = false;
+      subscription.unsubscribe();
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const loginWithGoogle = useCallback(
-    async (credentialResponse?: { credential: string }) => {
-      try {
-        dispatch({ type: 'LOGIN_START' });
+  const loginWithGoogle = useCallback(async (_credentialResponse?: { credential: string }) => {
+    try {
+      dispatch({ type: 'LOGIN_START' });
 
-        if (isSupabase) {
-          await authService.signInWithGoogle();
-        } else {
-          if (!credentialResponse) {
-            throw new Error('Credential required for local login');
-          }
-          const payload = decodeGoogleToken(credentialResponse.credential);
-          const dbUser = await authService.createOrFind({
-            googleId: payload.sub,
-            name: payload.name,
-            email: payload.email,
-            avatar: payload.picture,
-          });
-
-          const user: User = {
-            id: dbUser?.id || payload.sub,
-            name: dbUser?.name || payload.name,
-            email: dbUser?.email || payload.email,
-            avatar: dbUser?.avatar || payload.picture,
-          };
-
-          if ((dbUser as any).token) {
-            authService.setAuthToken((dbUser as any).token);
-          }
-
-          dispatch({ type: 'LOGIN_SUCCESS', payload: user });
-          setStoredUser(user);
-          playSound('success');
-        }
-      } catch (error) {
-        console.error('Erro ao processar login Google:', error);
-        dispatch({ type: 'LOGIN_FAILURE', payload: 'Erro ao autenticar com Google.' });
+      if (!isSupabase) {
+        throw new Error('Login local desativado. Use o Supabase Auth.');
       }
-    },
-    [setStoredUser]
-  );
+
+      await authService.signInWithGoogle();
+    } catch (error) {
+      console.error('Erro ao processar login Google:', error);
+      dispatch({ type: 'LOGIN_FAILURE', payload: 'Erro ao autenticar com Google.' });
+    }
+  }, []);
 
   const logout = useCallback(async () => {
     dispatch({ type: 'LOGOUT' });
@@ -230,7 +173,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   return (
-    <AuthContext.Provider value={{ ...state, loginWithGoogle, logout, clearError }}>
+    <AuthContext.Provider
+      value={{ ...state, isInitializing, loginWithGoogle, logout, clearError }}
+    >
       {children}
     </AuthContext.Provider>
   );
